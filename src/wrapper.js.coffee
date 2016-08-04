@@ -1,11 +1,13 @@
-# =require underscore
-# =require underscore.string
-# =require underscore.inflection
+# ActiveResource.js
+# (c) 2016 Peak Labs, LLC
+# ActiveResource may be freely distributed under the MIT license
+# Portions of ActiveResource were inspired by or borrowed from ActiveRecord
+# Version 0.9.0
 
 class window.ActiveResource
   # The base URL to structure all queries from
   #
-  # @example 'https://app.getoccasion.com/api/v1/'
+  # @example 'https://www.example.com/api/v1/'
   @baseUrl = null
 
   # The headers to include when querying a URL
