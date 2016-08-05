@@ -1,5 +1,13 @@
 # Defines responses for various queries
 
+getJSONFixture = (fixture) ->
+  require("./fixtures/json/#{fixture}.json")
+
+jasmine.Ajax.useMock()
+window.onSuccess = jasmine.createSpy('onSuccess')
+window.onFailure = jasmine.createSpy('onFailure')
+window.onCompletion = jasmine.createSpy('onCompletion')
+
 window.JsonApiResponses =
   Comment:
     find:
