@@ -1,4 +1,7 @@
 describe 'ActiveResource', ->
+  beforeEach ->
+    jasmine.Ajax.useMock()
+
   describe '::Associations', ->
     describe '::HasManyAssociation', ->
       describe 'reading', ->

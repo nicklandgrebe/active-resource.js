@@ -1,4 +1,7 @@
 describe 'ActiveResource', ->
+  beforeEach ->
+    jasmine.Ajax.useMock()
+    
   describe '::Base', ->
     describe '.links()', ->
       it 'returns the correct links', ->

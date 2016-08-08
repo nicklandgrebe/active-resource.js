@@ -1,5 +1,7 @@
 describe 'ActiveResource', ->
   beforeEach ->
+    jasmine.Ajax.useMock()
+    
     MyLibrary::Product.last().then window.onSuccess
 
     mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)

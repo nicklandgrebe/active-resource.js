@@ -1,4 +1,7 @@
 describe 'ActiveResource', ->
+  beforeEach ->
+    jasmine.Ajax.useMock()
+
   describe '::Persistence', ->
     describe '#persisted()', ->
       describe 'when the resource is not persisted', ->

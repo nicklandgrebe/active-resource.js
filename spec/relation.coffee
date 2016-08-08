@@ -1,4 +1,7 @@
 describe 'ActiveResource', ->
+  beforeEach ->
+    jasmine.Ajax.useMock()
+    
   describe '::Relation', ->
     describe 'when calling Relation extension methods on Base', ->
       it 'creates a new Relation', ->

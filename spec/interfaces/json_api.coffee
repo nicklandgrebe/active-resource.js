@@ -1,4 +1,7 @@
 describe 'ActiveResource', ->
+  beforeEach ->
+    jasmine.Ajax.useMock()
+    
   describe 'Interfaces::JsonApi', ->
     describe '#get()', ->
       describe 'getting resources', ->
