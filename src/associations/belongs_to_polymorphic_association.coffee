@@ -1,5 +1,3 @@
-# =require ./belongs_to_association
-
 class ActiveResource::Associations::BelongsToPolymorphicAssociation extends ActiveResource::Associations::BelongsToAssociation
   klass: ->
     type = @owner[@reflection.foreignType()]

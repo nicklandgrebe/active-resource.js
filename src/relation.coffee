@@ -1,6 +1,3 @@
-# =require ./global
-# =require ./typing
-
 # Relation constructs queries based on a chained series of functions that extend the chain
 # or execute the built query, then building the result and returning it as either an
 # ActiveResource::Base or Collection of ActiveResource::Base

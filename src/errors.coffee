@@ -1,5 +1,3 @@
-# =require ./global
-
 # A class for managing errors associated with persisting an ActiveResource
 # Also adds instance methods to ActiveResource::Base to manage the class itself
 #

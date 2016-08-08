@@ -1,5 +1,3 @@
-# =require ./base
-
 # Implements an interface according the JSON API standard defined by (http://jsonapi.org/format/)
 #
 # @example JSON API format
@@ -275,11 +273,11 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   #
   # @param [Object] data the data of the resource to instantiate
   # @param [Array] includes the array of includes to search for resource relationships in
-  # @param [ActiveResource::Base] existingresource an existingresource to use instead of building a new one
+  # @param [ActiveResource::Base] existingResource an existingResource to use instead of building a new one
   # @return [ActiveResource] the built ActiveResource
   #
-  # 1. If an existingresource was provided, build everything into that resource
-  # 2. If an existingresource was not provided, build a resource of type `type` and build everything into that
+  # 1. If an existingResource was provided, build everything into that resource
+  # 2. If an existingResource was not provided, build a resource of type `type` and build everything into that
   # 3. Construct an object `attributes` that is made up of the resource primary key, plus its attributes
   # 4. Add all the relationships "included" in the response to the `attributes` object (product, order, etc.)
   # 5. Convert the attributes object toCamelCase (Javascript format)
@@ -287,8 +285,8 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # 7. Assign the links provided in the response to the resource
   # 8. Assign the relationship links provided in the response to the resource
   # 9. Return the built resource
-  buildresource = (data, includes, existingresource) ->
-    resource = existingresource || ActiveResource.constantize(_.singularize(s.classify(data['type']))).build()
+  buildResource = (data, includes, existingResource) ->
+    resource = existingResource || ActiveResource.constantize(_.singularize(s.classify(data['type']))).build()
 
     # If primaryKey is `id`, we want it as an int. If it were, say, `token`, we leave it alone
     if resource.klass().primaryKey == 'id'
@@ -393,7 +391,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
     findConditions[resource.klass().primaryKey] = relationshipData[resource.klass().primaryKey]
 
     if(include = _.findWhere(includes, findConditions))?
-      include = buildresource(include, includes)
+      include = buildResource(include, includes)
     include
 
   # Merges the changes made from a POST/PUT/PATCH call into the resource that called it
@@ -405,7 +403,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # 1. Use buildresource to build the changed attributes, relationships, and links into the existing resource
   # 2. Return the built resource
   mergePersistedChanges = (response, resource) ->
-    buildresource(response['data'], response['included'], resource)
+    buildResource(response['data'], response['included'], resource)
 
   # Adds errors in making a POST/PUT/PATCH call into the resource that called it
   #
@@ -455,7 +453,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
       built =
         ActiveResource::Collection.build(_.flatten([response.data]))
         .map (object) ->
-          object = buildresource(object, response.included)
+          object = buildResource(object, response.included)
           object.__queryOptions = _.pick(queryParams, 'include', 'fields')
           object
 

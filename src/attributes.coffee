@@ -1,5 +1,3 @@
-# =require ./global
-
 # ActiveResource methods for managing attributes of resources
 class ActiveResource::Attributes
   # Checks if the resource has an attribute
@@ -65,7 +63,7 @@ class ActiveResource::Attributes
     throw 'Cannot reload a resource that is not persisted' unless @persisted()
 
     resource = this
-    ActiveResource.interface.get @links()['self'], @__queryOptions
+    ActiveResource.interface.get(@links()['self'], @__queryOptions)
     .then (reloaded) ->
       resource.assignAttributes(reloaded)
 

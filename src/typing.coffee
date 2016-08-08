@@ -1,5 +1,3 @@
-# =require ./global
-
 # Provides support methods for determing the type (also known as klass) of different objects in
 # the ActiveResource framework
 class ActiveResource::Typing

@@ -1,5 +1,3 @@
-# =require ./association
-
 class ActiveResource::Associations::SingularAssociation extends ActiveResource::Associations::Association
   # Getter for the target
   reader: ->
@@ -14,14 +12,14 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
   writer: (resource, save = true) ->
     @__raiseOnTypeMismatch(resource) if resource?
 
-    persistresource =
-      if save && !@owner.newresource?()
+    persistResource =
+      if save && !@owner.newResource?()
         @__persistAssignment(resource)
       else
         $.when(resource)
 
     _this = this
-    persistresource
+    persistResource
     .then ->
       _this.loaded(true) if save
       _this.replace(resource)
@@ -31,7 +29,7 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
   # @param [Object] attributes the attributes to build into the resource
   # @return [ActiveResource::Base] the built resource for the association, with attributes
   build: (attributes = {}) ->
-    resource = @__buildresource(attributes)
+    resource = @__buildResource(attributes)
     @replace(resource)
     resource
 
@@ -42,7 +40,7 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
   #   @note May not be persisted, in which case `resource.errors().empty? == false`
   # @return [ActiveResource::Base] a promise to return the persisted resource **or** errors
   create: (attributes = {}, callback) ->
-    @__createresource(attributes, callback)
+    @__createResource(attributes, callback)
 
   # private
 
@@ -56,7 +54,7 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
   # Gets the resource that is the target
   #
   # @return [Promise] a promise to return the resource **or** error 404
-  __getresource: ->
+  __getResource: ->
     ActiveResource.interface.get @links()['related']
 
   # Finds target using either the owner's relationship endpoint
@@ -64,15 +62,15 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
   # @return [Promise] a promise to return the target **or** error 404
   __findTarget: ->
     _this = this
-    @__getresource()
+    @__getResource()
     .then (resource) ->
       _this.setInverseInstance(resource)
 
   # Creates a resource for the association
   #
   # @return [Promise] a promise to return the created target **or** errors
-  __createresource: (attributes, callback) ->
-    resource = @__buildresource(attributes)
+  __createResource: (attributes, callback) ->
+    resource = @__buildResource(attributes)
     @replace(resource)
 
     _this = this

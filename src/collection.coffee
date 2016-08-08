@@ -1,6 +1,3 @@
-# =require ./global
-# =require ./typing
-
 # Wraps a Javascript array with some useful functions native to Ruby Arrays
 class ActiveResource::Collection
   ActiveResource.include(@, ActiveResource::Typing)

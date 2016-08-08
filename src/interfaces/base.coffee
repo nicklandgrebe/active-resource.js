@@ -1,5 +1,3 @@
-# =require ../global
-
 # Abstract class for defining an interface between a server and ActiveResource
 # TODO: Ensure contentType is consistent in requests/responses
 class ActiveResource::Interfaces

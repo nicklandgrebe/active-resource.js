@@ -1,5 +1,3 @@
-# =require_tree .
-
 # Base class for interfacing with ActiveResources
 #
 # @example

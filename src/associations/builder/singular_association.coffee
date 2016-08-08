@@ -1,5 +1,3 @@
-# =require ./association
-
 class ActiveResource::Associations::Builder::SingularAssociation extends ActiveResource::Associations::Builder::Association
   # Defines getter/setter methods on the model for the association
   #

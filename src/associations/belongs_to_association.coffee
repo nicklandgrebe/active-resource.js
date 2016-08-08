@@ -1,5 +1,3 @@
-# =require ./singular_association
-
 class ActiveResource::Associations::BelongsToAssociation extends ActiveResource::Associations::SingularAssociation
   reset: ->
     super
@@ -20,8 +18,8 @@ class ActiveResource::Associations::BelongsToAssociation extends ActiveResource:
   # owner's relationship data endpoint, or the foreign key to query the resource's root URL
   #
   # @return [Promise] a promise to return the resource **or** error 404
-  __getresource: ->
-    unless @owner.newresource()
+  __getResource: ->
+    unless @owner.newResource()
       # @example Uses @links()['related'] == '/orders/1/product'
       super
     else

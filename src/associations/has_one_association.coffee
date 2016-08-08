@@ -1,5 +1,3 @@
-# =require ./singular_association
-
 class ActiveResource::Associations::HasOneAssociation extends ActiveResource::Associations::SingularAssociation
   # private
   replace: (resource) ->

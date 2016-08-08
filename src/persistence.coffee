@@ -1,5 +1,3 @@
-# =require ./global
-
 # ActiveResource methods for persisting local resources with the server
 class ActiveResource::Persistence
   # Whether or not this resource is persisted on the server
@@ -25,8 +23,8 @@ class ActiveResource::Persistence
   # Whether or not this resource is a new resource
   # @note Is the opposite of persisted()
   #
-  # @return [Boolean] whether or not the resource is a new_resource
-  @newresource: ->
+  # @return [Boolean] whether or not the resource is a new resource
+  @newResource: ->
     !@persisted()
 
   # Save any changes to the resource, and inserts the resource into callback after
@@ -102,7 +100,7 @@ class ActiveResource::Persistence
   #   .fail ->
   #     ...
   @destroy: ->
-    ActiveResource.interface.delete @links()['self'], (resource = this)
+    ActiveResource.interface.delete(@links()['self'], (resource = this))
     .then ->
       resource.__links = {}
       resource

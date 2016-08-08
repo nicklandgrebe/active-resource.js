@@ -1,6 +1,3 @@
-# =require ../global
-# =require ../typing
-
 # The instantiated class that manages an association for an ActiveResource
 class ActiveResource::Associations::Association
   ActiveResource.include(@, ActiveResource::Typing)
@@ -122,7 +119,7 @@ class ActiveResource::Associations::Association
   #
   # @return [Boolean] whether or not we can find the target
   __canFindTarget: ->
-    (!@owner.newresource() || @__foreignKeyPresent()) && @klass()
+    (!@owner.newResource() || @__foreignKeyPresent()) && @klass()
 
   # Defines attributes to create new resources with this association
   #
@@ -131,7 +128,7 @@ class ActiveResource::Associations::Association
     attributes = {}
 
     if @reflection.hasOne?() || @reflection.collection?()
-      attributes[@reflection.foreignKey()] = @owner[@reflection.ActiveResourcePrimaryKey()]
+      attributes[@reflection.foreignKey()] = @owner[@reflection.activeResourcePrimaryKey()]
 
       if @reflection.options['as']
         attributes[@reflection.type()] = @owner.klass().className
@@ -178,7 +175,7 @@ class ActiveResource::Associations::Association
   #
   # @param [Object] attributes the attributes to build the resource with
   # @return [ActiveResource::Base] the built resource in the association
-  __buildresource: (attributes) ->
+  __buildResource: (attributes) ->
     resource = @reflection.buildAssociation()
     resource.assignAttributes(attributes)
     resource

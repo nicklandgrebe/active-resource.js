@@ -1,5 +1,3 @@
-# =require ./association
-
 # CollectionAssociation is an abstract class that provides common stuff to ease the implementation
 # of association proxies that represent collections.
 class ActiveResource::Associations::CollectionAssociation extends ActiveResource::Associations::Association
@@ -27,7 +25,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     resources.each (r) => @__raiseOnTypeMismatch(r)
 
     persistAssignment =
-      if save && !@owner.newresource?()
+      if save && !@owner.newResource?()
         @__persistAssignment(resources.select((r) -> r.persisted?()).toArray())
       else
         $.when(resources)
@@ -47,7 +45,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     resources.each (r) => @__raiseOnTypeMismatch(r)
 
     persistConcat =
-      if !@owner.newresource?()
+      if !@owner.newResource?()
         # TODO: Do something better with unpersisted resources, like saving them
         @__persistConcat(resources.select((r) -> r.persisted?()).toArray())
       else
@@ -56,7 +54,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     _this = this
     persistConcat
     .then ->
-      _this.__concatresources(resources)
+      _this.__concatResources(resources)
 
   # Deletes resources from the target
   #
@@ -67,7 +65,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     resources.each (r) => @__raiseOnTypeMismatch(r)
 
     persistDelete =
-      if !@owner.newresource?()
+      if !@owner.newResource?()
         @__persistDelete(resources.select((r) -> r.persisted?()).toArray())
       else
         $.when(resources)
@@ -75,7 +73,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     _this = this
     persistDelete
     .then ->
-      _this.__removeresources(resources)
+      _this.__removeResources(resources)
 
   reset: ->
     super
@@ -123,7 +121,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     if _.isArray(attributes)
       _.map attributes, (attr) => @build(attr)
     else
-      @__concatresources(ActiveResource::Collection.build(@__buildresource(attributes))).first()
+      @__concatResources(ActiveResource::Collection.build(@__buildResource(attributes))).first()
 
   # Creates resource(s) for the association
   #
@@ -135,13 +133,13 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
   #   @note May not be persisted, in which case `resource.errors().empty? == false`
   # @return [ActiveResource::Base] a promise to return the persisted resource(s) **or** errors
   create: (attributes = {}, callback) ->
-    @__createresource(attributes, callback)
+    @__createResource(attributes, callback)
 
   # private
 
   __findTarget: ->
     _this = this
-    ActiveResource.interface.get @links()['related']
+    ActiveResource.interface.get(@links()['related'])
     .then (resources) ->
       resources.each (r) -> _this.setInverseInstance(r)
       resources
@@ -150,16 +148,16 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
   #
   # @param [Collection] other the array to replace on the target
   replace: (other) ->
-    @__removeresources(@target)
-    @__concatresources(other)
+    @__removeResources(@target)
+    @__concatResources(other)
 
   # Concats resources onto the target
   #
   # @param [Collection] resources the resources to concat onto the target
-  __concatresources: (resources) ->
+  __concatResources: (resources) ->
     resources.each (resource) =>
       @addToTarget(resource)
-      @insertresource(resource)
+      @insertResource(resource)
     resources
 
   # Removes the resources from the target
@@ -168,15 +166,15 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
   #   the library gets to that point
   #
   # @param [Collection] the resources to remove from the association
-  __removeresources: (resources) ->
-    @__deleteresources(resources)
+  __removeResources: (resources) ->
+    @__deleteResources(resources)
 
   # Deletes the resources from the target
   # @note Expected to be defined by descendants
   #
   # @param [Collection] resources the resource to delete from the association
-  __deleteresources: (resources) ->
-    throw '__deleteresources not implemented on CollectionAssociation'
+  __deleteResources: (resources) ->
+    throw '__deleteResources not implemented on CollectionAssociation'
 
   # Persists the new association by patching the owner's relationship endpoint
   #
@@ -197,13 +195,13 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     ActiveResource.interface.delete @links()['self'], resources, onlyResourceIdentifiers: true
 
   # @see #create
-  __createresource: (attributes, callback) ->
+  __createResource: (attributes, callback) ->
     throw 'You cannot call create unless the parent is saved' unless @owner.persisted?()
 
     if _.isArray(attributes)
-      _.map attributes, (attr) => @__createresource(attr, callback)
+      _.map attributes, (attr) => @__createResource(attr, callback)
     else
-      resources = @__concatresources(ActiveResource::Collection.build(@__buildresource(attributes)))
+      resources = @__concatResources(ActiveResource::Collection.build(@__buildResource(attributes)))
 
       resources.each (resource) =>
         resource.save(callback)

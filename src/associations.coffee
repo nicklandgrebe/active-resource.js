@@ -1,5 +1,3 @@
-# =require ./global
-
 # Adds methods for managing associations, which are built at the instance level
 # based on reflections stored at the class level of ActiveResources
 class ActiveResource::Associations

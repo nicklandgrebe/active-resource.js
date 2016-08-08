@@ -1,5 +1,3 @@
-# =require ../../global
-
 # Defines accessors on ActiveResources for managing associations, handling
 # foreign key reassignment, persistence, etc.
 class ActiveResource::Associations::Builder

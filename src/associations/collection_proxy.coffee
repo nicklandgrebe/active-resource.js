@@ -1,5 +1,3 @@
-# =require ../relation
-
 # Manages a hasMany association in the same form as a Relation, except all queries
 # are made with association links and a lot of the methods make use of Association
 # to accomplish their goal
