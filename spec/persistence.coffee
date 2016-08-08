@@ -22,13 +22,13 @@ describe 'ActiveResource', ->
         it 'returns true', ->
           expect(@resource.persisted?()).toBeTruthy()
 
-    describe '#newresource()', ->
+    describe '#newResource()', ->
       describe 'when the resource is not persisted', ->
         beforeEach ->
           @resource = MyLibrary::Product.build()
 
         it 'returns true', ->
-          expect(@resource.newresource?()).toBeTruthy()
+          expect(@resource.newResource?()).toBeTruthy()
 
       describe 'when the resource is persisted', ->
         beforeEach ->
@@ -39,7 +39,7 @@ describe 'ActiveResource', ->
           @resource = window.onCompletion.mostRecentCall.args[0]
 
         it 'returns false', ->
-          expect(@resource.newresource?()).toBeFalsy()
+          expect(@resource.newResource?()).toBeFalsy()
 
     describe '#save', ->
       describe 'in general', ->
