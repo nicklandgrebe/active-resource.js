@@ -21,7 +21,7 @@ class ActiveResource::Errors
   #
   # @return [Boolean] whether or not the resource is valid
   @valid: ->
-    @__errors.empty()
+    @errors().empty()
 
   # Instantiates with a @base resource and @__errors storage object
   #
