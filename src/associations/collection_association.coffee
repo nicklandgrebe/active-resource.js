@@ -25,8 +25,8 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     resources.each (r) => @__raiseOnTypeMismatch(r)
 
     persistAssignment =
-      if save && !@owner.newResource?()
-        @__persistAssignment(resources.select((r) -> r.persisted?()).toArray())
+      if save && !@owner.newResource?() && (persistedResources = resources.select((r) -> r.persisted?())).size()
+        @__persistAssignment(persistedResources.toArray())
       else
         $.when(resources)
 
@@ -45,9 +45,9 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     resources.each (r) => @__raiseOnTypeMismatch(r)
 
     persistConcat =
-      if !@owner.newResource?()
+      if !@owner.newResource?() && (persistedResources = resources.select((r) -> r.persisted?())).size()
         # TODO: Do something better with unpersisted resources, like saving them
-        @__persistConcat(resources.select((r) -> r.persisted?()).toArray())
+        @__persistConcat(persistedResources.toArray())
       else
         $.when(resources)
 
@@ -65,8 +65,8 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     resources.each (r) => @__raiseOnTypeMismatch(r)
 
     persistDelete =
-      if !@owner.newResource?()
-        @__persistDelete(resources.select((r) -> r.persisted?()).toArray())
+      if !@owner.newResource?() && (persistedResources = resources.select((r) -> r.persisted?())).size()
+        @__persistDelete(persistedResources.toArray())
       else
         $.when(resources)
 
