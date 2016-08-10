@@ -65,7 +65,11 @@ class ActiveResource::Attributes
     resource = this
     ActiveResource.interface.get(@links()['self'], @__queryOptions)
     .then (reloaded) ->
-      resource.assignAttributes(reloaded)
+      resource.assignAttributes(reloaded.attributes())
+      resource.klass().reflectOnAllAssociations().each (reflection) ->
+        target = reloaded.association(reflection.name).reader()
+        target = target.toArray() if reflection.collection?()
+        resource.association(reflection.name).writer(target, false)
 
   # private
 
