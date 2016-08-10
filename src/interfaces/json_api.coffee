@@ -56,7 +56,15 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   toUnderscored = (object) ->
     underscored = {}
     for k, v of object
-      underscored[s.underscored(k)] = v
+      underscored[s.underscored(k)] =
+        if _.isArray(v)
+          _.map v, (i) ->
+            toUnderscored(i)
+        else if _.isObject(v)
+          toUnderscored(v)
+        else
+          v
+
     underscored
 
   # Converts an object's attributes to camelCase format
@@ -69,7 +77,15 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   toCamelCase = (object) ->
     camelized = {}
     for k, v of object
-      camelized[s.camelize(k)] = v
+      camelized[s.camelize(k)] =
+        if _.isArray(v)
+          _.map v, (i) ->
+            toCamelCase(i)
+        else if _.isObject(v)
+          toCamelCase(v)
+        else
+          v
+          
     camelized
 
   #---------------------------------------------------------------------------
