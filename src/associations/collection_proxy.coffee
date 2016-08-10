@@ -24,6 +24,18 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
     else
       super
 
+  # Gets the cached association collection and returns it as an array
+  #
+  # @return [Array<ActiveResource::Base>] the array of cached collection association items
+  toArray: ->
+    @all(cached: true).toArray()
+
+  # Returns the size of the target currently loaded into memory
+  #
+  # @return [Integer] the size of the loaded target
+  size: ->
+    @target().size()
+
   # Checks whether or not the target is empty
   #
   # @note Does not take into consideration that the target may not be loaded,
@@ -68,6 +80,8 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
 
     @base.build(attributes)
 
+  # TODO: Add #load
+
   # Create resource for the association
   #
   # @see CollectionAssociation#create
@@ -80,6 +94,11 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
     # TODO: Add specs for queryOptions on `#create`
     @base.create(_.extend(attributes, @__queryOptions?['filter']), @__queryOptions, callback)
 
+  # Reloads the association
+  #
+  # @return [Promise<ActiveResource::Base>] a promise to return the reloaded target **or** errors 
+  reload: ->
+    @base.reload()
 
   # Deletes the resources from the association
   #
