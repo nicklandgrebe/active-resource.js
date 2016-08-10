@@ -98,7 +98,15 @@ class ActiveResource::Relation
   select: (args...) ->
     queryOptions = _.clone(@__queryOptions || {})
     queryOptions['fields'] ||= {}
-    _.each _.flatten(args), (arg) =>
+
+    ActiveResource::Collection.build(args)
+    .map((a) ->
+      if _.isObject(a)
+        (_.pick(a, key) for key in _.keys(a))
+      else
+        a
+    )
+    .flatten().each (arg) =>
       modelName =
         if _.isObject(arg)
           _.keys(arg)[0]
@@ -160,9 +168,20 @@ class ActiveResource::Relation
   # @param [Array<String,Object>] args the representations of includes to add to the query
   # @return [ActiveResource::Relation] the extended relation with added `include` params
   #
-  # 1. Append array of string args to queryOptions['include'] collection
+  # 1. Go through array of args and separate objects with multiple keys in arrays of single key objects so
+  #    the array does this: ['1', '2', { 3: 'a', 4: 'b' }] => ['1', '2', { 3: 'a' }, { 4: 'b' }]
+  # 1. Append flattened array args to queryOptions['include'] collection
   # 2. Create new relation with extended queryOptions
   includes: (args...) ->
+    args =
+      ActiveResource::Collection.build(args)
+      .map((a) ->
+        if _.isObject(a)
+          (_.pick(a, key) for key in _.keys(a))
+        else
+          a
+      )
+      .flatten().toArray()
     @__newRelation(@__extendArrayParam('include', args))
 
   # Builds a new ActiveResource of the type for this relation
