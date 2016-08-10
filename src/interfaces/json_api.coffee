@@ -317,7 +317,16 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
     resource.klass().reflectOnAllAssociations().each (reflection) ->
       association = resource.association(reflection.name)
       association.__links = data['relationships']?[s.underscored(reflection.name)]?['links']
-      association.loaded(true) if _.has(attributes, reflection.name)
+
+      relationshipEmpty =
+        if _.isObject(relationship = data['relationships']?[s.underscored(reflection.name)]?['data'])
+          _.keys(relationship).length == 0
+        else if relationship?
+          relationship.length == 0
+        else
+          true
+
+      association.loaded(true) if _.has(attributes, reflection.name) || relationshipEmpty
 
     resource
 
