@@ -468,12 +468,17 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   #   of each resource into the resource document
   #
   # 1. Build a resource document out of the resources passed in
-  # 2. Make POST request with the resource document
-  # 3. If request was successful, and a full document was returned (true unless `onlyResourceIdentifiers`),
+  # 2. Add queryOptions (only `fields` and `include`) so the response will contain those fields
+  # 3. Make POST request with the resource document
+  # 4. If request was successful, and a full document was returned (true unless `onlyResourceIdentifiers`),
   #    merge the changes in attributes/relationships made on the server to the persisted resource
-  # 4. If request failed, add the errors in the persistence attempt to the errors object of the resource
+  # 5. If request failed, add the errors in the persistence attempt to the errors object of the resource
   @post: (url, resourceData, options = {}) ->
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
+
+    unless options['onlyResourceIdentifiers']
+      data = _.extend(data, ActiveResource::Collection.build(resourceData).first().__queryOptions)
+
     @request(url, 'POST', data)
     .then (response) ->
       if options['onlyResourceIdentifiers']
@@ -494,6 +499,10 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   #   @see #post
   @patch: (url, resourceData, options = {}) ->
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
+
+    unless options['onlyResourceIdentifiers']
+      data = _.extend(data, ActiveResource::Collection.build(resourceData).first().__queryOptions)
+
     @request(url, 'PATCH', data)
     .then (response) ->
       if options['onlyResourceIdentifiers']
@@ -514,6 +523,10 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   #   @see #post
   @put: (url, resourceData, options = {}) ->
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
+
+    unless options['onlyResourceIdentifiers']
+      data = _.extend(data, ActiveResource::Collection.build(resourceData).first().__queryOptions)
+
     @request(url, 'PUT', data)
     .then (response) ->
       if options['onlyResourceIdentifiers']
