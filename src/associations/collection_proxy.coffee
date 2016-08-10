@@ -68,23 +68,18 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
 
     @base.build(attributes)
 
-  # Create resource(s) for the association
+  # Create resource for the association
   #
   # @see CollectionAssociation#create
   #
-  # @param [Object,Array<Object>] attributes the attributes to build into the resource
+  # @param [Object] attributes the attributes to build into the resource
   # @param [Function] callback the function to pass the built resource into after calling create
   #   @note May not be persisted, in which case `resource.errors().empty? == false`
-  # @return [ActiveResource::Base] a promise to return the persisted resource(s) **or** errors
+  # @return [ActiveResource::Base] a promise to return the persisted resource **or** errors
   create: (attributes = {}, callback) ->
-    attributes =
-      if _.isArray(attributes)
-        _.map attributes, (attr) =>
-          _.extend(attr, @__queryOptions?['filter'])
-      else
-        _.extend(attributes, @__queryOptions?['filter'])
+    # TODO: Add specs for queryOptions on `#create`
+    @base.create(_.extend(attributes, @__queryOptions?['filter']), @__queryOptions, callback)
 
-    @base.create(attributes, callback)
 
   # Deletes the resources from the association
   #

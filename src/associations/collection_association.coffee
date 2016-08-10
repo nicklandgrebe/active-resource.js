@@ -123,17 +123,17 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     else
       @__concatResources(ActiveResource::Collection.build(@__buildResource(attributes))).first()
 
-  # Creates resource(s) for the association
+  # Creates resource for the association
   #
-  # @note JSON API does not support creating multiple resources at once right now, so the
-  #   callback will be called individually for each resource that is attempted to be created
+  # @todo Add support for multiple resource creation when JSON API supports it
   #
-  # @param [Object,Array<Object>] attributes the attributes to build into the resource
+  # @param [Object] attributes the attributes to build into the resource
+  # @param [Object] queryOptions the options to add to the query, like `fields` and `include`
   # @param [Function] callback the function to pass the built resource into after calling create
   #   @note May not be persisted, in which case `resource.errors().empty? == false`
-  # @return [ActiveResource::Base] a promise to return the persisted resource(s) **or** errors
-  create: (attributes = {}, callback) ->
-    @__createResource(attributes, callback)
+  # @return [ActiveResource::Base] a promise to return the persisted resource **or** errors
+  create: (attributes = {}, queryOptions = {}, callback = _.noop()) ->
+    @__createResource(attributes, queryOptions, callback)
 
   # private
 
@@ -162,7 +162,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
 
   # Removes the resources from the target
   #
-  # @note Only calls @__deleteresources for now, but can implement callbacks when
+  # @note Only calls @__deleteResources for now, but can implement callbacks when
   #   the library gets to that point
   #
   # @param [Collection] the resources to remove from the association
@@ -195,13 +195,14 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     ActiveResource.interface.delete @links()['self'], resources, onlyResourceIdentifiers: true
 
   # @see #create
-  __createResource: (attributes, callback) ->
+  __createResource: (attributes, queryOptions, callback) ->
     throw 'You cannot call create unless the parent is saved' unless @owner.persisted?()
 
-    if _.isArray(attributes)
-      _.map attributes, (attr) => @__createResource(attr, callback)
-    else
-      resources = @__concatResources(ActiveResource::Collection.build(@__buildResource(attributes)))
+    resource = @__buildResource(attributes)
+    resource.__queryOptions = _.pick(queryOptions, 'fields', 'include')
+    @insertResource(resource)
 
-      resources.each (resource) =>
-        resource.save(callback)
+    _this = this
+    resource.save(callback)
+    .then ->
+      _this.addToTarget(resource)
