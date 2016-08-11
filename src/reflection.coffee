@@ -22,6 +22,8 @@ class ActiveResource::Reflection
   reflectOnAssociation: (association) ->
     @reflections()[association]
 
+  # TODO: Ensure that autosave associations are reloaded in the same persistence call that originally saved them
+  #
   # Returns all reflections of autosaving associations of the ActiveResource class
   #
   # @return [Collection] a collection of reflections of all autosaving associations
