@@ -60,7 +60,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
         if _.isArray(v)
           _.map v, (i) ->
             toUnderscored(i)
-        else if _.isObject(v) && !v.isA?(ActiveResource::Base)
+        else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection)
           toUnderscored(v)
         else
           v
@@ -81,7 +81,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
         if _.isArray(v)
           _.map v, (i) ->
             toCamelCase(i)
-        else if _.isObject(v) && !v.isA?(ActiveResource::Base)
+        else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection)
           toCamelCase(v)
         else
           v
