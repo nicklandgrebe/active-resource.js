@@ -36,16 +36,16 @@ class ActiveResource::Reflection
   # @param [String] macro the macro type for the reflection (hasMany, hasOne, belongsTo)
   # @param [String] name the name of the association to reflect on
   # @param [Object] options the options to build into the reflection
-  # @param [Class] ActiveResource the ActiveResource class that owns this reflection
+  # @param [Class] activeResource the ActiveResource class that owns this reflection
   # @return [Reflection] the built reflection of an association
-  @create: (macro, name, options, ActiveResource) ->
+  @create: (macro, name, options, activeResource) ->
     klass =
       switch macro
         when 'hasMany'   then Reflection::HasManyReflection
         when 'hasOne'    then Reflection::HasOneReflection
         when 'belongsTo' then Reflection::BelongsToReflection
 
-    new klass(name, options, ActiveResource)
+    new klass(name, options, activeResource)
 
   # Adds a reflection to the ActiveResource's class
   #
@@ -67,8 +67,8 @@ class ActiveResource::Reflection
 
     # @param [String] name the name of the association to reflect on
     # @param [Object] options the options to build into the reflection
-    # @param [Class] ActiveResource the ActiveResource class that owns this reflection
-    constructor: (@name, @options, @ActiveResource) ->
+    # @param [Class] activeResource the ActiveResource class that owns this reflection
+    constructor: (@name, @options, @activeResource) ->
 
     # Returns the target klass that this reflection reflects on
     # @note Will throw error if called on polymorphic reflection
@@ -99,7 +99,7 @@ class ActiveResource::Reflection
 
     # @return [String] the primaryKey for the owner ActiveResource of the reflection
     activeResourcePrimaryKey: ->
-      @__activeResourcePrimaryKey ||= @options['primaryKey'] || @__primaryKey(@ActiveResource)
+      @__activeResourcePrimaryKey ||= @options['primaryKey'] || @__primaryKey(@activeResource)
 
     # @return [Boolean] whether or not this reflection is for a collection of resources
     collection: ->
@@ -176,7 +176,7 @@ class ActiveResource::Reflection
       else if @options['as']
         "#{@options['as']}Id"
       else
-        "#{s.camelize(@ActiveResource.className, true)}Id"
+        "#{s.camelize(@activeResource.className, true)}Id"
 
     # Determines the primaryKey of a given class
     # @note Throws an error if the primaryKey could not be determined
@@ -210,7 +210,7 @@ class ActiveResource::Reflection
     # @return [Reflection,Boolean] the automaticInverseOf reflection for this reflection
     automaticInverseOf = (reflection) ->
       if canFindInverseOfAutomatically(reflection)
-        inverseName = s.camelize(reflection.options['as'] || reflection.ActiveResource.className,true)
+        inverseName = s.camelize(reflection.options['as'] || reflection.activeResource.className,true)
 
         try inverseReflection = reflection.klass().reflectOnAssociation(inverseName)
         catch e then inverseReflection = false
@@ -251,7 +251,7 @@ class ActiveResource::Reflection
     # @return [Boolean] whether or not the inverse reflection is valid
     validInverseReflection = (reflection, inverseReflection) ->
       inverseReflection? &&
-        reflection.klass().className == inverseReflection.ActiveResource.className &&
+        reflection.klass().className == inverseReflection.activeResource.className &&
         canFindInverseOfAutomatically(inverseReflection)
 
   class @::HasManyReflection extends @::AbstractReflection
