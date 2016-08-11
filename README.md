@@ -129,7 +129,7 @@ product.orders().empty()     # NOTE: Only indicates if the collection currently 
 product.orders().size()      # NOTE: Only gives the size of the collection currently loaded
 ```
 
-In regards to association collection proxies, you can work off them just like you would any other `ActiveResource` class:
+In regards to association collection proxies, you can work off them just like you would any other ActiveResource `Relation` class:
 ```coffee
 product.orders().where(title: 'A product title').select('title').last(10)
 .then (orders) ->
@@ -271,6 +271,7 @@ Order.build().method1 # defined
 ```coffee
 c = ActiveResource::Collection.build([product1, product2])
 
+c.all()
 c.toArray()
 c.size()
 c.empty()
@@ -344,7 +345,7 @@ class Product extends ActiveResource::Base
   this.className = 'Product'
 ```
 
-*This property is required.* Since Javascript doesn't really have `class`, and Coffeescript is just mocking this behavior,
+**This property is required.** Since Javascript doesn't really have `class`, and Coffeescript is just mocking this behavior,
 there is no reliability in relying on `Product.build().klass().name`, which could be anything, especially in a minified environment. This
 property makes it so the name of a class will always be accurate, and the property should always be consistent with the name of the
 Coffeescript class.
@@ -356,7 +357,7 @@ class Product extends ActiveResource::Base
   this.queryName = 'products'
 ```
 
-*This property is required.* This is the name that will be used in URLs, so a call like `Product.all()` will result in an HTTP request `GET /api/v1/products`
+**This property is required.** This is the name that will be used in URLs, so a call like `Product.all()` will result in an HTTP request `GET /api/v1/products`
 
 #### `Base.primaryKey`
 
