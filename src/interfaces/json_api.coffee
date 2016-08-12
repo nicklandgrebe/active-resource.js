@@ -441,7 +441,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # 3. Add error to resource
   addErrorsFromPersistenceAttempt = (errors, resource) ->
     _.each errors, (error) ->
-      resource.errors().add(error.field || 'base', error.key, error.message)
+      resource.errors().add(s.camelize(error.field) || 'base', s.camelize(error.key), error.message)
     resource
 
   #---------------------------------------------------------------------------
