@@ -483,6 +483,12 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
           object
 
       if _.isArray(response.data) then built else built.first()
+    , (errors) ->
+      ActiveResource::Collection.build(errors.responseJSON).map((error) ->
+        error['field'] = s.camelize(error['field'])
+        error['key'] = s.camelize(error['key'])
+        error
+      )
 
   # Make POST request
   #
