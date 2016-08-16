@@ -58,4 +58,12 @@ class ActiveResource::Errors
   # @param [String] attribute the attribute to get errors for
   # @return [Object] the error object for the attribute
   forAttribute: (attribute) ->
-    @__errors[attribute]
+    ActiveResource::Collection.build(@__errors[attribute]).inject {}, (out, error) ->
+      out[error.code] = error.message
+      out
+
+  # Returns the error object for base
+  #
+  # @return [Object] the error object for base
+  forBase: ->
+    @forAttribute('base')
