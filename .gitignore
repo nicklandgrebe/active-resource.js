@@ -2,3 +2,4 @@ spec/spec.js
 _SpecRunner.html
 
 node_modules
+.grunt
