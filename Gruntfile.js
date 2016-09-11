@@ -24,7 +24,7 @@ module.exports = function(grunt) {
       },
       specs: {
         files: {
-          'spec/spec.js': [ 'spec/support/**/*.coffee', 'spec/**/*.coffee' ]
+          'spec/spec.js': [ 'spec/support/*.coffee', 'spec/support/**/*.coffee', 'spec/**/*.coffee' ]
         }
       }
     },
@@ -85,13 +85,12 @@ module.exports = function(grunt) {
       pivotal: {
         src: [
           'lib/jquery.min.js',
-          'lib/mock-ajax.js',
           'lib/underscore.min.js',
           'lib/underscore.string.js',
           'lib/underscore.inflection.js',
+          'node_modules/jasmine-ajax/lib/mock-ajax.js',
           'build/activeresource.min.js'
-        ]
-        ,
+        ],
         options: {
           specs: 'spec/spec.js'
         }

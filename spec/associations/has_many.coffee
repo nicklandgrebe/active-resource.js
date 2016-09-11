@@ -1,6 +1,8 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.useMock()
+    window.onSuccess = jasmine.createSpy('onSuccess')
+    window.onFailure = jasmine.createSpy('onFailure')
+    window.onCompletion = jasmine.createSpy('onCompletion')
 
   describe '::Associations', ->
     describe '::HasManyAssociation', ->
@@ -9,8 +11,8 @@ describe 'ActiveResource', ->
           MyLibrary::Product.includes('orders').find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.find.includes)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.includes)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         it 'returns a CollectionProxy', ->
           expect(@resource.orders().klass()).toBe(ActiveResource::Associations::CollectionProxy)
@@ -27,8 +29,8 @@ describe 'ActiveResource', ->
           MyLibrary::Product.find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.find.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         it 'uses relationship data URL', ->
           relationshipLinks = {
@@ -42,8 +44,8 @@ describe 'ActiveResource', ->
             @resource.association('orders').loadTarget()
             .done window.onSuccess
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Order.all.success)
-            @target = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+            @target = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns a collection', ->
             expect(@target.klass()).toBe(ActiveResource::Collection)
@@ -59,8 +61,8 @@ describe 'ActiveResource', ->
             @resource.orders().all()
             .done window.onSuccess
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Order.all.success)
-            @result = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+            @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns a collection', ->
             expect(@result.klass()).toBe(ActiveResource::Collection)
@@ -76,11 +78,11 @@ describe 'ActiveResource', ->
             @resource.orders().first()
             .done window.onSuccess
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Order.all.success)
-            @result = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+            @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries the first resource of the relationship data URL', ->
-            expect(requestParams(mostRecentAjaxRequest())).toEqual('page[size]=1')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('page[size]=1')
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -93,11 +95,11 @@ describe 'ActiveResource', ->
             @resource.orders().last()
             .done window.onSuccess
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Order.all.success)
-            @result = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+            @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries the first resource of the relationship data URL', ->
-            expect(requestParams(mostRecentAjaxRequest())).toEqual('page[number]=-1&page[size]=1')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('page[number]=-1&page[size]=1')
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -110,12 +112,12 @@ describe 'ActiveResource', ->
             @resource.orders().find(1)
             .done window.onSuccess
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Order.find.success)
-            @result = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.success)
+            @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries a specific member of the relationship data URL', ->
             memberLink = 'https://example.com/api/v1/products/1/orders/1'
-            expect(mostRecentAjaxRequest().url).toEqual(memberLink)
+            expect(jasmine.Ajax.requests.mostRecent().url).toEqual(memberLink)
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -128,11 +130,11 @@ describe 'ActiveResource', ->
             @resource.orders().findBy(token: 'abc123')
             .done window.onSuccess
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Order.all.success)
-            @result = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+            @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries the first relationship resource with filters', ->
-            expect(requestParams(mostRecentAjaxRequest())).toEqual('filter[token]=abc123&page[size]=1')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('filter[token]=abc123&page[size]=1')
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -146,22 +148,22 @@ describe 'ActiveResource', ->
 
           it 'adds query params to the relationship URL query', ->
             @resource.orders().where(price: 5).all()
-            expect(requestParams(mostRecentAjaxRequest())).toEqual('filter[price]=5')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('filter[price]=5')
 
           describe '#select()', ->
             beforeEach ->
               @resource.orders().select('price','verificationCode').all()
 
             it 'uses the correct model name for shallow fields', ->
-              expect(requestParams(mostRecentAjaxRequest())).toEqual('fields[orders]=price,verification_code')
+              expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('fields[orders]=price,verification_code')
 
           describe '#includes()', ->
             beforeEach ->
               @resource.orders().includes('orderItems').all()
               .done window.onSuccess
 
-              mostRecentAjaxRequest().response(JsonApiResponses.Order.all.includes)
-              @result = window.onSuccess.mostRecentCall.args[0]
+              jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.includes)
+              @result = window.onSuccess.calls.mostRecent().args[0]
 
             it 'associates included resources', ->
               expect(@result.first().orderItems().all(cached: true).size()).toEqual(1)
@@ -253,29 +255,29 @@ describe 'ActiveResource', ->
           MyLibrary::Product.find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.find.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         describe 'in general', ->
           beforeEach ->
             @target = [MyLibrary::Order.build(id: 1), MyLibrary::Order.build(id: 2)]
             @resource.orders().assign(@target)
-            mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.success)
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
           it 'persists the update to the relationship URL', ->
             relationshipLink = 'https://example.com/api/v1/products/1/relationships/orders/'
-            expect(mostRecentAjaxRequest().url).toEqual(relationshipLink)
+            expect(jasmine.Ajax.requests.mostRecent().url).toEqual(relationshipLink)
 
           it 'makes a PATCH request', ->
-            expect(mostRecentAjaxRequest().method).toEqual('PATCH')
+            expect(jasmine.Ajax.requests.mostRecent().method).toEqual('PATCH')
 
         describe 'when assigning collection of resources', ->
           beforeEach ->
             MyLibrary::Order.all()
             .done window.onSuccess
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Order.all.success)
-            @target = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+            @target = window.onSuccess.calls.mostRecent().args[0]
             @resource.orders().assign(@target)
 
           it 'sends a resource identifier document', ->
@@ -291,11 +293,11 @@ describe 'ActiveResource', ->
                 }
               ]
             }
-            expect(requestData(mostRecentAjaxRequest())).toEqual(resourceDocument)
+            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
 
           describe 'when update succeeds', ->
             beforeEach ->
-              mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.success)
+              jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
             it 'replaces the target with the resource(s)', ->
               @target.each (t) =>
@@ -311,7 +313,7 @@ describe 'ActiveResource', ->
 
           describe 'when update fails', ->
             beforeEach ->
-              mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.failure)
+              jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.failure)
 
             it 'does not replace the target with the resource(s)', ->
               @target.each (t) =>
@@ -330,11 +332,11 @@ describe 'ActiveResource', ->
             @resource.orders().assign([])
 
           it 'sends an empty document', ->
-            expect(requestData(mostRecentAjaxRequest())).toEqual(data: [])
+            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(data: [])
 
           describe 'when update succeeds', ->
             beforeEach ->
-              mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.success)
+              jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
             it 'replaces the target with an empty collection', ->
               expect(@resource.orders().all(cached: true).size()).toEqual(0)
@@ -344,8 +346,8 @@ describe 'ActiveResource', ->
           MyLibrary::Product.find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.find.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
           @target = @resource.orders().build([{ price: 1 }, { price: 2 }])
 
@@ -374,22 +376,22 @@ describe 'ActiveResource', ->
           MyLibrary::Product.find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.find.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         describe 'in general', ->
           beforeEach ->
             @resource.orders().create({ price: 3, verificationCode: 'abc123' }, window.onCompletion)
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Order.save.success)
-            @target = window.onCompletion.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.save.success)
+            @target = window.onCompletion.calls.mostRecent().args[0]
 
           it 'makes a request to the target\'s root URL', ->
             targetURL = 'https://example.com/api/v1/orders/'
-            expect(mostRecentAjaxRequest().url).toEqual(targetURL)
+            expect(jasmine.Ajax.requests.mostRecent().url).toEqual(targetURL)
 
           it 'makes a POST request', ->
-            expect(mostRecentAjaxRequest().method).toEqual('POST')
+            expect(jasmine.Ajax.requests.mostRecent().method).toEqual('POST')
 
           it 'sends a resource document', ->
             resourceDocument = {
@@ -407,7 +409,7 @@ describe 'ActiveResource', ->
                 }
               }
             }
-            expect(requestData(mostRecentAjaxRequest())).toEqual(resourceDocument)
+            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
 
           it 'builds resource(s) of reflection klass type', ->
             expect(@target.klass()).toBe(MyLibrary::Order)
@@ -428,8 +430,8 @@ describe 'ActiveResource', ->
           beforeEach ->
             @resource.orders().create({ price: 3, verificationCode: 'abc123' }, window.onCompletion)
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Order.save.success)
-            @target = window.onCompletion.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.save.success)
+            @target = window.onCompletion.calls.mostRecent().args[0]
 
           it 'persists the resource', ->
             expect(@target.persisted?()).toBeTruthy()
@@ -438,8 +440,8 @@ describe 'ActiveResource', ->
           beforeEach ->
             @resource.orders().create({ price: 3 }, window.onCompletion)
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Order.save.failure)
-            @target = window.onCompletion.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.save.failure)
+            @target = window.onCompletion.calls.mostRecent().args[0]
 
           it 'does not persist the resource', ->
             expect(@target.persisted?()).toBeFalsy()
@@ -477,7 +479,7 @@ describe 'ActiveResource', ->
                 }
               }
             }
-            expect(requestData(mostRecentAjaxRequest())).toEqual(resourceDocument)
+            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
 
           # TODO: Add ability to determine if autosave association is persisted upon
           # creation (#create does not allow for queryParams['include'])
@@ -494,24 +496,24 @@ describe 'ActiveResource', ->
           MyLibrary::Product.find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.find.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
           MyLibrary::Order.all()
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Order.all.success)
-          @target = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+          @target = window.onSuccess.calls.mostRecent().args[0]
 
         describe 'in general', ->
           beforeEach ->
             @resource.orders().push(@target)
 
           it 'makes a request to the target\'s relationship URL', ->
-            expect(mostRecentAjaxRequest().url).toEqual('https://example.com/api/v1/products/1/relationships/orders/')
+            expect(jasmine.Ajax.requests.mostRecent().url).toEqual('https://example.com/api/v1/products/1/relationships/orders/')
 
           it 'makes a POST request', ->
-            expect(mostRecentAjaxRequest().method).toEqual('POST')
+            expect(jasmine.Ajax.requests.mostRecent().method).toEqual('POST')
 
           it 'sends a resource identifier document', ->
             resourceDocument = {
@@ -520,12 +522,12 @@ describe 'ActiveResource', ->
                 { id: 2, type: 'orders' }
               ]
             }
-            expect(requestData(mostRecentAjaxRequest())).toEqual(resourceDocument)
+            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
 
         describe 'when pushing succeeds', ->
           beforeEach ->
             @resource.orders().push(@target)
-            mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.success)
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
           it 'assigns the inverse target(s) of the resource(s)', ->
             @target.each (t) =>
@@ -541,7 +543,7 @@ describe 'ActiveResource', ->
 
         describe 'when pushing fails', ->
           beforeEach ->
-            mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.failure)
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.failure)
 
           it 'does not assign the inverse target(s) of the resource(s)', ->
             @target.each (t) =>
@@ -560,8 +562,8 @@ describe 'ActiveResource', ->
           MyLibrary::Product.includes('orders').find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.find.includes)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.includes)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
           @target = @resource.orders().all(cached: true)
 
@@ -570,10 +572,10 @@ describe 'ActiveResource', ->
             @resource.orders().delete(@target.first())
 
           it 'makes a request to the target\'s relationship URL', ->
-            expect(mostRecentAjaxRequest().url).toEqual('https://example.com/api/v1/products/1/relationships/orders/')
+            expect(jasmine.Ajax.requests.mostRecent().url).toEqual('https://example.com/api/v1/products/1/relationships/orders/')
 
           it 'makes a DELETE request', ->
-            expect(mostRecentAjaxRequest().method).toEqual('DELETE')
+            expect(jasmine.Ajax.requests.mostRecent().method).toEqual('DELETE')
 
           it 'sends a resource identifier document', ->
             resourceDocument = {
@@ -585,7 +587,7 @@ describe 'ActiveResource', ->
         describe 'when deleting succeeds', ->
           beforeEach ->
             @resource.orders().delete(@target.first())
-            mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.success)
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
           it 'removes the inverse target(s) of the resource(s)', ->
             expect(@target.first().product()).toBeNull()
@@ -599,7 +601,7 @@ describe 'ActiveResource', ->
         describe 'when deleting fails', ->
           beforeEach ->
             @resource.orders().delete(@target.first())
-            mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.failure)
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.failure)
 
           it 'does not remove the inverse target(s) of the resource(s)', ->
             expect(@target.first().product()).toBe(@resource)
@@ -613,7 +615,7 @@ describe 'ActiveResource', ->
         describe '#deleteAll()', ->
           beforeEach ->
             @resource.orders().deleteAll()
-            mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.success)
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
           it 'sends a resource identifier document with all resources', ->
             resourceDocument = {
@@ -632,8 +634,8 @@ describe 'ActiveResource', ->
             MyLibrary::Product.find(1)
             .done window.onSuccess
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Product.find.success)
-            @resource = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
+            @resource = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns true', ->
             expect(@resource.orders().empty()).toBeTruthy()
@@ -643,8 +645,8 @@ describe 'ActiveResource', ->
             MyLibrary::Product.includes('orders').find(1)
             .done window.onSuccess
 
-            mostRecentAjaxRequest().response(JsonApiResponses.Product.find.includes)
-            @resource = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.includes)
+            @resource = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns false', ->
             expect(@resource.orders().empty()).toBeFalsy()

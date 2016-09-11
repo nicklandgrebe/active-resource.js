@@ -1,0 +1,27 @@
+window.JsonApiResponses.GiftCard.save.success = window.JsonApiResponses.GiftCard.find.success =
+  status: 200,
+  responseText: '{
+    "data": {
+      "id": "1",
+      "type": "gift_cards",
+      "attributes": {
+        "initial_value": 10,
+        "value": 5
+      },
+      "relationships": {
+        "order": {
+          "data": {
+            "id": 1,
+            "type": "orders"
+          },
+          "links": {
+            "self": "https://example.com/api/v1/gift_cards/1/relationships/order/",
+            "related": "https://example.com/api/v1/gift_cards/1/order/"
+          }
+        }
+      },
+      "links": {
+        "self": "https://example.com/api/v1/gift_cards/1/"
+      }
+    }
+  }'

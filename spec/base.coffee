@@ -1,7 +1,4 @@
 describe 'ActiveResource', ->
-  beforeEach ->
-    jasmine.Ajax.useMock()
-    
   describe '::Base', ->
     describe '.links()', ->
       it 'returns the correct links', ->
@@ -32,8 +29,8 @@ describe 'ActiveResource', ->
           MyLibrary::Venue.find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Venue.find.tokenized)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Venue.find.tokenized)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         it 'builds the primaryKey into the resource retrieved', ->
           expect(@resource.token).toEqual('abc123')
@@ -50,4 +47,4 @@ describe 'ActiveResource', ->
               relationships: {}
             }
           }
-          expect(requestData(mostRecentAjaxRequest())).toEqual(resourceDocument)
+          expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)

@@ -1,7 +1,0 @@
-[
-  {
-    "key": "blank",
-    "field": "verification_code",
-    "message": "Verification code cannot be blank."
-  }
-]

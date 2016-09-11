@@ -1,7 +1,9 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.useMock()
-    
+    window.onSuccess = jasmine.createSpy('onSuccess')
+    window.onFailure = jasmine.createSpy('onFailure')
+    window.onCompletion = jasmine.createSpy('onCompletion')
+
   describe 'Interfaces::JsonApi', ->
     describe '#get()', ->
       describe 'getting resources', ->
@@ -13,9 +15,9 @@ describe 'ActiveResource', ->
 
         describe 'on success', ->
           beforeEach ->
-            mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
             expect(window.onSuccess).toHaveBeenCalled()
-            @collection = window.onSuccess.mostRecentCall.args[0]
+            @collection = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns a collection', ->
             expect(@collection.isA?(ActiveResource::Collection)).toBeTruthy()
@@ -37,9 +39,9 @@ describe 'ActiveResource', ->
 
         describe 'on success', ->
           beforeEach ->
-            mostRecentAjaxRequest().response(JsonApiResponses.Product.find.success)
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
             expect(window.onSuccess).toHaveBeenCalled()
-            @resource = window.onSuccess.mostRecentCall.args[0]
+            @resource = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns a resource of the queried type', ->
             expect(@resource.isA?(MyLibrary::Product)).toBeTruthy()
@@ -49,11 +51,11 @@ describe 'ActiveResource', ->
 
         describe 'on failure', ->
           beforeEach ->
-            mostRecentAjaxRequest().response(JsonApiResponses.Product.find.failure)
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.failure)
             expect(window.onFailure).toHaveBeenCalled()
 
           it 'returns an error', ->
-            error = window.onFailure.mostRecentCall.args[0].responseJSON[0]
+            error = window.onFailure.calls.mostRecent().args[0].responseJSON[0]
             expect(error.key).toBeDefined()
 
       describe 'using fields queryParam', ->
@@ -68,7 +70,7 @@ describe 'ActiveResource', ->
           .done window.onSuccess
           .fail window.onFailure
 
-          @paramStr = decodeURIComponent(mostRecentAjaxRequest().url.split('?')[1])
+          @paramStr = decodeURIComponent(jasmine.Ajax.requests.mostRecent().url.split('?')[1])
 
         it 'builds a field set into the query URL', ->
           expect(@paramStr).toEqual('fields[product]=title,updated_at&fields[orders]=price,created_at')
@@ -83,7 +85,7 @@ describe 'ActiveResource', ->
           .done window.onSuccess
           .fail window.onFailure
 
-          @paramStr = decodeURIComponent(mostRecentAjaxRequest().url.split('?')[1])
+          @paramStr = decodeURIComponent(jasmine.Ajax.requests.mostRecent().url.split('?')[1])
 
         it 'builds an include tree into the query URL', ->
           expect(@paramStr).toEqual('include=merchant,attribute_values,orders.transactions')
@@ -98,7 +100,7 @@ describe 'ActiveResource', ->
           .done window.onSuccess
           .fail window.onFailure
 
-          @paramStr = decodeURIComponent(mostRecentAjaxRequest().url.split('?')[1])
+          @paramStr = decodeURIComponent(jasmine.Ajax.requests.mostRecent().url.split('?')[1])
 
         it 'builds an include tree into the query URL', ->
           expect(@paramStr).toEqual('sort=updated_at,-created_at')
@@ -134,12 +136,12 @@ describe 'ActiveResource', ->
                 }
               }
             }
-          expect(requestData(mostRecentAjaxRequest())).toEqual(resourceDocument)
+          expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
 
         describe 'when persistence succeeds', ->
           beforeEach ->
-            mostRecentAjaxRequest().response(JsonApiResponses.Product.save.success)
-            @resource = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
+            @resource = window.onSuccess.calls.mostRecent().args[0]
 
           it 'indicates the resource is persisted', ->
             expect(@resource.persisted?()).toBeTruthy()
@@ -149,8 +151,8 @@ describe 'ActiveResource', ->
 
         describe 'when persistence fails', ->
           beforeEach ->
-            mostRecentAjaxRequest().response(JsonApiResponses.Product.save.failure)
-            @resource = window.onFailure.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.failure)
+            @resource = window.onFailure.calls.mostRecent().args[0]
 
           it 'adds errors the resource', ->
             expect(@resource.errors().empty?()).toBeFalsy()
@@ -179,14 +181,14 @@ describe 'ActiveResource', ->
                 }
               ]
             }
-          expect(requestData(mostRecentAjaxRequest())).toEqual(resourceDocument)
+          expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
 
     describe '#delete', ->
       beforeEach ->
         MyLibrary::Product.last().then window.onSuccess
 
-        mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
-        @resource = window.onSuccess.mostRecentCall.args[0]
+        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+        @resource = window.onSuccess.calls.mostRecent().args[0]
 
       describe 'with resource data', ->
         beforeEach ->
@@ -203,7 +205,7 @@ describe 'ActiveResource', ->
                 type: 'products'
               }
             }
-          expect(requestData(mostRecentAjaxRequest())).toEqual(resourceDocument)
+          expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
 
       describe 'without resource data', ->
         beforeEach ->
@@ -213,4 +215,4 @@ describe 'ActiveResource', ->
           .fail window.onFailure
 
         it 'sends no data', ->
-          expect(requestData(mostRecentAjaxRequest())).toEqual({})
+          expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual({})

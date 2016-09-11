@@ -1,6 +1,8 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.useMock()
+    window.onSuccess = jasmine.createSpy('onSuccess')
+    window.onFailure = jasmine.createSpy('onFailure')
+    window.onCompletion = jasmine.createSpy('onCompletion')
 
   describe '::Associations', ->
     describe '::BelongsToAssociation', ->
@@ -9,9 +11,9 @@ describe 'ActiveResource', ->
           MyLibrary::Order.includes('giftCard').find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Order.find.includes)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
           expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         it 'returns the target', ->
           expect(@resource.giftCard().isA?(MyLibrary::GiftCard)).toBeTruthy()
@@ -21,19 +23,19 @@ describe 'ActiveResource', ->
           MyLibrary::Order.find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Order.find.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.success)
           expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
           @resource.loadGiftCard()
           .done window.onSuccess
-          mostRecentAjaxRequest().response(JsonApiResponses.GiftCard.find.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.find.success)
 
         it 'queries the relationship URL', ->
-          expect(mostRecentAjaxRequest().url).toEqual('https://example.com/api/v1/orders/1/gift_card/')
+          expect(jasmine.Ajax.requests.mostRecent().url).toEqual('https://example.com/api/v1/orders/1/gift_card/')
 
         it 'returns the target', ->
-          @target = window.onSuccess.mostRecentCall.args[0]
+          @target = window.onSuccess.calls.mostRecent().args[0]
           expect(@target.isA?(MyLibrary::GiftCard)).toBeTruthy()
 
       describe 'assigning', ->
@@ -41,9 +43,9 @@ describe 'ActiveResource', ->
           MyLibrary::Order.find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Order.find.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.success)
           expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
           @target = MyLibrary::GiftCard.build(id: 2)
 
@@ -113,9 +115,9 @@ describe 'ActiveResource', ->
           MyLibrary::Order.includes('giftCard').find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Order.find.includes)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
           expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         describe 'in general', ->
           beforeEach ->
@@ -125,10 +127,10 @@ describe 'ActiveResource', ->
 
           it 'persists the update to the relationship URL', ->
             url = 'https://example.com/api/v1/orders/1/relationships/gift_card/'
-            expect(mostRecentAjaxRequest().url).toEqual(url)
+            expect(jasmine.Ajax.requests.mostRecent().url).toEqual(url)
 
           it 'makes a PATCH request', ->
-            expect(mostRecentAjaxRequest().method).toEqual('PATCH')
+            expect(jasmine.Ajax.requests.mostRecent().method).toEqual('PATCH')
 
         describe 'when assigning a resource', ->
           beforeEach ->
@@ -145,11 +147,11 @@ describe 'ActiveResource', ->
                 }
               }
 
-            expect(requestData(mostRecentAjaxRequest())).toEqual(resourceDocument)
+            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
 
           describe 'when update succeeds', ->
             beforeEach ->
-              mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.success)
+              jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
             it 'assigns the target', ->
               expect(@resource.giftCard()).toEqual(@target)
@@ -162,7 +164,7 @@ describe 'ActiveResource', ->
 
           describe 'when update fails', ->
             beforeEach ->
-              mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.failure)
+              jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.failure)
 
             it 'does not assign the target', ->
               expect(@resource.giftCard()).not.toBe(@target)
@@ -179,11 +181,11 @@ describe 'ActiveResource', ->
             @resource.updateGiftCard(null)
 
           it 'sends a blank document', ->
-            expect(requestData(mostRecentAjaxRequest())).toEqual({})
+            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual({})
 
           describe 'when update succeeds', ->
             beforeEach ->
-              mostRecentAjaxRequest().response(JsonApiResponses.relationships.update.success)
+              jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
             it 'assigns null', ->
               expect(@resource.giftCard()).toBeNull()
@@ -201,9 +203,9 @@ describe 'ActiveResource', ->
           MyLibrary::Order.includes('giftCard').find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Order.find.includes)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
           expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          @resource = window.onSuccess.calls.mostRecent().args[0]
           @target = @resource.buildGiftCard(value: 5)
 
         it 'builds a resource of reflection klass type', ->
@@ -234,23 +236,23 @@ describe 'ActiveResource', ->
           MyLibrary::Order.includes('giftCard').find(1)
           .done window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Order.find.includes)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
           expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         describe 'in general', ->
           beforeEach ->
             @resource.createGiftCard(initialValue: 10, value: 5)
             .done window.onSuccess
 
-            mostRecentAjaxRequest().response(JsonApiResponses.GiftCard.save.success)
-            @target = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.save.success)
+            @target = window.onSuccess.calls.mostRecent().args[0]
 
           it 'makes a request to the target\'s root URL', ->
-            expect(mostRecentAjaxRequest().url).toEqual('https://example.com/api/v1/gift_cards/')
+            expect(jasmine.Ajax.requests.mostRecent().url).toEqual('https://example.com/api/v1/gift_cards/')
 
           it 'makes a POST request', ->
-            expect(mostRecentAjaxRequest().method).toEqual('POST')
+            expect(jasmine.Ajax.requests.mostRecent().method).toEqual('POST')
 
           it 'sends a resource document', ->
             resourceDocument =
@@ -268,7 +270,7 @@ describe 'ActiveResource', ->
                   }
                 }
               }
-            expect(requestData(mostRecentAjaxRequest())).toEqual(resourceDocument)
+            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
 
           it 'builds a resource of reflection klass type', ->
             expect(@target.klass()).toBe(MyLibrary::GiftCard)
@@ -284,8 +286,8 @@ describe 'ActiveResource', ->
             @resource.createGiftCard(initialValue: 10, value: 5)
             .done window.onSuccess
 
-            mostRecentAjaxRequest().response(JsonApiResponses.GiftCard.save.success)
-            @target = window.onSuccess.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.save.success)
+            @target = window.onSuccess.calls.mostRecent().args[0]
 
           it 'persists the target', ->
             expect(@target.persisted?()).toBeTruthy()
@@ -295,8 +297,8 @@ describe 'ActiveResource', ->
             @resource.createGiftCard(value: 5)
             .fail window.onFailure
 
-            mostRecentAjaxRequest().response(JsonApiResponses.GiftCard.save.failure)
-            @target = window.onFailure.mostRecentCall.args[0]
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.save.failure)
+            @target = window.onFailure.calls.mostRecent().args[0]
 
           it 'does not persist the target', ->
             expect(@target.persisted?()).toBeFalsy()

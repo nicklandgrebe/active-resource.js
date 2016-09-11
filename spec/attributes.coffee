@@ -1,11 +1,13 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.useMock()
-    
+    window.onSuccess = jasmine.createSpy('onSuccess')
+    window.onFailure = jasmine.createSpy('onFailure')
+    window.onCompletion = jasmine.createSpy('onCompletion')
+
     MyLibrary::Product.last().then window.onSuccess
 
-    mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
-    @resource = window.onSuccess.mostRecentCall.args[0]
+    jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+    @resource = window.onSuccess.calls.mostRecent().args[0]
 
   describe '::Attributes', ->
     describe '#hasAttribute()', ->
@@ -63,12 +65,12 @@ describe 'ActiveResource', ->
       describe 'when resource is persisted', ->
         it 'makes a call to GET the resource', ->
           @resource.reload()
-          expect(mostRecentAjaxRequest().url).toEqual(@resource.links()['self'])
+          expect(jasmine.Ajax.requests.mostRecent().url).toEqual(@resource.links()['self'])
 
         it 'reloads the resource\'s attributes', ->
           oldTitle = @resource.title
           @resource.reload()
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
           expect(@resource.title).toNotEqual(oldTitle)
 
       describe 'when resource is not persisted', ->

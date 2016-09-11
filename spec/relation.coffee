@@ -1,7 +1,9 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.useMock()
-    
+    window.onSuccess = jasmine.createSpy('onSuccess')
+    window.onFailure = jasmine.createSpy('onFailure')
+    window.onCompletion = jasmine.createSpy('onCompletion')
+
   describe '::Relation', ->
     describe 'when calling Relation extension methods on Base', ->
       it 'creates a new Relation', ->
@@ -16,12 +18,12 @@ describe 'ActiveResource', ->
         MyLibrary::Product.all()
         .done window.onSuccess
 
-        mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
+        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
         expect(window.onSuccess).toHaveBeenCalled()
-        @result = window.onSuccess.mostRecentCall.args[0]
+        @result = window.onSuccess.calls.mostRecent().args[0]
 
       it 'makes a call to retrieve all resources', ->
-        expect(mostRecentAjaxRequest().url).toEqual(MyLibrary::Product.links()['related'])
+        expect(jasmine.Ajax.requests.mostRecent().url).toEqual(MyLibrary::Product.links()['related'])
 
       it 'returns a collection of the type requested', ->
         expect(@result.isA?(ActiveResource::Collection)).toBeTruthy()
@@ -33,10 +35,10 @@ describe 'ActiveResource', ->
           @i += 1
 
         @response = JsonApiResponses.Product.all.success
-        mostRecentAjaxRequest().response(@response)
+        jasmine.Ajax.requests.mostRecent().respondWith(@response)
 
       it 'makes a call to retrieve all resources', ->
-        expect(mostRecentAjaxRequest().url).toEqual(MyLibrary::Product.links()['related'])
+        expect(jasmine.Ajax.requests.mostRecent().url).toEqual(MyLibrary::Product.links()['related'])
 
       it 'iterates over each resource returned', ->
         expect(@i).toEqual(JSON.parse(@response.responseText).data.length)
@@ -46,12 +48,12 @@ describe 'ActiveResource', ->
         MyLibrary::Product.find(1)
         .done window.onSuccess
 
-        mostRecentAjaxRequest().response(JsonApiResponses.Product.find.success)
+        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
         expect(window.onSuccess).toHaveBeenCalled()
-        @result = window.onSuccess.mostRecentCall.args[0]
+        @result = window.onSuccess.calls.mostRecent().args[0]
 
       it 'makes a call to retrieve a resource', ->
-        expect(mostRecentAjaxRequest().url).toEqual(MyLibrary::Product.links()['related'] + '1')
+        expect(jasmine.Ajax.requests.mostRecent().url).toEqual(MyLibrary::Product.links()['related'] + '1')
 
       it 'returns a resource of the type requested', ->
         expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
@@ -61,12 +63,12 @@ describe 'ActiveResource', ->
         MyLibrary::Product.findBy(token: 'jshf8e')
         .done window.onSuccess
 
-        mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
+        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
         expect(window.onSuccess).toHaveBeenCalled()
-        @result = window.onSuccess.mostRecentCall.args[0]
+        @result = window.onSuccess.calls.mostRecent().args[0]
 
       it 'makes a call to retrieve filtered resources', ->
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('filter[token]=jshf8e')
 
       it 'returns a resource of the type requested', ->
@@ -77,12 +79,12 @@ describe 'ActiveResource', ->
         MyLibrary::Product.first()
         .done window.onSuccess
 
-        mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
+        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
         expect(window.onSuccess).toHaveBeenCalled()
-        @result = window.onSuccess.mostRecentCall.args[0]
+        @result = window.onSuccess.calls.mostRecent().args[0]
 
       it 'makes a call to retrieve a single resource via index', ->
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('page[size]=1')
 
       it 'returns a resource of the type requested', ->
@@ -93,12 +95,12 @@ describe 'ActiveResource', ->
         MyLibrary::Product.last()
         .done window.onSuccess
 
-        mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
+        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
         expect(window.onSuccess).toHaveBeenCalled()
-        @result = window.onSuccess.mostRecentCall.args[0]
+        @result = window.onSuccess.calls.mostRecent().args[0]
 
       it 'makes a call to retrieve a single resource starting from the back, via index', ->
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('page[number]=-1&page[size]=1')
 
       it 'returns a resource of the type requested', ->
@@ -107,62 +109,62 @@ describe 'ActiveResource', ->
     describe '#where()', ->
       it 'adds filters to a query', ->
         MyLibrary::Product.where(token: 'jshf8e').all()
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('filter[token]=jshf8e')
 
       it 'merges filters', ->
         MyLibrary::Product.where(token: 'jshf8e').where(another: 'param').all()
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('filter[token]=jshf8e&filter[another]=param')
 
     describe '#order()', ->
       it 'adds sort params to a query', ->
         MyLibrary::Product.order(createdAt: 'asc').all()
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('sort=created_at')
 
       it 'merges sorts', ->
         MyLibrary::Product.order(createdAt: 'asc').order(updatedAt: 'desc').all()
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('sort=created_at,-updated_at')
 
     describe '#select()', ->
       it 'determines the root model to apply fields to', ->
         MyLibrary::Product.select('id', 'createdAt').all()
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('fields[products]=id,created_at')
 
       it 'determines the model to apply nested fields to', ->
         MyLibrary::Product.select('id', { orders: 'price' }).all()
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('fields[products]=id&fields[orders]=price')
 
       it 'merges fields', ->
         MyLibrary::Product.select('id', 'createdAt').select(orders: 'price').all()
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('fields[products]=id,created_at&fields[orders]=price')
 
     describe '#includes()', ->
       it 'adds root level includes', ->
         MyLibrary::Product.includes('merchant', 'attributeValues').all()
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('include=merchant,attribute_values')
 
       it 'adds nested includes', ->
         MyLibrary::Product.includes('merchant', { orders: ['attributeValues','giftCards'] }).all()
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('include=merchant,orders.attribute_values,orders.gift_cards')
 
     describe '#page()', ->
       it 'adds a page number to the query', ->
         MyLibrary::Product.page(2).all()
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('page[number]=2')
 
     describe '#per()', ->
       it 'adds a page size to the query', ->
         MyLibrary::Product.per(2).all()
-        @paramStr = requestParams(mostRecentAjaxRequest())
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('page[size]=2')
 
     describe '#build()', ->
@@ -186,15 +188,13 @@ describe 'ActiveResource', ->
           expect(@product.title).toEqual('My title')
 
     describe '#create()', ->
-      beforeEach ->
-        window.onCompletion = jasmine.createSpy('onCompletion')
-
       describe 'in general', ->
         beforeEach ->
           MyLibrary::Product.create(title: 'Another title', description: 'Another description', window.onCompletion)
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.success)
-          @result = window.onCompletion.mostRecentCall.args[0]
+          console.log(window.onCompletion.calls.count())
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
+          @result = window.onCompletion.calls.mostRecent().args[0]
 
         it 'executes the completion callback', ->
           expect(window.onCompletion).toHaveBeenCalled()
@@ -209,9 +209,9 @@ describe 'ActiveResource', ->
         beforeEach ->
           MyLibrary::Product.create(title: 'Another title', description: 'Another description', window.onCompletion)
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
           expect(window.onCompletion).toHaveBeenCalled()
-          @result = window.onCompletion.mostRecentCall.args[0]
+          @result = window.onCompletion.calls.mostRecent().args[0]
 
         it 'creates a persisted resource', ->
           expect(@result.persisted( )).toBeTruthy()
@@ -220,9 +220,9 @@ describe 'ActiveResource', ->
         beforeEach ->
           MyLibrary::Product.create(title: '', description: '', window.onCompletion)
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.failure)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.failure)
           expect(window.onCompletion).toHaveBeenCalled()
-          @result = window.onCompletion.mostRecentCall.args[0]
+          @result = window.onCompletion.calls.mostRecent().args[0]
 
         it 'does not create a persisted resource', ->
           expect(@result.persisted?()).toBeFalsy()

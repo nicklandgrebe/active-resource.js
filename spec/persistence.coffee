@@ -1,6 +1,8 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.useMock()
+    window.onSuccess = jasmine.createSpy('onSuccess')
+    window.onFailure = jasmine.createSpy('onFailure')
+    window.onCompletion = jasmine.createSpy('onCompletion')
 
   describe '::Persistence', ->
     describe '#persisted()', ->
@@ -15,9 +17,9 @@ describe 'ActiveResource', ->
         beforeEach ->
           MyLibrary::Product.create(title: 'A product title', description: 'A product description', window.onCompletion)
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
           expect(window.onCompletion).toHaveBeenCalled()
-          @resource = window.onCompletion.mostRecentCall.args[0]
+          @resource = window.onCompletion.calls.mostRecent().args[0]
 
         it 'returns true', ->
           expect(@resource.persisted?()).toBeTruthy()
@@ -34,9 +36,9 @@ describe 'ActiveResource', ->
         beforeEach ->
           MyLibrary::Product.create(title: 'A product title', description: 'A product description', window.onCompletion)
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
           expect(window.onCompletion).toHaveBeenCalled()
-          @resource = window.onCompletion.mostRecentCall.args[0]
+          @resource = window.onCompletion.calls.mostRecent().args[0]
 
         it 'returns false', ->
           expect(@resource.newResource?()).toBeFalsy()
@@ -46,24 +48,24 @@ describe 'ActiveResource', ->
         beforeEach ->
           MyLibrary::Product.last().then window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         it 'executes the completion callback', ->
           @resource.save(window.onCompletion)
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
           expect(window.onCompletion).toHaveBeenCalled()
 
       describe 'when resource is persisted', ->
         beforeEach ->
           MyLibrary::Product.last().then window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         it 'makes a PUT request', ->
           @resource.save()
-          expect(mostRecentAjaxRequest().method).toEqual('PUT')
+          expect(jasmine.Ajax.requests.mostRecent().method).toEqual('PUT')
 
       describe 'when resource is not persisted', ->
         beforeEach ->
@@ -71,18 +73,18 @@ describe 'ActiveResource', ->
 
         it 'makes a POST request', ->
           @resource.save()
-          expect(mostRecentAjaxRequest().method).toEqual('POST')
+          expect(jasmine.Ajax.requests.mostRecent().method).toEqual('POST')
 
       describe 'when resource is valid', ->
         beforeEach ->
           MyLibrary::Product.last().then window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
           @resource.title = 'Another title'
           @resource.save()
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
 
         it 'returns the resource with saved attributes', ->
           expect(@resource.title).toEqual('Another title')
@@ -94,12 +96,12 @@ describe 'ActiveResource', ->
         beforeEach ->
           MyLibrary::Product.last().then window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
           @resource.title = ''
           @resource.save()
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.failure)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.failure)
 
         it 'returns a resource with errors', ->
           expect(@resource.errors().empty?()).toBeFalsy()
@@ -112,24 +114,24 @@ describe 'ActiveResource', ->
         beforeEach ->
           MyLibrary::Product.last().then window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         it 'executes the completion callback', ->
           @resource.update(title: 'Another title', window.onCompletion)
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
           expect(window.onCompletion).toHaveBeenCalled()
 
       describe 'when resource is persisted', ->
         beforeEach ->
           MyLibrary::Product.last().then window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
         it 'makes a PUT request', ->
           @resource.update(title: 'Another title')
-          expect(mostRecentAjaxRequest().method).toEqual('PUT')
+          expect(jasmine.Ajax.requests.mostRecent().method).toEqual('PUT')
 
       describe 'when resource is not persisted', ->
         beforeEach ->
@@ -137,17 +139,17 @@ describe 'ActiveResource', ->
 
         it 'makes a POST request', ->
           @resource.update(title: 'Another title')
-          expect(mostRecentAjaxRequest().method).toEqual('POST')
+          expect(jasmine.Ajax.requests.mostRecent().method).toEqual('POST')
 
       describe 'when resource is valid', ->
         beforeEach ->
           MyLibrary::Product.last().then window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
           @resource.update(title: 'Another title', window.onCompletion)
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
 
         it 'updates the resource\'s attributes', ->
           expect(@resource.title).toEqual('Another title')
@@ -156,11 +158,11 @@ describe 'ActiveResource', ->
         beforeEach ->
           MyLibrary::Product.last().then window.onSuccess
 
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
-          @resource = window.onSuccess.mostRecentCall.args[0]
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          @resource = window.onSuccess.calls.mostRecent().args[0]
 
           @resource.update(title: '', description: '', window.onCompletion)
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.save.failure)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.failure)
 
         it 'does not update the attributes', ->
           expect(@resource.title).toNotEqual('')
@@ -172,19 +174,19 @@ describe 'ActiveResource', ->
       beforeEach ->
         MyLibrary::Product.last().then window.onSuccess
 
-        mostRecentAjaxRequest().response(JsonApiResponses.Product.all.success)
-        @resource = window.onSuccess.mostRecentCall.args[0]
+        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+        @resource = window.onSuccess.calls.mostRecent().args[0]
         @resource.destroy()
         .done window.onSuccess
         .fail window.onFailure
 
       describe 'in general', ->
         it 'makes a DELETE request', ->
-          expect(mostRecentAjaxRequest().method).toEqual('DELETE')
+          expect(jasmine.Ajax.requests.mostRecent().method).toEqual('DELETE')
 
       describe 'on success', ->
         beforeEach ->
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.destroy.success)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.destroy.success)
 
         it 'unpersists the resource', ->
           expect(@resource.persisted?()).toBeFalsy()
@@ -193,11 +195,11 @@ describe 'ActiveResource', ->
           expect(window.onSuccess).toHaveBeenCalled()
 
         it 'returns the destroyed resource to the callback', ->
-          expect(window.onSuccess.mostRecentCall.args[0]).toEqual(@resource)
+          expect(window.onSuccess.calls.mostRecent().args[0]).toEqual(@resource)
 
       describe 'on failure', ->
         beforeEach ->
-          mostRecentAjaxRequest().response(JsonApiResponses.Product.destroy.failure)
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.destroy.failure)
 
         it 'does not unpersisted the resource', ->
           expect(@resource.persisted?()).toBeTruthy()
@@ -206,5 +208,5 @@ describe 'ActiveResource', ->
           expect(window.onFailure).toHaveBeenCalled()
 
         it 'returns an error to the callback', ->
-          errors = window.onFailure.mostRecentCall.args[0].responseJSON
+          errors = window.onFailure.calls.mostRecent().args[0].responseJSON
           expect(errors[0].key).toBeDefined()
