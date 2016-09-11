@@ -1,3 +1,6 @@
+# Imply that a singular version of the word 'Class' is still 'Class'
+_.singular('Class', 'Class');
+
 class window.MyLibrary
   class @::Comment extends ActiveResource::Base
     this.className = 'Comment'

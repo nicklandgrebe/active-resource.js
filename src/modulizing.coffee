@@ -1,37 +1,4 @@
-# ActiveResource.js
-# (c) 2016 Peak Labs, LLC
-# ActiveResource may be freely distributed under the MIT license
-# Portions of ActiveResource were inspired by or borrowed from ActiveRecord
-# Version 0.9.0
-
-class window.ActiveResource
-  # The base URL to structure all queries from
-  #
-  # @example 'https://www.example.com/api/v1/'
-  @baseUrl = null
-
-  # The headers to include when querying a URL
-  #
-  # @example
-  #   {
-  #     Authorization: "Basic #{window.btoa(unescape(encodeURIComponent('[API_LOGIN]:[API_SECRET]')))}"
-  #   }
-  @headers = {}
-
-  # The scope object to check for ActiveResource classes when calling `constantize`
-  #
-  # @example Occsn
-  #   ActiveResource.constantize('Product') == window.prototype['Product']
-  @constantizeScope = window
-
-  # The interface class that allows for ActiveResource subclasses to submit queries to the server indicated by
-  # `baseUrl`
-  #
-  # @example
-  #   ActiveResource.interface = ActiveResource::Interfaces::JsonApi
-  #
-  @interface = null
-
+((moduleHandler) ->
   # Constantizes a className string into an actual ActiveResource::Base class
   #
   # @note By default, is scoped to the window object, so all lookups are
@@ -42,7 +9,7 @@ class window.ActiveResource
   #
   # @param [String] className the class name to look for a constant with
   # @return [Class] the class constant corresponding to the name provided
-  @constantize: (className) ->
+  moduleHandler.constantize = (className) ->
     unless (klass = ActiveResource.constantizeScope[className])?
       throw "NameError: klass #{className} does not exist"
     klass
@@ -51,7 +18,7 @@ class window.ActiveResource
   #
   # @param [Class] klass the object to extend the mixin into
   # @param [Class,Object] mixin the methods/members to extend into the obj
-  @extend: (klass, mixin) ->
+  moduleHandler.extend = (klass, mixin) ->
     for name, method of mixin
       unless method.__excludeFromExtend
         klass[name] = method
@@ -61,5 +28,6 @@ class window.ActiveResource
   #
   # @param [Class] klass the klass to include mixin members in when instantiated
   # @param [Class,Object] mixin the methods/members to include into the klass instances
-  @include: (klass, mixin) ->
+  moduleHandler.include = (klass, mixin) ->
     @extend klass.prototype, mixin
+)(ActiveResource)
