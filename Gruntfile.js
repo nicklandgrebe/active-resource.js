@@ -2,13 +2,13 @@ module.exports = function(grunt) {
 
   // configure the tasks
   grunt.initConfig({
-
+    pkg: grunt.file.readJSON('package.json'),
     clean: {
-      build: {
-        src: [ 'build' ]
+      dist: {
+        src: [ 'dist' ]
       },
-      scripts: {
-        src: [ 'build/**/*.js', '!build/activeresource.min.js' ]
+      build: {
+        src: [ 'build/**/*.js', '!build/module.js' ]
       },
       specs: {
         src: 'spec/spec.js'
@@ -28,71 +28,71 @@ module.exports = function(grunt) {
         }
       }
     },
+    umd_wrapper: {
+      build: {
+        options: {},
+        files: {
+          'build/activeresource.tmp.js': 'build/module.js'
+        }
+      },
+      specs: {
+        options: {},
+        files: {
+          'spec/spec.js': 'spec/module.js'
+        }
+      }
+    },
     uglify: {
       build: {
         options: {
-          mangle: false
+          mangle: false,
+          banner:
+            '/*\n' +
+            '\tActiveResource.js <%= pkg.version %>\n' +
+            '\t(c) <%= grunt.template.today("yyyy") %> Nick Landgrebe && Peak Labs, LLC DBA Occasion App\n' +
+            '\tActiveResource.js may be freely distributed under the MIT license\n' +
+            '\tPortions of ActiveResource.js were inspired by or borrowed from Rail\'s ActiveRecord library\n' +
+          '*/\n'
         },
         files: {
-          'build/activeresource.min.js': [
-            'build/root.js',
-            'build/config.js',
-            'build/typing.js',
-            'build/collection.js',
-            'build/attributes.js',
-            'build/errors.js',
-            'build/persistence.js',
-            'build/reflection.js',
-            'build/relation.js',
-            'build/interfaces/base.js',
-            'build/interfaces/json_api.js',
-            'build/associations.js',
-            'build/associations/association.js',
-            'build/associations/collection_proxy.js',
-            'build/associations/collection_association.js',
-            'build/associations/has_many_association.js',
-            'build/associations/singular_association.js',
-            'build/associations/has_one_association.js',
-            'build/associations/belongs_to_association.js',
-            'build/associations/belongs_to_polymorphic_association.js',
-            'build/associations/builder/association.js',
-            'build/associations/builder/collection_association.js',
-            'build/associations/builder/has_many.js',
-            'build/associations/builder/singular_association.js',
-            'build/associations/builder/has_one.js',
-            'build/associations/builder/belongs_to.js',
-            'build/base.js'
-          ]
+          'dist/activeresource.min.js': 'build/activeresource.tmp.js'
         }
       }
     },
     watch: {
       scripts: {
         files: 'src/**/*.js.coffee',
-        tasks: [ 'compile' ]
+        tasks: [ 'build' ]
       }
     },
     connect: {
-      server: {
+      test: {
         options: {
-          port: 4000,
-          base: 'build',
-          hostname: '*'
+          port: 8000
         }
       }
     },
     jasmine: {
-      pivotal: {
-        src: [
-          'lib/jquery.min.js',
-          'lib/underscore.min.js',
-          'lib/underscore.string.js',
-          'lib/underscore.inflection.js',
-          'node_modules/jasmine-ajax/lib/mock-ajax.js',
-          'build/activeresource.min.js'
-        ],
+      activeresource: {
         options: {
-          specs: 'spec/spec.js'
+          specs: 'spec/spec.js',
+          host: 'http://127.0.0.1:8000',
+          helpers: [
+            'node_modules/jasmine-ajax/lib/mock-ajax.js'
+          ],
+          template: require('grunt-template-jasmine-requirejs'),
+          templateOptions: {
+            requireConfig: {
+              baseUrl: '/',
+              paths: {
+                "jquery": '/node_modules/jquery/dist/jquery.min',
+                "underscore": '/node_modules/underscore/underscore-min',
+                "underscore.string": '/node_modules/underscore.string/dist/underscore.string.min',
+                "underscore.inflection": '/node_modules/underscore.inflection/lib/underscore.inflection',
+                "activeresource": '/dist/activeresource.min'
+              }
+            }
+          }
         }
       }
     }
@@ -100,10 +100,10 @@ module.exports = function(grunt) {
   });
 
   // load the tasks
-  grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-umd-wrapper');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
@@ -111,19 +111,25 @@ module.exports = function(grunt) {
   // define the tasks
   grunt.registerTask(
     'compile',
-    'Compiles the JavaScript files.',
-    [ 'coffee', 'uglify', 'clean:scripts' ]
+    'Compiles the source files into a minified UMD module file.',
+    [ 'coffee:build', 'umd_wrapper:build', 'uglify', 'clean:build' ]
   );
 
   grunt.registerTask(
+    'spec',
+    'Compiles and runs the Javascript spec files for ActiveResource.js source code.',
+    [ 'clean:specs', 'coffee:specs', 'umd_wrapper:specs', 'connect:test', 'jasmine:activeresource' ]
+  )
+
+  grunt.registerTask(
     'build',
-    'Compiles all of the assets and copies the files to the build directory, then runs specs on the build.',
-    [ 'clean:build', 'clean:specs', 'compile', 'jasmine' ]
+    'Creates a new build of the library in the dist folder, then runs the specs on it.',
+    [ 'clean:dist', 'compile', 'spec' ]
   );
 
   grunt.registerTask(
     'default',
-    'Watches the project for changes, automatically builds them and runs a server.',
-    [ 'build', 'connect', 'watch' ]
+    'Watches the project for changes, automatically builds them and runs specs.',
+    [ 'build', 'watch' ]
   );
 };

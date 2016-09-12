@@ -1,5 +1,4 @@
 ActiveResource.baseUrl = 'https://example.com/api/v1/'
-ActiveResource.interface = ActiveResource::Interfaces::JsonApi
 
 # Get the params in a URL after the `?`
 #
