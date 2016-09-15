@@ -21,7 +21,7 @@ class ActiveResource::Interfaces
         else
           JSON.stringify(data)
 
-      $.ajax options
+      jQuery.ajax options
 
     # Make GET request
     #

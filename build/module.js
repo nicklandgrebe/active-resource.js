@@ -1,7 +1,7 @@
 @module ActiveResource
 @export ActiveResource
 
-@import jquery as $
+@import jquery as jQuery
 @import underscore as _
 @import underscore.string as s
 @import underscore.inflection
