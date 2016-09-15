@@ -52,7 +52,7 @@ module.exports = function(grunt) {
             '\t(c) <%= grunt.template.today("yyyy") %> Nick Landgrebe && Peak Labs, LLC DBA Occasion App\n' +
             '\tActiveResource.js may be freely distributed under the MIT license\n' +
             '\tPortions of ActiveResource.js were inspired by or borrowed from Rail\'s ActiveRecord library\n' +
-          '*/\n'
+            '*/\n'
         },
         files: {
           'dist/activeresource.min.js': 'build/activeresource.tmp.js'
@@ -75,10 +75,11 @@ module.exports = function(grunt) {
     jasmine: {
       activeresource: {
         options: {
+          keepRunner: true,
           specs: 'spec/spec.js',
           host: 'http://127.0.0.1:8000',
-          helpers: [
-            'node_modules/jasmine-ajax/lib/mock-ajax.js'
+          vendor: [
+            '/node_modules/jquery/dist/jquery.min.js'
           ],
           template: require('grunt-template-jasmine-requirejs'),
           templateOptions: {
@@ -87,9 +88,11 @@ module.exports = function(grunt) {
               paths: {
                 "jquery": '/node_modules/jquery/dist/jquery.min',
                 "underscore": '/node_modules/underscore/underscore-min',
-                "underscore.string": '/node_modules/underscore.string/dist/underscore.string.min',
+                "underscore.string": '/node_modules/underscore.string/dist/underscore.string',
                 "underscore.inflection": '/node_modules/underscore.inflection/lib/underscore.inflection',
-                "activeresource": '/dist/activeresource.min'
+                "activeresource": '/dist/activeresource.min',
+                "jasmine-jquery": '/node_modules/jasmine-jquery/lib/jasmine-jquery',
+                "jasmine-ajax": '/node_modules/jasmine-ajax/lib/mock-ajax'
               }
             }
           }
