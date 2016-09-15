@@ -7,7 +7,7 @@
   "license": "MIT",
   "dependencies": {
     "jquery": "2.2.4",
-    "underscore": "latest",
+    "underscore": "1.8.3",
     "underscore.string": "latest",
     "underscore.inflection": "latest"
   },
