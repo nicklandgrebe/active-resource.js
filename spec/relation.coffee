@@ -1,8 +1,13 @@
 describe 'ActiveResource', ->
   beforeEach ->
+    jasmine.Ajax.install()
+
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
+
+  afterEach ->
+    jasmine.Ajax.uninstall()
 
   describe '::Relation', ->
     describe 'when calling Relation extension methods on Base', ->
@@ -192,7 +197,6 @@ describe 'ActiveResource', ->
         beforeEach ->
           MyLibrary::Product.create(title: 'Another title', description: 'Another description', window.onCompletion)
 
-          console.log(window.onCompletion.calls.count())
           jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
           @result = window.onCompletion.calls.mostRecent().args[0]
 

@@ -1,8 +1,13 @@
 describe 'ActiveResource', ->
   beforeEach ->
+    jasmine.Ajax.install()
+
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
+
+  afterEach ->
+    jasmine.Ajax.uninstall()
 
   describe '::Persistence', ->
     describe '#persisted()', ->
@@ -165,7 +170,7 @@ describe 'ActiveResource', ->
           jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.failure)
 
         it 'does not update the attributes', ->
-          expect(@resource.title).toNotEqual('')
+          expect(@resource.title).not.toEqual('')
 
         it 'returns a resource with errors', ->
           expect(@resource.errors().empty?()).toBeFalsy()
@@ -177,8 +182,8 @@ describe 'ActiveResource', ->
         jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
         @resource = window.onSuccess.calls.mostRecent().args[0]
         @resource.destroy()
-        .done window.onSuccess
-        .fail window.onFailure
+        .done(window.onSuccess)
+        .fail(window.onFailure)
 
       describe 'in general', ->
         it 'makes a DELETE request', ->

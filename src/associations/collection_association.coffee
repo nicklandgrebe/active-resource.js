@@ -24,8 +24,10 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
 
     resources.each (r) => @__raiseOnTypeMismatch(r)
 
+    persistedResources = resources.select((r) -> r.persisted?())
+
     persistAssignment =
-      if save && !@owner.newResource?() && (persistedResources = resources.select((r) -> r.persisted?())).size()
+      if save && !@owner.newResource?() && (resources.size() == 0 || persistedResources.size() > 0)
         @__persistAssignment(persistedResources.toArray())
       else
         $.when(resources)

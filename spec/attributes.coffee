@@ -1,5 +1,7 @@
 describe 'ActiveResource', ->
   beforeEach ->
+    jasmine.Ajax.install()
+
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
@@ -8,6 +10,9 @@ describe 'ActiveResource', ->
 
     jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
     @resource = window.onSuccess.calls.mostRecent().args[0]
+
+  afterEach ->
+    jasmine.Ajax.uninstall()
 
   describe '::Attributes', ->
     describe '#hasAttribute()', ->
@@ -71,7 +76,7 @@ describe 'ActiveResource', ->
           oldTitle = @resource.title
           @resource.reload()
           jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
-          expect(@resource.title).toNotEqual(oldTitle)
+          expect(@resource.title).not.toEqual(oldTitle)
 
       describe 'when resource is not persisted', ->
         beforeEach ->

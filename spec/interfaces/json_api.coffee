@@ -1,8 +1,13 @@
 describe 'ActiveResource', ->
   beforeEach ->
+    jasmine.Ajax.install()
+
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
+
+  afterEach ->
+    jasmine.Ajax.uninstall()
 
   describe 'Interfaces::JsonApi', ->
     describe '#get()', ->
@@ -10,8 +15,8 @@ describe 'ActiveResource', ->
         beforeEach ->
           ActiveResource::Interfaces::JsonApi
           .get(MyLibrary::Product.links()['related'])
-          .done window.onSuccess
-          .fail window.onFailure
+          .done(window.onSuccess)
+          .fail(window.onFailure)
 
         describe 'on success', ->
           beforeEach ->
@@ -34,8 +39,8 @@ describe 'ActiveResource', ->
         beforeEach ->
           ActiveResource::Interfaces::JsonApi
           .get(MyLibrary::Product.links()['related'] + '1')
-          .done window.onSuccess
-          .fail window.onFailure
+          .done(window.onSuccess)
+          .fail(window.onFailure)
 
         describe 'on success', ->
           beforeEach ->
@@ -55,7 +60,7 @@ describe 'ActiveResource', ->
             expect(window.onFailure).toHaveBeenCalled()
 
           it 'returns an error', ->
-            error = window.onFailure.calls.mostRecent().args[0].responseJSON[0]
+            error = window.onFailure.calls.mostRecent().args[0].first()
             expect(error.key).toBeDefined()
 
       describe 'using fields queryParam', ->
@@ -67,8 +72,8 @@ describe 'ActiveResource', ->
 
           ActiveResource::Interfaces::JsonApi
           .get(MyLibrary::Product.links()['related'], queryParams)
-          .done window.onSuccess
-          .fail window.onFailure
+          .done(window.onSuccess)
+          .fail(window.onFailure)
 
           @paramStr = decodeURIComponent(jasmine.Ajax.requests.mostRecent().url.split('?')[1])
 
@@ -82,8 +87,8 @@ describe 'ActiveResource', ->
 
           ActiveResource::Interfaces::JsonApi
           .get(MyLibrary::Product.links()['related'], queryParams)
-          .done window.onSuccess
-          .fail window.onFailure
+          .done(window.onSuccess)
+          .fail(window.onFailure)
 
           @paramStr = decodeURIComponent(jasmine.Ajax.requests.mostRecent().url.split('?')[1])
 
@@ -97,8 +102,8 @@ describe 'ActiveResource', ->
 
           ActiveResource::Interfaces::JsonApi
           .get(MyLibrary::Product.links()['related'], queryParams)
-          .done window.onSuccess
-          .fail window.onFailure
+          .done(window.onSuccess)
+          .fail(window.onFailure)
 
           @paramStr = decodeURIComponent(jasmine.Ajax.requests.mostRecent().url.split('?')[1])
 
@@ -113,8 +118,8 @@ describe 'ActiveResource', ->
 
           ActiveResource::Interfaces::JsonApi
           .post(MyLibrary::Product.links()['related'], @product)
-          .done window.onSuccess
-          .fail window.onFailure
+          .done(window.onSuccess)
+          .fail(window.onFailure)
 
         it 'builds a resource document', ->
           resourceDocument =
@@ -136,7 +141,7 @@ describe 'ActiveResource', ->
                 }
               }
             }
-          expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
+          expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
         describe 'when persistence succeeds', ->
           beforeEach ->
@@ -164,8 +169,8 @@ describe 'ActiveResource', ->
 
           ActiveResource::Interfaces::JsonApi
           .post(MyLibrary::Product.links()['related'], [@product, @product2], onlyResourceIdentifiers: true)
-          .done window.onSuccess
-          .fail window.onFailure
+          .done(window.onSuccess)
+          .fail(window.onFailure)
 
         it 'builds a resource identifier document', ->
           resourceDocument =
@@ -181,7 +186,7 @@ describe 'ActiveResource', ->
                 }
               ]
             }
-          expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
+          expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
     describe '#delete', ->
       beforeEach ->
@@ -194,8 +199,8 @@ describe 'ActiveResource', ->
         beforeEach ->
           ActiveResource::Interfaces::JsonApi
           .delete(MyLibrary::Product.links()['self'], @resource)
-          .done window.onSuccess
-          .fail window.onFailure
+          .done(window.onSuccess)
+          .fail(window.onFailure)
 
         it 'builds a resource identifier document', ->
           resourceDocument =
@@ -205,14 +210,14 @@ describe 'ActiveResource', ->
                 type: 'products'
               }
             }
-          expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
+          expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
       describe 'without resource data', ->
         beforeEach ->
           ActiveResource::Interfaces::JsonApi
           .delete(MyLibrary::Product.links()['self'])
-          .done window.onSuccess
-          .fail window.onFailure
+          .done(window.onSuccess)
+          .fail(window.onFailure)
 
         it 'sends no data', ->
-          expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual({})
+          expect(jasmine.Ajax.requests.mostRecent().data()).toEqual({})

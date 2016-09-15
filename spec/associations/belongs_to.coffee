@@ -1,8 +1,13 @@
 describe 'ActiveResource', ->
   beforeEach ->
+    jasmine.Ajax.install()
+
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
+
+  afterEach ->
+    jasmine.Ajax.uninstall()
 
   describe '::Associations', ->
     describe '::BelongsToAssociation', ->
@@ -147,7 +152,7 @@ describe 'ActiveResource', ->
                 }
               }
 
-            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
+            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
           describe 'when update succeeds', ->
             beforeEach ->
@@ -181,7 +186,7 @@ describe 'ActiveResource', ->
             @resource.updateGiftCard(null)
 
           it 'sends a blank document', ->
-            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual({})
+            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual({})
 
           describe 'when update succeeds', ->
             beforeEach ->
@@ -270,7 +275,7 @@ describe 'ActiveResource', ->
                   }
                 }
               }
-            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
+            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
           it 'builds a resource of reflection klass type', ->
             expect(@target.klass()).toBe(MyLibrary::GiftCard)

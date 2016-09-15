@@ -1,4 +1,14 @@
 describe 'ActiveResource', ->
+  beforeEach ->
+    jasmine.Ajax.install()
+
+    window.onSuccess = jasmine.createSpy('onSuccess')
+    window.onFailure = jasmine.createSpy('onFailure')
+    window.onCompletion = jasmine.createSpy('onCompletion')
+
+  afterEach ->
+    jasmine.Ajax.uninstall()
+
   describe '::Base', ->
     describe '.links()', ->
       it 'returns the correct links', ->
@@ -47,4 +57,4 @@ describe 'ActiveResource', ->
               relationships: {}
             }
           }
-          expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
+          expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)

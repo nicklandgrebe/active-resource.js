@@ -1,8 +1,13 @@
 describe 'ActiveResource', ->
   beforeEach ->
+    jasmine.Ajax.install()
+
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
+
+  afterEach ->
+    jasmine.Ajax.uninstall()
 
   describe '::Associations', ->
     describe '::HasManyAssociation', ->
@@ -260,8 +265,13 @@ describe 'ActiveResource', ->
 
         describe 'in general', ->
           beforeEach ->
-            @target = [MyLibrary::Order.build(id: 1), MyLibrary::Order.build(id: 2)]
+            MyLibrary::Order.all()
+            .done window.onSuccess
+
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+            @target = window.onSuccess.calls.mostRecent().args[0]
             @resource.orders().assign(@target)
+
             jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
           it 'persists the update to the relationship URL', ->
@@ -293,7 +303,7 @@ describe 'ActiveResource', ->
                 }
               ]
             }
-            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
+            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
           describe 'when update succeeds', ->
             beforeEach ->
@@ -332,7 +342,7 @@ describe 'ActiveResource', ->
             @resource.orders().assign([])
 
           it 'sends an empty document', ->
-            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(data: [])
+            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(data: [])
 
           describe 'when update succeeds', ->
             beforeEach ->
@@ -409,7 +419,7 @@ describe 'ActiveResource', ->
                 }
               }
             }
-            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
+            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
           it 'builds resource(s) of reflection klass type', ->
             expect(@target.klass()).toBe(MyLibrary::Order)
@@ -479,7 +489,7 @@ describe 'ActiveResource', ->
                 }
               }
             }
-            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
+            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
           # TODO: Add ability to determine if autosave association is persisted upon
           # creation (#create does not allow for queryParams['include'])
@@ -505,10 +515,9 @@ describe 'ActiveResource', ->
           jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
           @target = window.onSuccess.calls.mostRecent().args[0]
 
-        describe 'in general', ->
-          beforeEach ->
-            @resource.orders().push(@target)
+          @resource.orders().push(@target)
 
+        describe 'in general', ->
           it 'makes a request to the target\'s relationship URL', ->
             expect(jasmine.Ajax.requests.mostRecent().url).toEqual('https://example.com/api/v1/products/1/relationships/orders/')
 
@@ -522,11 +531,10 @@ describe 'ActiveResource', ->
                 { id: 2, type: 'orders' }
               ]
             }
-            expect(requestData(jasmine.Ajax.requests.mostRecent())).toEqual(resourceDocument)
+            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
         describe 'when pushing succeeds', ->
           beforeEach ->
-            @resource.orders().push(@target)
             jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
           it 'assigns the inverse target(s) of the resource(s)', ->
@@ -583,6 +591,7 @@ describe 'ActiveResource', ->
                 { id: 1, type: 'orders' }
               ]
             }
+            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
         describe 'when deleting succeeds', ->
           beforeEach ->
@@ -624,6 +633,7 @@ describe 'ActiveResource', ->
                 { id: 2, type: 'orders' }
               ]
             }
+            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
           it 'deletes all resources from the target', ->
             expect(@resource.orders().all(cached: true).size()).toEqual(0)

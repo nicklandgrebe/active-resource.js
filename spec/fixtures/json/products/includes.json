@@ -34,6 +34,9 @@
       "type": "orders",
       "attributes": {
         "price": 1.0
+      },
+      "links": {
+        "self": "https://example.com/api/v1/orders/1/"
       }
     },
     {
@@ -41,6 +44,9 @@
       "type": "orders",
       "attributes": {
         "price": 2.0
+      },
+      "links": {
+        "self": "https://example.com/api/v1/orders/2/"
       }
     }
   ]

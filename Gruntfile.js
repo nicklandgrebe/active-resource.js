@@ -24,7 +24,7 @@ module.exports = function(grunt) {
       },
       specs: {
         files: {
-          'spec/spec.js': [ 'spec/support/*.coffee', 'spec/support/**/*.coffee', 'spec/**/*.coffee' ]
+          'spec/spec.js': [ 'spec/support/*.coffee', 'spec/**/*.coffee' ]
         }
       }
     },
