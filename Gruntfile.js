@@ -143,7 +143,7 @@ module.exports = function(grunt) {
   grunt.registerTask(
     'build',
     'Creates a temporary build of the library in the build folder, then runs the specs on it.',
-    [ 'clean:dist', 'compile', 'spec' ]
+    [ 'clean:build', 'compile', 'spec' ]
   );
 
   grunt.registerTask(
