@@ -27,7 +27,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     persistedResources = resources.select((r) -> r.persisted?())
 
     persistAssignment =
-      if save && !@owner.newResource?() && (resources.size() == 0 || persistedResources.size() > 0)
+      if save && !@owner.newResource?() && (resources.empty() || !persistedResources.empty())
         @__persistAssignment(persistedResources.toArray())
       else
         $.when(resources)
