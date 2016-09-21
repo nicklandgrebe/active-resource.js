@@ -8,7 +8,10 @@ module.exports = function(grunt) {
         src: [ 'dist' ]
       },
       build: {
-        src: [ 'build/**/*.js', '!build/module.js' ]
+        src: [
+          'build/**/*.js', '!build/module.js',
+          '!build/activeresource.js', '!build/activeresource.min.js'
+        ]
       },
       specs: {
         src: 'spec/spec.js'
@@ -32,7 +35,7 @@ module.exports = function(grunt) {
       build: {
         options: {},
         files: {
-          'build/activeresource.tmp.js': 'build/module.js'
+          'build/activeresource.js': 'build/module.js'
         }
       },
       specs: {
@@ -45,23 +48,35 @@ module.exports = function(grunt) {
     uglify: {
       build: {
         options: {
-          mangle: false,
-          banner:
-            '/*\n' +
-            '\tActiveResource.js <%= pkg.version %>\n' +
-            '\t(c) <%= grunt.template.today("yyyy") %> Nick Landgrebe && Peak Labs, LLC DBA Occasion App\n' +
-            '\tActiveResource.js may be freely distributed under the MIT license\n' +
-            '\tPortions of ActiveResource.js were inspired by or borrowed from Rail\'s ActiveRecord library\n' +
-            '*/\n'
+          mangle: false
         },
         files: {
-          'dist/activeresource.min.js': 'build/activeresource.tmp.js'
+          'build/activeresource.min.js': 'build/activeresource.js'
         }
       }
     },
+    concat: {
+      options: {
+        banner:
+          '/*\n' +
+          '\tActiveResource.js <%= pkg.version %>\n' +
+          '\t(c) <%= grunt.template.today("yyyy") %> Nick Landgrebe && Peak Labs, LLC DBA Occasion App\n' +
+          '\tActiveResource.js may be freely distributed under the MIT license\n' +
+          '\tPortions of ActiveResource.js were inspired by or borrowed from Rail\'s ActiveRecord library\n' +
+          '*/\n\n'
+      },
+      raw: {
+        src: 'build/activeresource.js',
+        dest: 'dist/activeresource.js'
+      },
+      min: {
+        src: 'build/activeresource.min.js',
+        dest: 'dist/activeresource.min.js'
+      }
+    },
     watch: {
-      scripts: {
-        files: 'src/**/*.js.coffee',
+      source: {
+        files: 'src/**/*.coffee',
         tasks: [ 'build' ]
       }
     },
@@ -90,7 +105,7 @@ module.exports = function(grunt) {
                 "underscore": '/node_modules/underscore/underscore-min',
                 "underscore.string": '/node_modules/underscore.string/dist/underscore.string',
                 "underscore.inflection": '/node_modules/underscore.inflection/lib/underscore.inflection',
-                "activeresource": '/dist/activeresource.min',
+                "activeresource": '/build/activeresource',
                 "jasmine-jquery": '/node_modules/jasmine-jquery/lib/jasmine-jquery',
                 "jasmine-ajax": '/node_modules/jasmine-ajax/lib/mock-ajax'
               }
@@ -105,6 +120,7 @@ module.exports = function(grunt) {
   // load the tasks
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-coffee');
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-umd-wrapper');
   grunt.loadNpmTasks('grunt-contrib-watch');
@@ -114,7 +130,7 @@ module.exports = function(grunt) {
   // define the tasks
   grunt.registerTask(
     'compile',
-    'Compiles the source files into a minified UMD module file.',
+    'Compiles the source files into 1) a raw UMD module file and 2) a minified UMD module file.',
     [ 'coffee:build', 'umd_wrapper:build', 'uglify', 'clean:build' ]
   );
 
@@ -126,8 +142,14 @@ module.exports = function(grunt) {
 
   grunt.registerTask(
     'build',
-    'Creates a new build of the library in the dist folder, then runs the specs on it.',
+    'Creates a temporary build of the library in the build folder, then runs the specs on it.',
     [ 'clean:dist', 'compile', 'spec' ]
+  );
+
+  grunt.registerTask(
+    'release',
+    'Creates a new release of the library in the dist folder',
+    [ 'clean:dist', 'compile', 'concat' ]
   );
 
   grunt.registerTask(
