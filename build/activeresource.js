@@ -1363,7 +1363,7 @@ var ActiveResource = function(){};
       }));
     };
 
-    Relation.prototype.per = function(value) {
+    Relation.prototype.perPage = function(value) {
       return this.__newRelation(this.__extendObjectParam('page', {
         size: value
       }));
