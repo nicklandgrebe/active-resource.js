@@ -1,6 +1,8 @@
-[
-  {
-    "key": "forbidden",
-    "message": "Action is forbidden"
-  }
-]
+{
+  "errors": [
+    {
+      "code": "forbidden",
+      "detail": "Action is forbidden"
+    }
+  ]
+}

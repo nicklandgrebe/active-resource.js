@@ -429,17 +429,67 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
 
   # Adds errors in making a POST/PUT/PATCH call into the resource that called it
   #
+  # @note The format for resource errors is as follows:
+  #   {
+  #     "errors": [
+  #       {
+  #         "source": { "pointer": "/data/attributes/title" },
+  #         "code": "blank",
+  #         "detail": "Title cannot be blank."
+  #       },
+  #       {
+  #         "source": { "pointer": "/data/relationships/product" },
+  #         "code": "blank",
+  #         "detail": "Product cannot be blank."
+  #       },
+  #       {
+  #         "source": { "pointer": "/data/relationships/product/data/attributes/title" },
+  #         "code": "blank",
+  #         "detail": "Title cannot be blank."
+  #       }
+  #     ]
+  #   }
+  #
   # @param [Object] response The response to pull errors from
   # @param [ActiveResource::Base] the resource to add errors onto
   # @return [ActiveResource::Base] the unpersisted resource, now with errors
-  #
-  # 1. Iterate over each error
-  # 2. If error has a field, add it to that field, otherwise add it to base
-  # 3. Add error to resource
-  addErrorsFromPersistenceAttempt = (errors, resource) ->
+  resourceErrors = (resource, errors) ->
     _.each errors, (error) ->
-      resource.errors().add(s.camelize(error.field) || 'base', s.camelize(error.key), error.message)
+
+      attribute = []
+      if error['source']['pointer'] == '/data'
+        attribute.push 'base'
+      else
+        _.each error['source']['pointer'].split('/data'), (i) ->
+          if(m = i.match(/\/(attributes|relationships|)\/(\w+)/))?
+            attribute.push m[2]
+
+      resource.errors().add(attribute.join('.'), s.camelize(error['code']), error['detail'])
     resource
+
+  # De-serializes errors from the error response to GET and DELETE requests,
+  # which will be of the form: { source: { parameter: '...' } }
+  #
+  # @note The format for parameter errors is as follows:
+  #   {
+  #     "errors": [
+  #       {
+  #         "source": { "parameter": "a_parameter" },
+  #         "code": "invalid",
+  #         "detail": "a_parameter was invalid."
+  #       }
+  #     ]
+  #   }
+  #
+  # @param [Array] errors the errors to de-serialize
+  # @return [Collection] the collection of errors
+  parameterErrors = (errors) ->
+    ActiveResource::Collection.build(errors).map((error) ->
+      out = { details: error['detail'] }
+      out['parameter'] = s.camelize(error['source']['parameter']) if error['source']?['parameter']?
+      out['code'] = s.camelize(error['code'])
+      out
+    )
 
   #---------------------------------------------------------------------------
   #---------------------------------------------------------------------------
@@ -452,15 +502,6 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   #
   # @param [String] url the url to query
   # @param [Object] queryParams query params to send to the server
-  #
-  # 1. Convert all filter params to underscored format for server
-  # 2. Convert fields params to a JSON API sparse fieldset
-  # 3. Convert include params to a JSON API include tree
-  # 4. Convert sort params defined with `'asc'`, `'desc'` to JSON API format
-  # 5. Make a GET request to the specified URL
-  # 6. Iterate over each resource in the response and build it into an ActiveResource
-  # 7. If `include` or `fields` params were included in request, add them to resources so the
-  #    resources can reload themselves accurately using the same query params
   @get: (url, queryParams = {}) ->
     data = {}
     data['filter']  = toUnderscored(queryParams['filter'])       if queryParams['filter']?
@@ -481,11 +522,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
 
       if _.isArray(response.data) then built else built.first()
     , (errors) ->
-      ActiveResource::Collection.build(errors.responseJSON).map((error) ->
-        error['field'] = s.camelize(error['field'])
-        error['key'] = s.camelize(error['key'])
-        error
-      )
+      parameterErrors(errors.responseJSON['errors'])
 
   # Make POST request
   #
@@ -494,18 +531,11 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # @param [Object] options options that may modify the data sent to the server
   # @option [Boolean] onlyResourceIdentifiers if false, render the attributes and relationships
   #   of each resource into the resource document
-  #
-  # 1. Build a resource document out of the resources passed in
-  # 2. Add queryParams (only `fields` and `include`) so the response will contain those fields
-  # 3. Make POST request with the resource document
-  # 4. If request was successful, and a full document was returned (true unless `onlyResourceIdentifiers`),
-  #    merge the changes in attributes/relationships made on the server to the persisted resource
-  # 5. If request failed, add the errors in the persistence attempt to the errors object of the resource
   @post: (url, resourceData, options = {}) ->
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
-      queryParams = ActiveResource::Collection.build(resourceData).first().queryParams()
+      queryParams = resourceData.queryParams()
 
       data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
       data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
@@ -520,7 +550,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
       if options['onlyResourceIdentifiers']
         errors
       else
-        addErrorsFromPersistenceAttempt(errors.responseJSON, resourceData)
+        resourceErrors(resourceData, errors.responseJSON['errors'])
 
   # Make PATCH request
   #
@@ -532,7 +562,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
-      queryParams = ActiveResource::Collection.build(resourceData).first().queryParams()
+      queryParams = resourceData.queryParams()
 
       data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
       data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
@@ -547,7 +577,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
       if options['onlyResourceIdentifiers']
         errors
       else
-        addErrorsFromPersistenceAttempt(errors.responseJSON, resourceData)
+        resourceErrors(resourceData, errors.responseJSON['errors'])
 
   # Make PUT request
   #
@@ -559,7 +589,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
-      queryParams = ActiveResource::Collection.build(resourceData).first().queryParams()
+      queryParams = resourceData.queryParams()
 
       data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
       data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
@@ -574,7 +604,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
       if options['onlyResourceIdentifiers']
         errors
       else
-        addErrorsFromPersistenceAttempt(errors.responseJSON, resourceData)
+        resourceErrors(resourceData, errors.responseJSON['errors'])
 
   # Make DELETE request
   #
@@ -588,10 +618,6 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # @param [Object] resourceData the resourceData to send to the server
   # @param [Object] options options that may modify the data sent to the server
   #   @see #post
-  #
-  # 1. If resourceData was provided, build a resource document out of it using only resource identifiers
-  # 2. If resourceData was not provided, send nothing as data to the server
-  # 3. Make DELETE request
   @delete: (url, resourceData, options = {}) ->
     data =
       if resourceData?
@@ -600,3 +626,6 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
         {}
 
     @request(url, 'DELETE', data)
+    .then null
+    , (errors) ->
+      parameterErrors(errors.responseJSON['errors']) if errors.responseJSON

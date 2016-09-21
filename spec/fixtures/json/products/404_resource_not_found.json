@@ -1,7 +1,9 @@
-[
-  {
-    "key": "not_found",
-    "field": "id",
-    "message": "Could not find product with id: 1"
-  }
-]
+{
+  "errors": [
+    {
+      "source": { "parameter": "id" },
+      "code": "not_found",
+      "detail": "Could not find product with id: 1"
+    }
+  ]
+}

@@ -213,5 +213,5 @@ describe 'ActiveResource', ->
           expect(window.onFailure).toHaveBeenCalled()
 
         it 'returns an error to the callback', ->
-          errors = window.onFailure.calls.mostRecent().args[0].responseJSON
-          expect(errors[0].key).toBeDefined()
+          errors = window.onFailure.calls.mostRecent().args[0]
+          expect(errors.first().code).toEqual('forbidden')

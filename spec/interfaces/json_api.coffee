@@ -59,9 +59,12 @@ describe 'ActiveResource', ->
             jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.failure)
             expect(window.onFailure).toHaveBeenCalled()
 
-          it 'returns an error', ->
+          it 'returns a collection of errors', ->
+            expect(window.onFailure.calls.mostRecent().args[0].klass()).toBe(ActiveResource::Collection)
+
+          it 'returns a parameter error', ->
             error = window.onFailure.calls.mostRecent().args[0].first()
-            expect(error.key).toBeDefined()
+            expect(error.parameter).toEqual('id')
 
       describe 'using fields queryParam', ->
         beforeEach ->
@@ -161,6 +164,15 @@ describe 'ActiveResource', ->
 
           it 'adds errors the resource', ->
             expect(@resource.errors().empty?()).toBeFalsy()
+
+          it 'converts a pointer to a base error field', ->
+            expect(@resource.errors().forBase()).toEqual({ invalid: "A problem occurred with the base of the product." })
+
+          it 'converts a pointer to a attribute error field', ->
+            expect(@resource.errors().forAttribute('title')).toEqual({ blank: 'Title cannot be blank.' })
+
+          it 'converts a pointer to a relationship error field', ->
+            expect(@resource.errors().forAttribute('orders.price')).toEqual({ blank: 'Price cannot be blank.' })
 
       describe 'persisting changes involving resource identifiers', ->
         beforeEach ->

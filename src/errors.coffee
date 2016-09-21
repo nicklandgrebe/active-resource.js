@@ -37,11 +37,11 @@ class ActiveResource::Errors
   # @param [String] attribute the attribute the error applies to
   #   Or 'base' if it applies to the base object
   # @param [String] code the code for the error
-  # @param [String] message the message for the error
+  # @param [String] detail the message for the error
   # @return [Object] the error object created and added to storage
-  add: (attribute, code, message = '') ->
+  add: (attribute, code, detail = '') ->
     @__errors[attribute] ||= []
-    @__errors[attribute].push(error = { code: code, message: message })
+    @__errors[attribute].push(error = { code: code, detail: detail })
     error
 
   # Indicates whether or not the errors object is empty
@@ -59,7 +59,7 @@ class ActiveResource::Errors
   # @return [Object] the error object for the attribute
   forAttribute: (attribute) ->
     ActiveResource::Collection.build(@__errors[attribute]).inject {}, (out, error) ->
-      out[error.code] = error.message
+      out[error.code] = error.detail
       out
 
   # Returns the error object for base

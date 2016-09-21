@@ -125,7 +125,7 @@ var ActiveResource = function(){};
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   ActiveResource.prototype.Interfaces.prototype.JsonApi = (function(_super) {
-    var addErrorsFromPersistenceAttempt, addRelationshipsToAttributes, buildIncludeTree, buildResource, buildResourceDocument, buildResourceIdentifier, buildResourceRelationships, buildSortList, buildSparseFieldset, findIncludeFromRelationship, mergePersistedChanges, toCamelCase, toUnderscored;
+    var addRelationshipsToAttributes, buildIncludeTree, buildResource, buildResourceDocument, buildResourceIdentifier, buildResourceRelationships, buildSortList, buildSparseFieldset, findIncludeFromRelationship, mergePersistedChanges, parameterErrors, resourceErrors, toCamelCase, toUnderscored;
 
     __extends(JsonApi, _super);
 
@@ -345,11 +345,37 @@ var ActiveResource = function(){};
       return buildResource(response['data'], response['included'], resource);
     };
 
-    addErrorsFromPersistenceAttempt = function(errors, resource) {
+    resourceErrors = function(resource, errors) {
       _.each(errors, function(error) {
-        return resource.errors().add(s.camelize(error.field) || 'base', s.camelize(error.key), error.message);
+        var attribute;
+        attribute = [];
+        if (error['source']['pointer'] === '/data') {
+          attribute.push('base');
+        } else {
+          _.each(error['source']['pointer'].split('/data'), function(i) {
+            var m;
+            if ((m = i.match(/\/(attributes|relationships|)\/(\w+)/)) != null) {
+              return attribute.push(m[2]);
+            }
+          });
+        }
+        return resource.errors().add(attribute.join('.'), s.camelize(error['code']), error['detail']);
       });
       return resource;
+    };
+
+    parameterErrors = function(errors) {
+      return ActiveResource.prototype.Collection.build(errors).map(function(error) {
+        var out, _ref1;
+        out = {
+          details: error['detail']
+        };
+        if (((_ref1 = error['source']) != null ? _ref1['parameter'] : void 0) != null) {
+          out['parameter'] = s.camelize(error['source']['parameter']);
+        }
+        out['code'] = s.camelize(error['code']);
+        return out;
+      });
     };
 
     JsonApi.get = function(url, queryParams) {
@@ -386,11 +412,7 @@ var ActiveResource = function(){};
           return built.first();
         }
       }, function(errors) {
-        return ActiveResource.prototype.Collection.build(errors.responseJSON).map(function(error) {
-          error['field'] = s.camelize(error['field']);
-          error['key'] = s.camelize(error['key']);
-          return error;
-        });
+        return parameterErrors(errors.responseJSON['errors']);
       });
     };
 
@@ -403,7 +425,7 @@ var ActiveResource = function(){};
         data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers'])
       };
       if (!options['onlyResourceIdentifiers']) {
-        queryParams = ActiveResource.prototype.Collection.build(resourceData).first().queryParams();
+        queryParams = resourceData.queryParams();
         if (queryParams['fields'] != null) {
           data['fields'] = buildSparseFieldset(queryParams['fields']);
         }
@@ -421,7 +443,7 @@ var ActiveResource = function(){};
         if (options['onlyResourceIdentifiers']) {
           return errors;
         } else {
-          return addErrorsFromPersistenceAttempt(errors.responseJSON, resourceData);
+          return resourceErrors(resourceData, errors.responseJSON['errors']);
         }
       });
     };
@@ -435,7 +457,7 @@ var ActiveResource = function(){};
         data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers'])
       };
       if (!options['onlyResourceIdentifiers']) {
-        queryParams = ActiveResource.prototype.Collection.build(resourceData).first().queryParams();
+        queryParams = resourceData.queryParams();
         if (queryParams['fields'] != null) {
           data['fields'] = buildSparseFieldset(queryParams['fields']);
         }
@@ -453,7 +475,7 @@ var ActiveResource = function(){};
         if (options['onlyResourceIdentifiers']) {
           return errors;
         } else {
-          return addErrorsFromPersistenceAttempt(errors.responseJSON, resourceData);
+          return resourceErrors(resourceData, errors.responseJSON['errors']);
         }
       });
     };
@@ -467,7 +489,7 @@ var ActiveResource = function(){};
         data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers'])
       };
       if (!options['onlyResourceIdentifiers']) {
-        queryParams = ActiveResource.prototype.Collection.build(resourceData).first().queryParams();
+        queryParams = resourceData.queryParams();
         if (queryParams['fields'] != null) {
           data['fields'] = buildSparseFieldset(queryParams['fields']);
         }
@@ -485,7 +507,7 @@ var ActiveResource = function(){};
         if (options['onlyResourceIdentifiers']) {
           return errors;
         } else {
-          return addErrorsFromPersistenceAttempt(errors.responseJSON, resourceData);
+          return resourceErrors(resourceData, errors.responseJSON['errors']);
         }
       });
     };
@@ -498,7 +520,11 @@ var ActiveResource = function(){};
       data = resourceData != null ? {
         data: buildResourceDocument(resourceData, true)
       } : {};
-      return this.request(url, 'DELETE', data);
+      return this.request(url, 'DELETE', data).then(null, function(errors) {
+        if (errors.responseJSON) {
+          return parameterErrors(errors.responseJSON['errors']);
+        }
+      });
     };
 
     return JsonApi;
@@ -800,15 +826,15 @@ var ActiveResource = function(){};
       return this.__errors = {};
     };
 
-    Errors.prototype.add = function(attribute, code, message) {
+    Errors.prototype.add = function(attribute, code, detail) {
       var error, _base;
-      if (message == null) {
-        message = '';
+      if (detail == null) {
+        detail = '';
       }
       (_base = this.__errors)[attribute] || (_base[attribute] = []);
       this.__errors[attribute].push(error = {
         code: code,
-        message: message
+        detail: detail
       });
       return error;
     };
@@ -826,7 +852,7 @@ var ActiveResource = function(){};
 
     Errors.prototype.forAttribute = function(attribute) {
       return ActiveResource.prototype.Collection.build(this.__errors[attribute]).inject({}, function(out, error) {
-        out[error.code] = error.message;
+        out[error.code] = error.detail;
         return out;
       });
     };
