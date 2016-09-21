@@ -208,3 +208,4 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     resource.save(callback)
     .then ->
       _this.addToTarget(resource)
+      resource
