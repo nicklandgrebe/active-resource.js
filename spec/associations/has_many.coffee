@@ -87,7 +87,7 @@ describe 'ActiveResource', ->
             @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries the first resource of the relationship data URL', ->
-            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('page[size]=1')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('limit=1')
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -104,7 +104,7 @@ describe 'ActiveResource', ->
             @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries the first resource of the relationship data URL', ->
-            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('page[number]=-1&page[size]=1')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('limit=1&offset=-1')
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -139,7 +139,7 @@ describe 'ActiveResource', ->
             @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries the first relationship resource with filters', ->
-            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('filter[token]=abc123&page[size]=1')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('filter[token]=abc123&limit=1')
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)

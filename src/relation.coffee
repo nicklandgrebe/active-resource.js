@@ -285,7 +285,7 @@ class ActiveResource::Relation
   # @param [Integer] n the number of resources to retrieve
   # @return [Promise] a promise to return an Array of n ActiveResources **or** errors
   #
-  # 1. If there are no page params set, we can just query the first resource of page 1 to optimize
+  # 1. If there are no page params set, we can apply limit n to optimize the query
   # => * If page params are set, we risk retrieving the "first" resource incorrectly
   # 2. Query all resources in the relation and then return the first N resources from the resulting collection
   first: (n) ->
@@ -293,7 +293,7 @@ class ActiveResource::Relation
       if @queryParams()['page']?
         this
       else
-        @per(n || 1)
+        @limit(n || 1)
 
     relation.all()
     .then (collection) ->
@@ -304,7 +304,7 @@ class ActiveResource::Relation
   # @param [Integer] n the number of resources to retrieve
   # @return [Promise] a promise to return an Array of n ActiveResources **or** errors
   #
-  # 1. If there are no page params set, we can just query the last resource of the last page to optimize
+  # 1. If there are no page params set, we can apply limit and offset to optimize the query
   # => * If page params are set, we risk retrieving the "last" resource incorrectly
   # 2. Query all resources in the relation and then return the last N resources from the resulting collection
   last: (n) ->
@@ -312,7 +312,7 @@ class ActiveResource::Relation
       if @queryParams()['page']?
         this
       else
-        @page(-1).per(n || 1)
+        @offset(-(n || 1)).limit(n || 1)
 
     relation.all()
     .then (collection) ->

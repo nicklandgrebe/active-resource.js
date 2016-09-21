@@ -1439,7 +1439,7 @@ var ActiveResource = function(){};
 
     Relation.prototype.first = function(n) {
       var relation;
-      relation = this.queryParams()['page'] != null ? this : this.per(n || 1);
+      relation = this.queryParams()['page'] != null ? this : this.limit(n || 1);
       return relation.all().then(function(collection) {
         return collection.first(n);
       });
@@ -1447,7 +1447,7 @@ var ActiveResource = function(){};
 
     Relation.prototype.last = function(n) {
       var relation;
-      relation = this.queryParams()['page'] != null ? this : this.page(-1).per(n || 1);
+      relation = this.queryParams()['page'] != null ? this : this.offset(-(n || 1)).limit(n || 1);
       return relation.all().then(function(collection) {
         return collection.last(n);
       });

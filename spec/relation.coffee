@@ -90,7 +90,7 @@ describe 'ActiveResource', ->
 
       it 'makes a call to retrieve a single resource via index', ->
         @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('page[size]=1')
+        expect(@paramStr).toContain('limit=1')
 
       it 'returns a resource of the type requested', ->
         expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
@@ -106,7 +106,7 @@ describe 'ActiveResource', ->
 
       it 'makes a call to retrieve a single resource starting from the back, via index', ->
         @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('page[number]=-1&page[size]=1')
+        expect(@paramStr).toContain('limit=1&offset=-1')
 
       it 'returns a resource of the type requested', ->
         expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
