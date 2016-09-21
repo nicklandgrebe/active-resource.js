@@ -67,6 +67,27 @@ class ActiveResource::QueryParams
   @__collectionRelatedParams: ->
     _.pick(@queryParams(), COLLECTION_RELATED...)
 
+  # Extends a value param of queryParams with the new value passed in
+  #
+  # @example
+  #   @__queryParams = { limit: 2 }
+  #   param = 'limit'
+  #   value = 5
+  #
+  #   return { limit: 5 }
+  #
+  # @note queryParams defaults to @__queryParams, but this function can be used
+  #   to modify any object
+  #
+  # @param [String] param the name of the param to extend
+  # @param [Object] value the value to replace on the param
+  # @param [Object] queryParams the object to modify instead of @__queryParams
+  # @return [Object] the extended queryParams
+  @__extendValueParam: (param, value, queryParams) ->
+    queryParams ||= _.clone(@queryParams())
+    queryParams[param] = value
+    queryParams
+
   # Extends an object param of queryParams with the options passed in
   #
   # @example

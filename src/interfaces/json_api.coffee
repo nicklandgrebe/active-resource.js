@@ -510,6 +510,8 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
     if queryParams['sort']?
       data['sort']    = buildSortList(queryParams['sort'])
     data['page']    = queryParams['page']                        if queryParams['page']?
+    data['limit']   = queryParams['limit']                       if queryParams['limit']?
+    data['offset']  = queryParams['offset']                      if queryParams['offset']?
 
     @request(url, 'GET', data)
     .then (response) ->

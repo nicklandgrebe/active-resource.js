@@ -399,6 +399,12 @@ var ActiveResource = function(){};
       if (queryParams['page'] != null) {
         data['page'] = queryParams['page'];
       }
+      if (queryParams['limit'] != null) {
+        data['limit'] = queryParams['limit'];
+      }
+      if (queryParams['offset'] != null) {
+        data['offset'] = queryParams['offset'];
+      }
       return this.request(url, 'GET', data).then(function(response) {
         var built;
         built = ActiveResource.prototype.Collection.build(_.flatten([response.data])).map(function(object) {
@@ -973,6 +979,12 @@ var ActiveResource = function(){};
       return _.pick.apply(_, [this.queryParams()].concat(__slice.call(COLLECTION_RELATED)));
     };
 
+    QueryParams.__extendValueParam = function(param, value, queryParams) {
+      queryParams || (queryParams = _.clone(this.queryParams()));
+      queryParams[param] = value;
+      return queryParams;
+    };
+
     QueryParams.__extendObjectParam = function(param, options, queryParams) {
       queryParams || (queryParams = _.clone(this.queryParams()));
       queryParams[param] = _.extend(queryParams[param] || {}, options);
@@ -1355,6 +1367,14 @@ var ActiveResource = function(){};
       return this.__newRelation(this.__extendObjectParam('page', {
         size: value
       }));
+    };
+
+    Relation.prototype.limit = function(value) {
+      return this.__newRelation(this.__extendValueParam('limit', value));
+    };
+
+    Relation.prototype.offset = function(value) {
+      return this.__newRelation(this.__extendValueParam('offset', value));
     };
 
     Relation.prototype.includes = function() {

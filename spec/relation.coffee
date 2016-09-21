@@ -172,6 +172,18 @@ describe 'ActiveResource', ->
         @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('page[size]=2')
 
+    describe '#limit()', ->
+      it 'adds a limit to the query', ->
+        MyLibrary::Product.limit(2).all()
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
+        expect(@paramStr).toContain('limit=2')
+
+    describe '#offset()', ->
+      it 'adds an offset to the query', ->
+        MyLibrary::Product.offset(2).all()
+        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
+        expect(@paramStr).toContain('offset=2')
+
     describe '#build()', ->
       beforeEach ->
         @product = MyLibrary::Product.build(title: 'A product title')
