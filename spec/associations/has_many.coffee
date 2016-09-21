@@ -174,6 +174,19 @@ describe 'ActiveResource', ->
               expect(@result.first().orderItems().all(cached: true).size()).toEqual(1)
               expect(@result.last().orderItems().all(cached: true).size()).toEqual(1)
 
+      describe 'reloading', ->
+        describe 'when nested associations were included', ->
+          beforeEach ->
+            MyLibrary::Product.includes(orders: 'comments').find(1)
+            .done window.onSuccess
+
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.includes)
+            @resource = window.onSuccess.calls.mostRecent().args[0]
+
+          it "adds the nested associations to queryParams['include']", ->
+            @resource.orders().reload()
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('include=comments')
+
       describe 'assigning when owner is unpersisted', ->
         beforeEach ->
           @resource = MyLibrary::Product.build(id: 2)

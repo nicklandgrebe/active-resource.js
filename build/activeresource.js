@@ -935,15 +935,18 @@ var ActiveResource = function(){};
     QueryParams.queryParamsForReflection = function(reflection) {
       var queryParams, _ref;
       queryParams = {};
-      ActiveResource.prototype.Collection.build(this.queryParams()['include']).inject([], function(out, i) {
-        if (_.isObject(i)) {
-          return _.each(_.keys(i), function(i2) {
-            if (i2 === reflection.name) {
-              return out.push.apply(out, i[i2]);
-            }
-          });
-        }
-      });
+      if (this.queryParams()['include'] != null) {
+        queryParams['include'] = ActiveResource.prototype.Collection.build(this.queryParams()['include']).inject([], function(out, i) {
+          if (_.isObject(i)) {
+            _.each(_.keys(i), function(i2) {
+              if (i2 === reflection.name) {
+                return out.push.apply(out, _.flatten([i[i2]]));
+              }
+            });
+          }
+          return out;
+        });
+      }
       if (!(typeof reflection.polymorphic === "function" ? reflection.polymorphic() : void 0) && (((_ref = this.queryParams()['fields']) != null ? _ref[reflection.klass().queryName] : void 0) != null)) {
         queryParams['fields'] = _.pick(this.queryParams()['fields'], reflection.klass().queryName);
       }
@@ -1758,6 +1761,7 @@ var ActiveResource = function(){};
     CollectionAssociation.prototype.__findTarget = function() {
       var _this;
       _this = this;
+      debugger;
       return ActiveResource["interface"].get(this.links()['related'], this.owner.queryParamsForReflection(this.reflection)).then(function(resources) {
         resources.each(function(r) {
           return _this.setInverseInstance(r);

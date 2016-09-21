@@ -33,11 +33,15 @@ class ActiveResource::QueryParams
   # @return [Object] the queryParams for the reflections
   @queryParamsForReflection: (reflection) ->
     queryParams = {}
-    ActiveResource::Collection.build(@queryParams()['include']).inject [], (out, i) ->
-      if _.isObject(i)
-        _.each _.keys(i), (i2) ->
-          if i2 == reflection.name
-            out.push i[i2]...
+
+    if @queryParams()['include']?
+      queryParams['include'] =
+        ActiveResource::Collection.build(@queryParams()['include']).inject [], (out, i) ->
+          if _.isObject(i)
+            _.each _.keys(i), (i2) ->
+              if i2 == reflection.name
+                out.push _.flatten([i[i2]])...
+          out
 
     if !reflection.polymorphic?() && @queryParams()['fields']?[reflection.klass().queryName]?
       queryParams['fields'] = _.pick(@queryParams()['fields'], reflection.klass().queryName)

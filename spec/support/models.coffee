@@ -26,6 +26,12 @@ class window.MyLibrary
     this.hasMany 'comments', as: 'resource'
     this.hasMany 'orderItems'
 
+  class @::Comment extends ActiveResource::Base
+    this.className = 'Comment'
+    this.queryName = 'comments'
+
+    this.belongsTo 'resource', polymorphic: true
+
   class @::OrderItem extends ActiveResource::Base
     this.className = 'OrderItem'
     this.queryName = 'order_items'

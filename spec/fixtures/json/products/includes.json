@@ -35,6 +35,16 @@
       "attributes": {
         "price": 1.0
       },
+      "relationships": {
+        "comments": {
+          "data": [
+            {
+              "id": 1,
+              "type": "comments"
+            }
+          ]
+        }
+      },
       "links": {
         "self": "https://example.com/api/v1/orders/1/"
       }
@@ -45,8 +55,32 @@
       "attributes": {
         "price": 2.0
       },
+      "relationships": {
+        "comments": {
+          "data": [
+            {
+              "id": 1,
+              "type": "comments"
+            }
+          ]
+        }
+      },
       "links": {
         "self": "https://example.com/api/v1/orders/2/"
+      }
+    },
+    {
+      "id": 1,
+      "type": "comments",
+      "attributes": {
+        "body": "Comment 1"
+      }
+    },
+    {
+      "id": 2,
+      "type": "comments",
+      "attributes": {
+        "body": "Comment 2"
       }
     }
   ]
