@@ -87,7 +87,7 @@ describe 'ActiveResource', ->
             @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries the first resource of the relationship data URL', ->
-            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('page[size]=1')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('page[size]=1')
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -104,7 +104,7 @@ describe 'ActiveResource', ->
             @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries the first resource of the relationship data URL', ->
-            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('page[number]=-1&page[size]=1')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('page[number]=-1&page[size]=1')
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -122,7 +122,7 @@ describe 'ActiveResource', ->
 
           it 'queries a specific member of the relationship data URL', ->
             memberLink = 'https://example.com/api/v1/products/1/orders/1'
-            expect(jasmine.Ajax.requests.mostRecent().url).toEqual(memberLink)
+            expect(jasmine.Ajax.requests.mostRecent().url).toContain(memberLink)
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -139,7 +139,7 @@ describe 'ActiveResource', ->
             @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries the first relationship resource with filters', ->
-            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('filter[token]=abc123&page[size]=1')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('filter[token]=abc123&page[size]=1')
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -153,7 +153,7 @@ describe 'ActiveResource', ->
 
           it 'adds query params to the relationship URL query', ->
             @resource.orders().where(price: 5).all()
-            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('filter[price]=5')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('filter[price]=5')
 
           describe '#select()', ->
             beforeEach ->
@@ -409,12 +409,12 @@ describe 'ActiveResource', ->
                 type: 'orders',
                 attributes: {
                   price: 3,
-                  product_id: 1,
-                  verification_code: 'abc123'
+                  verification_code: 'abc123',
+                  product_id: 1
                 },
                 relationships: {
                   product: {
-                    data: { id: 1, type: 'products' }
+                    data: { type: 'products', id: 1 }
                   }
                 }
               }
@@ -461,40 +461,60 @@ describe 'ActiveResource', ->
 
         describe 'when autosave association is present', ->
           beforeEach ->
-            orderItems = [MyLibrary::OrderItem.build(title: 'My title')]
+            MyLibrary::Order.hasMany 'orderItems', autosave: true
+
+            orderItems = [
+              MyLibrary::OrderItem.build(amount: 1.0),
+              MyLibrary::OrderItem.build(amount: 2.0)
+            ]
             @resource.orders().create({ price: 3, orderItems: orderItems }, window.onCompletion)
+
+          afterEach ->
+            MyLibrary::Order.hasMany 'orderItems'
+            MyLibrary::Order.resetQueryParams()
 
           it 'adds the association attributes to the resource document', ->
             resourceDocument = {
-              data: {
-                type: 'orders',
-                attributes: {
-                  price: 3,
-                  product_id: 1
-                },
-                relationships: {
-                  order_items: {
-                    data: [
-                      {
-                        type: 'order_items',
-                        attributes: {
-                          title: 'My title'
-                        }
+              type: 'orders',
+              attributes: {
+                price: 3,
+                product_id: 1
+              },
+              relationships: {
+                order_items: {
+                  data: [
+                    {
+                      type: 'order_items',
+                      attributes: {
+                        amount: 1.0
                       }
-                    ]
-                  }
-                  product: {
-                    data: { id: 1, type: 'products' }
-                  }
+                    },
+                    {
+                      type: 'order_items',
+                      attributes: {
+                        amount: 2.0
+                      }
+                    }
+                  ]
+                }
+                product: {
+                  data: { id: 1, type: 'products' }
                 }
               }
             }
-            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+            expect(jasmine.Ajax.requests.mostRecent().data()['data']).toEqual(resourceDocument)
 
-          # TODO: Add ability to determine if autosave association is persisted upon
-          # creation (#create does not allow for queryParams['include'])
-          #describe 'when creation succeeds', ->
-          #  it 'persists the autosave association', ->
+          it "adds the autosave association to queryOptions['include']", ->
+            expect(jasmine.Ajax.requests.mostRecent().data()['include']).toContain('order_items')
+
+          describe 'when creation succeeds', ->
+            beforeEach ->
+              jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
+              @order = window.onCompletion.calls.mostRecent().args[0]
+
+            it 'persists the autosave association', ->
+              @order.orderItems().all(cached: true).each (o) ->
+                expect(o.persisted()).toBeTruthy()
 
         describe 'when owner is not persisted', ->
           it 'throws exception', ->

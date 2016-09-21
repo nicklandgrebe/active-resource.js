@@ -7,6 +7,39 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
 
   target: -> @base.target
 
+  # Override Relation#queryParams so we can merge together the queryParams of both
+  # owner.queryParamsForReflection(thisReflection) and the queryParams of the association
+  # class. This is important because we have to use the queryParams that were used to
+  # initially load this association, but if we ever do another query here we must also use
+  # the queryParams for the klass so autosave associations will be reloaded if we do something
+  # like `product.orders().create(orderItems: [...])`, if Order#orderItems were an autosave
+  # association
+  #
+  # TODO: If we ever include an association, we should automatically add nested includes for
+  # each default include of that association's class
+  #
+  # @return [Object] queryParams the queryParams for the collection proxy
+  queryParams: ->
+    @__queryParams ||= (=>
+      queryParams = _.clone(@base.owner.queryParamsForReflection(@base.reflection))
+
+      unless @base.reflection.polymorphic?()
+        klassQueryParams = _.clone(@base.klass().queryParams())
+
+        if klassQueryParams['include']?
+          queryParams = @__extendArrayParam('include', klassQueryParams['include'], queryParams)
+
+        if klassQueryParams['fields']?
+          _.each(klassQueryParams['fields'], (v, k) ->
+            if(v2 = queryParams['fields'][k])
+              v2.push v...
+            else
+              queryParams['fields'][k] = v
+          )
+
+      queryParams
+    )()
+
   # Gets all the items in the association
   #
   # @note This method will not set the target of the association to the response,

@@ -28,7 +28,7 @@ class ActiveResource::Relation
   # @param [ActiveResource::Base] base the resource class this relation is for
   # @param [Object] __queryParams the __queryParams already built by previous links in
   #   the Relation chain
-  constructor: (@base, @__queryParams = {}) ->
+  constructor: (@base, @__queryParams) ->
     @queryName = @base.queryName
 
   # Returns links to the server for the resource that this relation is for

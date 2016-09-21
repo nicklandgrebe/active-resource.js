@@ -218,11 +218,8 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # 5. Return the built relationship object
   buildResourceRelationships = (resource) ->
     relationships = {}
-    autosaveReflections = resource.klass().reflectOnAllAutosaveAssociations()
 
     resource.klass().reflectOnAllAssociations().each (reflection) ->
-      autosaving = autosaveReflections.include(reflection)
-
       if reflection.collection()
         unless resource.association(reflection.name).empty()
           relationships[s.underscored(reflection.name)] =
@@ -230,7 +227,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
               resource.association(reflection.name).reader()
               .all(cached: true).map((target) ->
                 output = buildResourceIdentifier(target)
-                if autosaving
+                if reflection.autosave?()
                   output['attributes'] = _.omit(target.attributes(), resource.klass().primaryKey)
                 output
               ).toArray()
@@ -238,7 +235,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
         if resource.association(reflection.name).reader()?
           target = resource.association(reflection.name).reader()
           output = buildResourceIdentifier(target)
-          if autosaving
+          if reflection.autosave?()
             output['attributes'] = _.omit(target.attributes(), resource.klass().primaryKey)
 
           relationships[s.underscored(reflection.name)] = { data: output }

@@ -32,13 +32,26 @@ describe 'ActiveResource', ->
         ).toBeTruthy()
 
     describe '#reflectOnAllAutosaveAssociations', ->
+      beforeEach ->
+        class MyLibrary::Customer extends ActiveResource::Base
+          @hasMany 'orders', autosave: true
+
       it 'gets all autosave reflections', ->
         expect(
-          MyLibrary::Order
+          MyLibrary::Customer
           .reflectOnAllAutosaveAssociations()
           .first()
           .options['autosave']
         ).toBeTruthy()
+
+    describe 'various reflection options', ->
+      describe 'autosave: true', ->
+        beforeEach ->
+          class MyLibrary::Customer extends ActiveResource::Base
+            @hasMany 'orders', autosave: true
+
+        it 'adds the association to class level queryParams', ->
+          expect(MyLibrary::Customer.queryParams()['include']).toContain('orders')
 
   describe 'building reflections using ::Associations', ->
     describe '.hasMany', ->

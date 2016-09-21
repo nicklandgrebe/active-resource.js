@@ -22,14 +22,12 @@ class ActiveResource::Reflection
   reflectOnAssociation: (association) ->
     @reflections()[association]
 
-  # TODO: Ensure that autosave associations are reloaded in the same persistence call that originally saved them
-  #
   # Returns all reflections of autosaving associations of the ActiveResource class
   #
   # @return [Collection] a collection of reflections of all autosaving associations
   reflectOnAllAutosaveAssociations: ->
     reflections = ActiveResource::Collection.build(_.values(@__reflections))
-    reflections.select((r) -> r.options['autosave'])
+    reflections.select((r) -> r.autosave?())
 
   # Creates a reflection of an association
   #
@@ -69,6 +67,10 @@ class ActiveResource::Reflection
     # @param [Object] options the options to build into the reflection
     # @param [Class] activeResource the ActiveResource class that owns this reflection
     constructor: (@name, @options, @activeResource) ->
+      if @autosave()
+        @activeResource.assignQueryParams(
+          @activeResource.__extendArrayParam('include', [@name])
+        )
 
     # Returns the target klass that this reflection reflects on
     # @note Will throw error if called on polymorphic reflection
@@ -120,6 +122,10 @@ class ActiveResource::Reflection
     # @return [Boolean] whether or not the association is polymorphic
     polymorphic: ->
       @options['polymorphic']
+
+    # @return [Boolean] whether or not this is an autosave association
+    autosave: ->
+      @options['autosave']
 
     buildAssociation: ->
       new (@klass())()

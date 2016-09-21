@@ -24,7 +24,7 @@ class window.MyLibrary
     this.belongsTo 'product'
 
     this.hasMany 'comments', as: 'resource'
-    this.hasMany 'orderItems', autosave: 'true'
+    this.hasMany 'orderItems'
 
   class @::OrderItem extends ActiveResource::Base
     this.className = 'OrderItem'

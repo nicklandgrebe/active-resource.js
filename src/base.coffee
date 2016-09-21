@@ -17,7 +17,7 @@ class ActiveResource::Base
   ActiveResource.include(@, ActiveResource::Attributes)
   ActiveResource.include(@, ActiveResource::Errors)
   ActiveResource.include(@, ActiveResource::Persistence)
-  ActiveResource.include(@, ActiveResource::QueryParams.prototype)
+  ActiveResource.include(@, ActiveResource::QueryParams)
   ActiveResource.include(@, ActiveResource::Typing)
 
   # The name to use when querying the server for this resource

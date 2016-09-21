@@ -4,13 +4,34 @@ class ActiveResource::QueryParams
   RESOURCE_RELATED = ['fields', 'include']
   COLLECTION_RELATED = ['filter', 'sort', 'page']
 
-  queryParams: ->
-    @__queryParams ||= {}
-
+  # Gets a queryParams object for `this`
+  #
+  # If `this` is an instance of a class, instantiate its queryParams with that of its classes,
+  # which will have built-in queryParams from autosave associations and `fields` declarations
+  #
+  # @return [Object] the queryParams for `this`
   @queryParams: ->
-    @__queryParams ||= {}
+    @__queryParams ||=
+      if @isA?(ActiveResource::Base)
+        _.clone(@klass().queryParams())
+      else
+        {}
 
-  queryParamsForReflection: (reflection) ->
+  # Gets the queryParams for a given reflection of a resource's class
+  #
+  # @note This is used by associations when doing any queries (reload, etc) to get the
+  #   includes/fields that the association was initially created with in their owner's call,
+  #   thus maintaining their fields/includes instead of getting all fields & no includes:
+  #
+  # @example
+  #   Product.includes(orders: 'customer').select('title', orders: ['price']).first()
+  #   .then (resource) ->
+  #     resource.queryParamsForReflection(resource.klass().reflectOnAssociation('orders'))
+  #     => { includes: ['customer'], fields: { orders: ['price'] } }
+  #
+  # @param [Reflection] reflection the reflection to get queryParams for
+  # @return [Object] the queryParams for the reflections
+  @queryParamsForReflection: (reflection) ->
     queryParams = {}
     ActiveResource::Collection.build(@queryParams()['include']).inject [], (out, i) ->
       if _.isObject(i)
@@ -18,18 +39,22 @@ class ActiveResource::QueryParams
           if i2 == reflection.name
             out.push i[i2]...
 
-    unless reflection.polymorphic?()
+    if !reflection.polymorphic?() && @queryParams()['fields']?[reflection.klass().queryName]?
       queryParams['fields'] = _.pick(@queryParams()['fields'], reflection.klass().queryName)
 
     queryParams
 
-  assignQueryParams: (queryParams) ->
+  @assignQueryParams: (queryParams) ->
     @__queryParams = queryParams
 
-  assignResourceRelatedQueryParams: (queryParams) ->
+  # Used to assign only resource related queryParams like `fields` and `include` to an object
+  #
+  # @param [Object] queryParams the queryParams to pick resource related params out of and assign
+  #   to `this`
+  @assignResourceRelatedQueryParams: (queryParams) ->
     @assignQueryParams(_.pick(queryParams, RESOURCE_RELATED...))
 
-  resetQueryParams: ->
+  @resetQueryParams: ->
     @__queryParams = {}
 
   @__resourceRelatedParams: ->
@@ -76,7 +101,11 @@ class ActiveResource::QueryParams
   # @param [Object] queryParams the object to modify instead of @__queryParams
   # @return [Object] the extended queryParams
   @__extendArrayParam: (param, items, queryParams) ->
-    queryParams ||= _.clone(@queryParams())
-    queryParams[param] ||= []
+    queryParams ||= _.clone(@queryParams()) # shallow clone
+    queryParams[param] =
+      if queryParams[param]
+        queryParams[param].slice(0) # clone array
+      else
+        []
     queryParams[param].push items... if items?
     queryParams
