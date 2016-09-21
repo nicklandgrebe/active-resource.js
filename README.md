@@ -45,7 +45,9 @@ http://example.com/api/v1/products/
 ```coffee
 Product.where(title: 'A product title').includes('orders').order(createdAt: 'desc').all()
 Product.select('title').first(5)
-Product.page(2).per(1).all()
+Product.page(2).perPage(1).all()
+
+Product.limit(2).offset(2).all()
 
 Product.find(1)
 Product.findBy(title: 'A product title')

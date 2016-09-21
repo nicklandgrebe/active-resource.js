@@ -10,7 +10,7 @@
 #   Order.where(price: 5.0).all()
 #
 # @example
-#   Order.where(price: 5.0).order('updatedAt').page(2).per(5).all()
+#   Order.where(price: 5.0).order('updatedAt').page(2).perPage(5).all()
 #
 # @example
 #   Order.includes('transactions').select('id','price',transactions: ['id','amount']).first(5)
@@ -134,23 +134,17 @@ class ActiveResource::Relation
   #
   # @param [Integer] value the page number to define for the query
   # @return [ActiveResource::Relation] the extended relation with added `page.number` param
-  #
-  # 1. Replace __queryParams['page']['number'] with value
-  # 2. Create new relation with the extended __queryParams
   page: (value) ->
     @__newRelation(@__extendObjectParam('page', { number: value }))
 
   # Defines the page size of the query
   #
   # @example
-  #  .per(5) = { page: { size: 5 } }
+  #  .perPage(5) = { page: { size: 5 } }
   #
   # @param [Integer] value the page size to define for the query
   # @return [ActiveResource::Relation] the extended relation with added `page.size` param
-  #
-  # 1. Replace __queryParams['page']['size'] with value
-  # 2. Create new relation with the extended __queryParams
-  per: (value) ->
+  perPage: (value) ->
     @__newRelation(@__extendObjectParam('page', { size: value }))
 
   # Defines the limit on the number of resources to query

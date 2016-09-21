@@ -166,9 +166,9 @@ describe 'ActiveResource', ->
         @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('page[number]=2')
 
-    describe '#per()', ->
+    describe '#perPage()', ->
       it 'adds a page size to the query', ->
-        MyLibrary::Product.per(2).all()
+        MyLibrary::Product.perPage(2).all()
         @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('page[size]=2')
 
