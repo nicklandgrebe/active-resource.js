@@ -19,15 +19,16 @@
 #   Order.find(token: 'as8h2nW')
 #
 # @example
-#   Order.includes('transactions').find_by(token: 'as8h2nW')
+#   Order.includes('transactions').findBy(token: 'as8h2nW')
 #
 class ActiveResource::Relation
+  ActiveResource.include(@, ActiveResource::QueryParams)
   ActiveResource.include(@, ActiveResource::Typing)
 
   # @param [ActiveResource::Base] base the resource class this relation is for
-  # @param [Object] __queryOptions the queryOptions already built by previous links in
+  # @param [Object] __queryParams the __queryParams already built by previous links in
   #   the Relation chain
-  constructor: (@base, @__queryOptions) ->
+  constructor: (@base, @__queryParams = {}) ->
     @queryName = @base.queryName
 
   # Returns links to the server for the resource that this relation is for
@@ -44,8 +45,8 @@ class ActiveResource::Relation
   # @param [Object] options the hash of filters to add the query
   # @return [ActiveResource::Relation] the extended relation with added `filter` params
   #
-  # 1. Extend queryOptions['filter'] with the additional options
-  # 2. Create new relation with the extended queryOptions
+  # 1. Extend __queryParams['filter'] with the additional options
+  # 2. Create new relation with the extended __queryParams
   where: (options) ->
     @__newRelation(@__extendObjectParam('filter', options))
 
@@ -63,8 +64,8 @@ class ActiveResource::Relation
   # @param [Array<String>] args a list of columns to order the query by
   # @return [ActiveResource::Relation] the extended relation with added `sort` params
   #
-  # 1. Add sorting key/value pairs to queryOptions['sort'] object
-  # 2. Create new relation with the extended queryOptions
+  # 1. Add sorting key/value pairs to __queryParams['sort'] object
+  # 2. Create new relation with the extended __queryParams
   order: (args) ->
     @__newRelation(@__extendObjectParam('sort', args))
 
@@ -86,7 +87,7 @@ class ActiveResource::Relation
   # @param [Array<String,Object>] args an array of field representations to cull the query by
   # @return [ActiveResource::Relation] the extended relation with added `sort` params
   #
-  # 1. Build new queryOptions so we don't persist across relation constructions
+  # 1. Build new queryParams so we don't persist across relation constructions
   # 2. Flatten the field arguments into an array of strings/objects and iterate over it
   # 3. Determine the model name for each field
   #   * If object: model name is the key (Order.select({ transactions: [...] }) # => transactions)
@@ -94,10 +95,10 @@ class ActiveResource::Relation
   # 4. Append the list of fields to the array of fields for that model
   #   * If object: first value of arg is array to append (Order.select({ transactions: ['id'] }) => ['id'])
   #   * If string: arg itself is item to append to array (Order.select('id') => ['id'])
-  # 5. Create new relation with the extended queryOptions
+  # 5. Create new relation with the extended queryParams
   select: (args...) ->
-    queryOptions = _.clone(@__queryOptions || {})
-    queryOptions['fields'] ||= {}
+    queryParams = _.clone(@queryParams())
+    queryParams['fields'] ||= {}
 
     ActiveResource::Collection.build(args)
     .map((a) ->
@@ -113,7 +114,7 @@ class ActiveResource::Relation
         else
           @queryName
 
-      queryOptions['fields'] =
+      queryParams['fields'] =
         @__extendArrayParam(
           modelName,
           if _.isObject(arg)
@@ -121,10 +122,10 @@ class ActiveResource::Relation
           else
             [arg]
           ,
-          queryOptions['fields']
+          queryParams['fields']
         )
 
-    @__newRelation(queryOptions)
+    @__newRelation(queryParams)
 
   # Defines the page number of the query
   #
@@ -134,8 +135,8 @@ class ActiveResource::Relation
   # @param [Integer] value the page number to define for the query
   # @return [ActiveResource::Relation] the extended relation with added `page.number` param
   #
-  # 1. Replace queryOptions['page']['number'] with value
-  # 2. Create new relation with the extended queryOptions
+  # 1. Replace __queryParams['page']['number'] with value
+  # 2. Create new relation with the extended __queryParams
   page: (value) ->
     @__newRelation(@__extendObjectParam('page', { number: value }))
 
@@ -147,8 +148,8 @@ class ActiveResource::Relation
   # @param [Integer] value the page size to define for the query
   # @return [ActiveResource::Relation] the extended relation with added `page.size` param
   #
-  # 1. Replace queryOptions['page']['size'] with value
-  # 2. Create new relation with the extended queryOptions
+  # 1. Replace __queryParams['page']['size'] with value
+  # 2. Create new relation with the extended __queryParams
   per: (value) ->
     @__newRelation(@__extendObjectParam('page', { size: value }))
 
@@ -170,8 +171,8 @@ class ActiveResource::Relation
   #
   # 1. Go through array of args and separate objects with multiple keys in arrays of single key objects so
   #    the array does this: ['1', '2', { 3: 'a', 4: 'b' }] => ['1', '2', { 3: 'a' }, { 4: 'b' }]
-  # 1. Append flattened array args to queryOptions['include'] collection
-  # 2. Create new relation with extended queryOptions
+  # 1. Append flattened array args to __queryParams['include'] collection
+  # 2. Create new relation with extended __queryParams
   includes: (args...) ->
     args =
       ActiveResource::Collection.build(args)
@@ -207,7 +208,8 @@ class ActiveResource::Relation
       else
         new this()
 
-    resource.assignAttributes(_.extend(attributes, @__queryOptions?['filter']))
+    resource.assignAttributes(_.extend(attributes, @queryParams()['filter']))
+    resource.assignResourceRelatedQueryParams(@queryParams())
     resource
 
   # Builds a new ActiveResource of the type for this relation and persists it on the server
@@ -233,7 +235,7 @@ class ActiveResource::Relation
   # @return [Promise] a promise to return the ActiveResource **or** errors
   find: (primaryKey) ->
     return unless primaryKey?
-    ActiveResource.interface.get @links()['related'] + primaryKey.toString(), @__queryOptions
+    ActiveResource.interface.get @links()['related'] + primaryKey.toString(), @queryParams()
 
   # Retrieves the first ActiveResource in the relation corresponding to conditions
   #
@@ -246,7 +248,7 @@ class ActiveResource::Relation
   #
   # @return [Promise] a promise to return a Collection of ActiveResources **or** errors
   all: ->
-    ActiveResource.interface.get @links()['related'], @__queryOptions
+    ActiveResource.interface.get @links()['related'], @queryParams()
 
   # Retrieves all resources in the relation and calls a function with each one of them
   #
@@ -268,7 +270,7 @@ class ActiveResource::Relation
   # 2. Query all resources in the relation and then return the first N resources from the resulting collection
   first: (n) ->
     relation =
-      if (@__queryOptions ||= {})['page']?
+      if @queryParams()['page']?
         this
       else
         @per(n || 1)
@@ -287,7 +289,7 @@ class ActiveResource::Relation
   # 2. Query all resources in the relation and then return the last N resources from the resulting collection
   last: (n) ->
     relation =
-      if (@__queryOptions ||= {})['page']?
+      if @queryParams()['page']?
         this
       else
         @page(-1).per(n || 1)
@@ -298,51 +300,8 @@ class ActiveResource::Relation
 
   # private
 
-  # Creates a new ActiveResource::Relation with the extended queryOptions passed in
-  # @param [Object] queryOptions the extended query options for the relation
+  # Creates a new ActiveResource::Relation with the extended __queryParams passed in
+  # @param [Object] queryParams the extended query params for the relation
   # @return [ActiveResource::Relation] the new Relation for the extended query
-  __newRelation: (queryOptions) ->
-    new @constructor(@base, queryOptions)
-
-  # Extends an object param of queryOptions with the options passed in
-  #
-  # @example
-  #   @__queryOptions = { fields: { order: '...' } }
-  #   param = 'fields'
-  #   options = { transactions: 'id,amount' }
-  #
-  #   return { fields: { order: '...', transactions: 'id,amount' } }
-  #
-  # @note queryOptions defaults to @__queryOptions, but this function can be used
-  #   to modify any object
-  #
-  # @param [String] param the name of the param to extend
-  # @param [Object] options the options to add to the param
-  # @param [Object] queryOptions the object to modify instead of @__queryOptions
-  # @return [Object] the extended queryOptions
-  __extendObjectParam: (param, options, queryOptions) ->
-    queryOptions ||= _.clone(@__queryOptions || {})
-    queryOptions[param] = _.extend(queryOptions[param] || {}, options)
-    queryOptions
-
-  # Push items onto an array param of queryOptions
-  #
-  # @example
-  #   @__queryOptions = { sort: ['id'] }
-  #   param = 'sort'
-  #   value = 'updatedAt'
-  #
-  #   return { sort: ['id', 'updatedAt'] }
-  #
-  # @note queryOptions defaults to @__queryOptions, but this function can be used
-  #   to modify any object
-  #
-  # @param [String] param the name of the param to extend
-  # @param [Array<String,Object>] items items to push onto the collection param
-  # @param [Object] queryOptions the object to modify instead of @__queryOptions
-  # @return [Object] the extended queryOptions
-  __extendArrayParam: (param, items, queryOptions) ->
-    queryOptions ||= _.clone(@__queryOptions || {})
-    queryOptions[param] ||= []
-    queryOptions[param].push items... if items?
-    queryOptions
+  __newRelation: (queryParams) ->
+    new @constructor(@base, queryParams)

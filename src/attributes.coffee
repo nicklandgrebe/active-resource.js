@@ -31,7 +31,7 @@ class ActiveResource::Attributes
   #
   # @return [Object] the attributes of the resource
   @attributes: ->
-    reserved = ['__associations', '__errors', '__links', '__queryOptions']
+    reserved = ['__associations', '__errors', '__links', '__queryParams']
 
     validOutput = (k, v) ->
       !_.isFunction(v) && !_.contains(reserved, k) &&
@@ -45,7 +45,7 @@ class ActiveResource::Attributes
 
     output
 
-  # Reloads all the attributes from the server, using saved @__queryOptions
+  # Reloads all the attributes from the server, using saved @__queryParams
   # to ensure proper field and include reloading
   #
   # @example
@@ -63,7 +63,7 @@ class ActiveResource::Attributes
     throw 'Cannot reload a resource that is not persisted' unless @persisted()
 
     resource = this
-    ActiveResource.interface.get(@links()['self'], @__queryOptions)
+    ActiveResource.interface.get(@links()['self'], @queryParams())
     .then (reloaded) ->
       resource.assignAttributes(reloaded.attributes())
       resource.klass().reflectOnAllAssociations().each (reflection) ->

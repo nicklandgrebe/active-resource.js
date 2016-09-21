@@ -362,23 +362,23 @@ describe 'ActiveResource', ->
           @target = @resource.orders().build([{ price: 1 }, { price: 2 }])
 
         it 'builds resource(s) of reflection klass type', ->
-          _.each @target, (t) =>
+          @target.each (t) =>
             expect(t.klass()).toBe(MyLibrary::Order)
 
         it 'assigns attributes to the resource(s)', ->
-          _.each @target, (t) =>
+          @target.each (t) =>
             expect([1, 2]).toContain(t.price)
 
         it 'assigns the inverse target(s)', ->
-          _.each @target, (t) =>
+          @target.each (t) =>
             expect(t.product()).toBe(@resource)
 
         it 'assigns the target(s) foreign key(s)', ->
-          _.each @target, (t) =>
+          @target.each (t) =>
             expect(t.productId).toEqual(@resource.id)
 
         it 'adds the resource to the target', ->
-          _.each @target, (t) =>
+          @target.each (t) =>
             expect(@resource.orders().all(cached: true).toArray()).toContain(t)
 
       describe 'creating', ->

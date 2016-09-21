@@ -74,11 +74,18 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
     attributes =
       if _.isArray(attributes)
         _.map attributes, (attr) =>
-          _.extend(attr, @__queryOptions?['filter'])
+          _.extend(attr, @queryParams()['filter'])
       else
-        _.extend(attributes, @__queryOptions?['filter'])
+        _.extend(attributes, @queryParams()['filter'])
 
-    @base.build(attributes)
+    resources = @base.build(attributes)
+    resources.each (r) =>
+      r.assignResourceRelatedQueryParams(@queryParams())
+
+    if resources.size() > 1
+      resources
+    else
+      resources.first()
 
   # TODO: Add #load
 
@@ -91,12 +98,12 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
   #   @note May not be persisted, in which case `resource.errors().empty? == false`
   # @return [ActiveResource::Base] a promise to return the persisted resource **or** errors
   create: (attributes = {}, callback) ->
-    # TODO: Add specs for queryOptions on `#create`
-    @base.create(_.extend(attributes, @__queryOptions?['filter']), @__queryOptions, callback)
+    attributes = _.extend(attributes, @queryParams()['filter'])
+    @base.create(attributes, @__resourceRelatedParams(), callback)
 
   # Reloads the association
   #
-  # @return [Promise<ActiveResource::Base>] a promise to return the reloaded target **or** errors 
+  # @return [Promise<ActiveResource::Base>] a promise to return the reloaded target **or** errors
   reload: ->
     @base.reload()
 

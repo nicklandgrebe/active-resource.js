@@ -479,7 +479,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
         ActiveResource::Collection.build(_.flatten([response.data]))
         .map (object) ->
           object = buildResource(object, response.included)
-          object.__queryOptions = _.pick(queryParams, 'include', 'fields')
+          object.assignResourceRelatedQueryParams(queryParams)
           object
 
       if _.isArray(response.data) then built else built.first()
@@ -499,7 +499,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   #   of each resource into the resource document
   #
   # 1. Build a resource document out of the resources passed in
-  # 2. Add queryOptions (only `fields` and `include`) so the response will contain those fields
+  # 2. Add queryParams (only `fields` and `include`) so the response will contain those fields
   # 3. Make POST request with the resource document
   # 4. If request was successful, and a full document was returned (true unless `onlyResourceIdentifiers`),
   #    merge the changes in attributes/relationships made on the server to the persisted resource
@@ -508,7 +508,10 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
-      data = _.extend(data, ActiveResource::Collection.build(resourceData).first().__queryOptions)
+      queryParams = ActiveResource::Collection.build(resourceData).first().queryParams()
+
+      data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
+      data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
     @request(url, 'POST', data)
     .then (response) ->
@@ -532,7 +535,10 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
-      data = _.extend(data, ActiveResource::Collection.build(resourceData).first().__queryOptions)
+      queryParams = ActiveResource::Collection.build(resourceData).first().queryParams()
+
+      data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
+      data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
     @request(url, 'PATCH', data)
     .then (response) ->
@@ -556,7 +562,10 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
-      data = _.extend(data, ActiveResource::Collection.build(resourceData).first().__queryOptions)
+      queryParams = ActiveResource::Collection.build(resourceData).first().queryParams()
+
+      data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
+      data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
     @request(url, 'PUT', data)
     .then (response) ->

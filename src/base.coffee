@@ -12,12 +12,12 @@
 class ActiveResource::Base
   ActiveResource.extend(@, ActiveResource::Associations)
   ActiveResource.extend(@, ActiveResource::Reflection.prototype)
-  ActiveResource.extend(@, ActiveResource::Relation)
   ActiveResource.extend(@, ActiveResource::Relation.prototype)
   ActiveResource.include(@, ActiveResource::Associations.prototype)
   ActiveResource.include(@, ActiveResource::Attributes)
   ActiveResource.include(@, ActiveResource::Errors)
   ActiveResource.include(@, ActiveResource::Persistence)
+  ActiveResource.include(@, ActiveResource::QueryParams.prototype)
   ActiveResource.include(@, ActiveResource::Typing)
 
   # The name to use when querying the server for this resource
@@ -55,8 +55,9 @@ class ActiveResource::Base
 
   # private
 
-  # Creates a new ActiveResource::Relation with the extended query_options passed in
-  # @param [Object] queryOptions the extended query options for the relation
+  # Creates a new ActiveResource::Relation with the extended queryParams passed in
+  #
+  # @param [Object] queryParams the extended query params for the relation
   # @return [ActiveResource::Relation] the new Relation for the extended query
-  @__newRelation: (queryOptions) ->
-    new ActiveResource::Relation(this, queryOptions)
+  @__newRelation: (queryParams) ->
+    new ActiveResource::Relation(this, queryParams)

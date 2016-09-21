@@ -36,11 +36,12 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
   # Creates a resource for the association
   #
   # @param [Object] attributes the attributes to build into the resource
+  # @param [Object] queryParams the options to add to the query, like `fields` and `include`
   # @param [Function] callback the function to pass the built resource into after calling create
   #   @note May not be persisted, in which case `resource.errors().empty? == false`
   # @return [ActiveResource::Base] a promise to return the persisted resource **or** errors
-  create: (attributes = {}, callback) ->
-    @__createResource(attributes, callback)
+  create: (attributes = {}, queryParams = {}, callback) ->
+    @__createResource(attributes, queryParams, callback)
 
   # private
 
@@ -55,7 +56,7 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
   #
   # @return [Promise] a promise to return the resource **or** error 404
   __getResource: ->
-    ActiveResource.interface.get @links()['related']
+    ActiveResource.interface.get @links()['related'], @owner.queryParamsForReflection(@reflection)
 
   # Finds target using either the owner's relationship endpoint
   #
@@ -68,9 +69,14 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
 
   # Creates a resource for the association
   #
+  # @see #create
+  #
   # @return [Promise] a promise to return the created target **or** errors
-  __createResource: (attributes, callback) ->
+  __createResource: (attributes, queryParams, callback) ->
+    throw 'You cannot call create on an association unless the parent is saved' unless @owner.persisted?()
+
     resource = @__buildResource(attributes)
+    resource.assignQueryParams(queryParams)
     @replace(resource)
 
     _this = this

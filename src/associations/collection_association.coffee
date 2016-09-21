@@ -121,7 +121,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
   # @return [ActiveResource::Base] the built resource(s) for the association, with attributes
   build: (attributes = {}) ->
     if _.isArray(attributes)
-      _.map attributes, (attr) => @build(attr)
+      ActiveResource::Collection.build(attributes).map (attr) => @build(attr)
     else
       @__concatResources(ActiveResource::Collection.build(@__buildResource(attributes))).first()
 
@@ -130,18 +130,18 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
   # @todo Add support for multiple resource creation when JSON API supports it
   #
   # @param [Object] attributes the attributes to build into the resource
-  # @param [Object] queryOptions the options to add to the query, like `fields` and `include`
+  # @param [Object] queryParams the options to add to the query, like `fields` and `include`
   # @param [Function] callback the function to pass the built resource into after calling create
   #   @note May not be persisted, in which case `resource.errors().empty? == false`
   # @return [ActiveResource::Base] a promise to return the persisted resource **or** errors
-  create: (attributes = {}, queryOptions = {}, callback = _.noop()) ->
-    @__createResource(attributes, queryOptions, callback)
+  create: (attributes = {}, queryParams = {}, callback = _.noop()) ->
+    @__createResource(attributes, queryParams, callback)
 
   # private
 
   __findTarget: ->
     _this = this
-    ActiveResource.interface.get(@links()['related'])
+    ActiveResource.interface.get(@links()['related'], @owner.queryParamsForReflection(@reflection))
     .then (resources) ->
       resources.each (r) -> _this.setInverseInstance(r)
       resources
@@ -197,11 +197,11 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     ActiveResource.interface.delete @links()['self'], resources, onlyResourceIdentifiers: true
 
   # @see #create
-  __createResource: (attributes, queryOptions, callback) ->
-    throw 'You cannot call create unless the parent is saved' unless @owner.persisted?()
+  __createResource: (attributes, queryParams, callback) ->
+    throw 'You cannot call create on an association unless the parent is saved' unless @owner.persisted?()
 
     resource = @__buildResource(attributes)
-    resource.__queryOptions = _.pick(queryOptions, 'fields', 'include')
+    resource.assignQueryParams(queryParams)
     @insertResource(resource)
 
     _this = this
