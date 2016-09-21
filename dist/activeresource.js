@@ -1,3 +1,10 @@
+/*
+	ActiveResource.js 1.0.0
+	(c) 2016 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
+	ActiveResource.js may be freely distributed under the MIT license
+	Portions of ActiveResource.js were inspired by or borrowed from Rail's ActiveRecord library
+*/
+
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
