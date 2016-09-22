@@ -1,5 +1,5 @@
 {
-  "name": "ActiveResource.js",
+  "name": "activeresource",
   "description": "Persistable object relational mapping in Javascript",
   "main": "dist/activeresource.min.js",
   "author": "Nick Landgrebe",
