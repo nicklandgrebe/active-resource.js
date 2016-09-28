@@ -24,7 +24,7 @@ class ActiveResource::Associations::BelongsToAssociation extends ActiveResource:
       super
     else
       # @example Uses @links()['related'] == '/products/:product_id'
-      ActiveResource.interface.get(
+      @interface().get(
         @links()['related'] + @owner[@reflection.foreignKey()],
         @owner.queryParamsForReflection(@reflection)
       )

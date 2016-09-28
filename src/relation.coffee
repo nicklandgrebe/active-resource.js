@@ -32,10 +32,17 @@ class ActiveResource::Relation
     @queryName = @base.queryName
 
   # Returns links to the server for the resource that this relation is for
+  #
   # This will always be { related: baseUrl + '/[@base.queryName]' }
   # @return [Object] string URLs for the resource
   links: ->
     @base.links()
+
+  # Returns the interface for the resource, taken from its klass's resourceLibrary
+  #
+  # @return [Interface] the interface to use for this resource
+  interface: ->
+    @base.interface()
 
   # Adds filters to the query
   #
@@ -249,7 +256,7 @@ class ActiveResource::Relation
   # @return [Promise] a promise to return the ActiveResource **or** errors
   find: (primaryKey) ->
     return unless primaryKey?
-    ActiveResource.interface.get @links()['related'] + primaryKey.toString(), @queryParams()
+    @interface().get @links()['related'] + primaryKey.toString(), @queryParams()
 
   # Retrieves the first ActiveResource in the relation corresponding to conditions
   #
@@ -262,7 +269,7 @@ class ActiveResource::Relation
   #
   # @return [Promise] a promise to return a Collection of ActiveResources **or** errors
   all: ->
-    ActiveResource.interface.get @links()['related'], @queryParams()
+    @interface().get @links()['related'], @queryParams()
 
   # Retrieves all resources in the relation and calls a function with each one of them
   #

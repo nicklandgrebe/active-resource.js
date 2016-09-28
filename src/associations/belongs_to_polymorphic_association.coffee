@@ -1,7 +1,7 @@
 class ActiveResource::Associations::BelongsToPolymorphicAssociation extends ActiveResource::Associations::BelongsToAssociation
   klass: ->
     type = @owner[@reflection.foreignType()]
-    ActiveResource.constantize(type)
+    @owner.klass().resourceLibrary.constantize(type)
 
   # private
 

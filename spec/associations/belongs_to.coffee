@@ -71,7 +71,7 @@ describe 'ActiveResource', ->
 
         describe 'when foreignKey defined', ->
           beforeEach ->
-            class MyLibrary::BelongsToClass extends ActiveResource::Base
+            class MyLibrary::BelongsToClass extends MyLibrary.Base
               this.className = 'BelongsToClass'
 
               @belongsTo 'giftCard', foreignKey: 'giftCardToken'
@@ -87,7 +87,7 @@ describe 'ActiveResource', ->
 
         describe 'when primaryKey defined', ->
           beforeEach ->
-            class MyLibrary::BelongsToClass extends ActiveResource::Base
+            class MyLibrary::BelongsToClass extends MyLibrary.Base
               this.className = 'BelongsToClass'
 
               @belongsTo 'giftCard', primaryKey: 'token', foreignKey: 'giftCardToken'
@@ -224,7 +224,9 @@ describe 'ActiveResource', ->
 
         describe 'when className is specified', ->
           beforeEach ->
-            class MyLibrary::MyClass extends ActiveResource::Base
+            class MyLibrary::MyClass extends MyLibrary.Base
+              @className = 'MyClass'
+
               @belongsTo 'randomClass', className: 'GiftCard'
 
             @resource = MyLibrary::MyClass.build()

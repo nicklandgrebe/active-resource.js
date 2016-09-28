@@ -32,6 +32,10 @@ class ActiveResource::Associations::Association
   links: ->
     @__links ||= @klass().links()
 
+  # The interface that the owner of this association uses
+  interface: ->
+    @owner.klass().interface()
+
   # Resets the loaded flag to `false` and the target to `nil`
   reset: ->
     @__loaded = false

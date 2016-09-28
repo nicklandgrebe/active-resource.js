@@ -212,7 +212,7 @@ describe 'ActiveResource', ->
 
         describe 'when foreignKey defined', ->
           beforeEach ->
-            class MyLibrary::HasManyClass extends ActiveResource::Base
+            class MyLibrary::HasManyClass extends MyLibrary.Base
               this.className = 'HasManyClass'
 
               @hasMany 'orders', foreignKey: 'hasManyClassToken'
@@ -228,7 +228,7 @@ describe 'ActiveResource', ->
 
         describe 'when primaryKey defined', ->
           beforeEach ->
-            class MyLibrary::HasManyClass extends ActiveResource::Base
+            class MyLibrary::HasManyClass extends MyLibrary.Base
               this.className = 'HasManyClass'
 
               @hasMany 'orders', primaryKey: 'token', foreignKey: 'hasManyClassToken'
@@ -244,12 +244,12 @@ describe 'ActiveResource', ->
 
         describe 'when target is polymorphic', ->
           beforeEach ->
-            class MyLibrary::HasManyClass extends ActiveResource::Base
+            class MyLibrary::HasManyClass extends MyLibrary.Base
               this.className = 'HasManyClass'
 
               @hasMany 'belongsToPolymorphics', as: 'hasManyAlias'
 
-            class MyLibrary::BelongsToPolymorphic extends ActiveResource::Base
+            class MyLibrary::BelongsToPolymorphic extends MyLibrary.Base
               this.className = 'BelongsToPolymorphic'
 
               @belongsTo 'hasManyAlias', polymorphic: true

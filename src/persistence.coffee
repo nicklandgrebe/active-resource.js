@@ -100,7 +100,7 @@ class ActiveResource::Persistence
   #   .fail ->
   #     ...
   @destroy: ->
-    ActiveResource.interface.delete(@links()['self'], (resource = this))
+    @klass().resourceLibrary.interface.delete(@links()['self'], (resource = this))
     .then ->
       resource.__links = {}
       resource
@@ -122,6 +122,6 @@ class ActiveResource::Persistence
     @errors().reset()
 
     if @persisted()
-      ActiveResource.interface.put @links()['self'], this
+      @klass().resourceLibrary.interface.put @links()['self'], this
     else
-      ActiveResource.interface.post @links()['related'], this
+      @klass().resourceLibrary.interface.post @links()['related'], this

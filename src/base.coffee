@@ -29,12 +29,8 @@ class ActiveResource::Base
   #
   # @note On a production server where minification occurs, the actual name of classes
   #   `@constructor.name` will change from `Product` to perhaps `p`. But, since a class
-  #   is added as a variable to the ActiveResource.constantizeScope, we can use this
-  #   method to determine the name of the variable in the constantizeScope
-  #
-  # @note ActiveResource will eventually employ an `ActiveResource.buildConstants()` method
-  #   to be called after defining all classes, and it will auto-generate @queryName
-  #   and @className, but until then you must define these yourself in each class
+  #   is added as a variable to its resource library (or its prototype), we can use this
+  #   method to determine the name of the variable in the resource library scope
   @className = ''
 
   # The primary key by which to index this resource
@@ -46,12 +42,22 @@ class ActiveResource::Base
   #
   # @return [Object] the URL links used to query this resource type
   @links: ->
-    throw 'ActiveResource.baseUrl is not set' unless ActiveResource.baseUrl?
-    @__links ||= { related: ActiveResource.baseUrl + @queryName + '/' }
+    throw 'baseUrl is not set' unless @resourceLibrary.baseUrl?
+    throw 'queryName is not set' unless @queryName?
+
+    @__links ||= { related: @resourceLibrary.baseUrl + @queryName + '/' }
 
   # Links to query the server for this persisted resource with
   links: ->
     @__links ||= @klass().links()
+
+  # The interface to use when querying the server for this class
+  @interface: ->
+    @resourceLibrary.interface
+
+  # The interface to use when querying the server for this resource
+  interface: ->
+    @klass().interface()
 
   # private
 

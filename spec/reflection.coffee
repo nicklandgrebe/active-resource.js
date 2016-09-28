@@ -33,7 +33,7 @@ describe 'ActiveResource', ->
 
     describe '#reflectOnAllAutosaveAssociations', ->
       beforeEach ->
-        class MyLibrary::Customer extends ActiveResource::Base
+        class MyLibrary::Customer extends MyLibrary.Base
           @hasMany 'orders', autosave: true
 
       it 'gets all autosave reflections', ->
@@ -47,7 +47,7 @@ describe 'ActiveResource', ->
     describe 'various reflection options', ->
       describe 'autosave: true', ->
         beforeEach ->
-          class MyLibrary::Customer extends ActiveResource::Base
+          class MyLibrary::Customer extends MyLibrary.Base
             @hasMany 'orders', autosave: true
 
         it 'adds the association to class level queryParams', ->
@@ -56,7 +56,7 @@ describe 'ActiveResource', ->
   describe 'building reflections using ::Associations', ->
     describe '.hasMany', ->
       beforeEach ->
-        class MyLibrary::Customer extends ActiveResource::Base
+        class MyLibrary::Customer extends MyLibrary.Base
           @hasMany 'orders'
 
       it 'builds a hasMany reflection', ->
@@ -71,8 +71,8 @@ describe 'ActiveResource', ->
 
     describe '.hasOne', ->
       beforeEach ->
-        class MyLibrary::GiftCard extends ActiveResource::Base
-          @hasOne 'order'
+        #class MyLibrary::GiftCard extends MyLibrary.Base
+          #@hasOne 'order'
 
       it 'builds a hasOne reflection', ->
         reflection = MyLibrary::GiftCard.reflectOnAssociation('order')
@@ -98,7 +98,7 @@ describe 'ActiveResource', ->
 
     describe '.belongsTo', ->
       beforeEach ->
-        class MyLibrary::AttributeValue extends ActiveResource::Base
+        class MyLibrary::AttributeValue extends MyLibrary.Base
           @belongsTo 'order'
 
       it 'builds a belongsTo reflection', ->

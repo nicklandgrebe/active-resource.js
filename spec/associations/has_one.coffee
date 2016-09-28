@@ -71,7 +71,7 @@ describe 'ActiveResource', ->
 
         describe 'when foreignKey defined', ->
           beforeEach ->
-            class MyLibrary::HasOneClass extends ActiveResource::Base
+            class MyLibrary::HasOneClass extends MyLibrary.Base
               @hasOne 'order', foreignKey: 'hasOneClassToken'
 
             @resource = MyLibrary::HasOneClass.build(id: 2)
@@ -85,7 +85,7 @@ describe 'ActiveResource', ->
 
         describe 'when primaryKey defined', ->
           beforeEach ->
-            class MyLibrary::HasOneClass extends ActiveResource::Base
+            class MyLibrary::HasOneClass extends MyLibrary.Base
               this.className = 'HasOneClass'
 
               @hasOne 'order', primaryKey: 'token'
@@ -101,12 +101,12 @@ describe 'ActiveResource', ->
 
         describe 'when target is polymorphic', ->
           beforeEach ->
-            class MyLibrary::HasOneClass extends ActiveResource::Base
+            class MyLibrary::HasOneClass extends MyLibrary.Base
               this.className = 'HasOneClass'
 
               @hasOne 'belongsToPolymorphicClass', as: 'hasOneAlias'
 
-            class MyLibrary::BelongsToPolymorphicClass extends ActiveResource::Base
+            class MyLibrary::BelongsToPolymorphicClass extends MyLibrary.Base
               this.className = 'BelongsToPolymorphicClass'
 
               @belongsTo 'hasOneAlias', polymorphic: true
@@ -237,7 +237,7 @@ describe 'ActiveResource', ->
 
         describe 'when className is specified', ->
           beforeEach ->
-            class MyLibrary::MyClass extends ActiveResource::Base
+            class MyLibrary::MyClass extends MyLibrary.Base
               @hasOne 'randomClass', className: 'GiftCard'
 
             @resource = MyLibrary::MyClass.build()

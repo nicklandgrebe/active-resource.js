@@ -1,5 +1,5 @@
 /*
-	ActiveResource.js 1.0.0
+	ActiveResource.js 2.0.0
 	(c) 2016 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	ActiveResource.js may be freely distributed under the MIT license
 	Portions of ActiveResource.js were inspired by or borrowed from Rail's ActiveRecord library
@@ -24,31 +24,23 @@
 var ActiveResource = function(){};
 
 (function() {
-  (function(moduleHandler) {
-    moduleHandler.constantize = function(className) {
-      var klass;
-      if ((klass = ActiveResource.constantizeScope[className]) == null) {
-        throw "NameError: klass " + className + " does not exist";
+  ActiveResource.extend = function(klass, mixin) {
+    var method, name, _results;
+    _results = [];
+    for (name in mixin) {
+      method = mixin[name];
+      if (!method.__excludeFromExtend) {
+        _results.push(klass[name] = method);
+      } else {
+        _results.push(void 0);
       }
-      return klass;
-    };
-    moduleHandler.extend = function(klass, mixin) {
-      var method, name, _results;
-      _results = [];
-      for (name in mixin) {
-        method = mixin[name];
-        if (!method.__excludeFromExtend) {
-          _results.push(klass[name] = method);
-        } else {
-          _results.push(void 0);
-        }
-      }
-      return _results;
-    };
-    return moduleHandler.include = function(klass, mixin) {
-      return this.extend(klass.prototype, mixin);
-    };
-  })(ActiveResource);
+    }
+    return _results;
+  };
+
+  ActiveResource.include = function(klass, mixin) {
+    return this.extend(klass.prototype, mixin);
+  };
 
 }).call(this);
 
@@ -77,18 +69,81 @@ var ActiveResource = function(){};
 }).call(this);
 
 (function() {
-  ActiveResource.prototype.Interfaces = (function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  ActiveResource.createResourceLibrary = function(baseUrl, options) {
+    var ResourceLibrary;
+    if (options == null) {
+      options = {};
+    }
+    return ResourceLibrary = (function() {
+      var Base, resourceLibrary, _ref;
+
+      function ResourceLibrary() {}
+
+      ResourceLibrary.baseUrl = baseUrl.charAt(baseUrl.length - 1) === '/' ? baseUrl : "" + baseUrl + "/";
+
+      ResourceLibrary.headers = options.headers;
+
+      ResourceLibrary["interface"] = new (options["interface"] || ActiveResource.Interfaces.JsonApi)(ResourceLibrary);
+
+      ResourceLibrary.constantizeScope = options['constantizeScope'];
+
+      resourceLibrary = ResourceLibrary;
+
+      ResourceLibrary.Base = Base = (function(_super) {
+        __extends(Base, _super);
+
+        function Base() {
+          _ref = Base.__super__.constructor.apply(this, arguments);
+          return _ref;
+        }
+
+        Base.resourceLibrary = resourceLibrary;
+
+        return Base;
+
+      })(ActiveResource.prototype.Base);
+
+      ResourceLibrary.constantize = function(className) {
+        var klass, scope, v, _i, _len;
+        klass = null;
+        scope = this.constantizeScope && _.values(this.constantizeScope) || _.flatten([_.values(this), _.values(this.prototype)]);
+        for (_i = 0, _len = scope.length; _i < _len; _i++) {
+          v = scope[_i];
+          if (_.isObject(v) && v.className === className) {
+            klass = v;
+          }
+        }
+        if (klass == null) {
+          throw "NameError: klass " + className + " does not exist";
+        }
+        return klass;
+      };
+
+      return ResourceLibrary;
+
+    }).call(this);
+  };
+
+}).call(this);
+
+(function() {
+  ActiveResource.Interfaces = ActiveResource.prototype.Interfaces = (function() {
     function Interfaces() {}
 
     Interfaces.prototype.Base = (function() {
-      function Base() {}
+      function Base(resourceLibrary) {
+        this.resourceLibrary = resourceLibrary;
+      }
 
-      Base.request = function(url, method, data) {
+      Base.prototype.request = function(url, method, data) {
         var options;
         options = {
           contentType: 'application/json',
           dataType: 'json',
-          headers: ActiveResource.headers,
+          headers: this.resourceLibrary.headers,
           method: method,
           url: url
         };
@@ -96,23 +151,23 @@ var ActiveResource = function(){};
         return jQuery.ajax(options);
       };
 
-      Base.get = function(url, queryParams) {
+      Base.prototype.get = function(url, queryParams) {
         throw '#get not implemented on base interface';
       };
 
-      Base.post = function(url, resourceData, options) {
+      Base.prototype.post = function(url, resourceData, options) {
         throw '#post not implemented on base interface';
       };
 
-      Base.patch = function(url, resourceData, options) {
+      Base.prototype.patch = function(url, resourceData, options) {
         throw '#patch not implemented on base interface';
       };
 
-      Base.put = function(url, resourceData, options) {
+      Base.prototype.put = function(url, resourceData, options) {
         throw '#put not implemented on base interface';
       };
 
-      Base["delete"] = function(url, resourceData, options) {
+      Base.prototype["delete"] = function(url, resourceData, options) {
         throw '#delete not implemented on base interface';
       };
 
@@ -122,7 +177,7 @@ var ActiveResource = function(){};
 
     return Interfaces;
 
-  }).call(this);
+  })();
 
 }).call(this);
 
@@ -131,8 +186,8 @@ var ActiveResource = function(){};
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  ActiveResource.prototype.Interfaces.prototype.JsonApi = (function(_super) {
-    var addRelationshipsToAttributes, buildIncludeTree, buildResource, buildResourceDocument, buildResourceIdentifier, buildResourceRelationships, buildSortList, buildSparseFieldset, findIncludeFromRelationship, mergePersistedChanges, parameterErrors, resourceErrors, toCamelCase, toUnderscored;
+  ActiveResource.Interfaces.JsonApi = ActiveResource.prototype.Interfaces.prototype.JsonApi = (function(_super) {
+    var buildIncludeTree, buildResourceDocument, buildResourceIdentifier, buildResourceRelationships, buildSortList, buildSparseFieldset, toCamelCase, toUnderscored;
 
     __extends(JsonApi, _super);
 
@@ -141,8 +196,8 @@ var ActiveResource = function(){};
       return _ref;
     }
 
-    JsonApi.request = function(url, method, data) {
-      return JsonApi.__super__.constructor.request.apply(this, arguments).then(function(response, textStatus, xhr) {
+    JsonApi.prototype.request = function(url, method, data) {
+      return JsonApi.__super__.request.apply(this, arguments).then(function(response, textStatus, xhr) {
         if (!(((response != null ? response.data : void 0) != null) || xhr.status === 204)) {
           throw "Response from " + url + " was not in JSON API format";
         }
@@ -294,14 +349,14 @@ var ActiveResource = function(){};
       }
     };
 
-    buildResource = function(data, includes, existingResource) {
+    JsonApi.prototype.buildResource = function(data, includes, existingResource) {
       var attributes, resource;
-      resource = existingResource || ActiveResource.constantize(_.singularize(s.classify(data['type']))).build();
+      resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
       if (resource.klass().primaryKey === 'id') {
         data['id'] = parseInt(data['id']);
       }
       attributes = _.extend(_.omit(data, 'type', 'attributes', 'links', 'relationships'), data['attributes']);
-      attributes = addRelationshipsToAttributes(attributes, data['relationships'], includes, resource);
+      attributes = this.addRelationshipsToAttributes(attributes, data['relationships'], includes, resource);
       resource.assignAttributes(toCamelCase(attributes));
       resource.__links = _.pick(data['links'], 'self');
       resource.klass().reflectOnAllAssociations().each(function(reflection) {
@@ -316,18 +371,19 @@ var ActiveResource = function(){};
       return resource;
     };
 
-    addRelationshipsToAttributes = function(attributes, relationships, includes, resource) {
+    JsonApi.prototype.addRelationshipsToAttributes = function(attributes, relationships, includes, resource) {
+      var _this = this;
       _.each(relationships, function(relationship, relationshipName) {
         var include, relationshipItems;
         if (_.isArray(relationship['data'])) {
           relationshipItems = ActiveResource.prototype.Collection.build(relationship['data']).map(function(relationshipMember) {
-            return findIncludeFromRelationship(relationshipMember, includes, resource);
+            return _this.findIncludeFromRelationship(relationshipMember, includes, resource);
           }).compact();
           if (!(typeof relationshipItems.empty === "function" ? relationshipItems.empty() : void 0)) {
             return attributes[relationshipName] = relationshipItems;
           }
         } else if (relationship['data'] != null) {
-          include = findIncludeFromRelationship(relationship['data'], includes, resource);
+          include = _this.findIncludeFromRelationship(relationship['data'], includes, resource);
           if (include != null) {
             return attributes[relationshipName] = include;
           }
@@ -336,23 +392,23 @@ var ActiveResource = function(){};
       return attributes;
     };
 
-    findIncludeFromRelationship = function(relationshipData, includes, resource) {
+    JsonApi.prototype.findIncludeFromRelationship = function(relationshipData, includes, resource) {
       var findConditions, include;
       findConditions = {
         type: relationshipData.type
       };
       findConditions[resource.klass().primaryKey] = relationshipData[resource.klass().primaryKey];
       if ((include = _.findWhere(includes, findConditions)) != null) {
-        include = buildResource(include, includes);
+        include = this.buildResource(include, includes);
       }
       return include;
     };
 
-    mergePersistedChanges = function(response, resource) {
-      return buildResource(response['data'], response['included'], resource);
+    JsonApi.prototype.mergePersistedChanges = function(response, resource) {
+      return this.buildResource(response['data'], response['included'], resource);
     };
 
-    resourceErrors = function(resource, errors) {
+    JsonApi.prototype.resourceErrors = function(resource, errors) {
       _.each(errors, function(error) {
         var attribute;
         attribute = [];
@@ -371,7 +427,7 @@ var ActiveResource = function(){};
       return resource;
     };
 
-    parameterErrors = function(errors) {
+    JsonApi.prototype.parameterErrors = function(errors) {
       return ActiveResource.prototype.Collection.build(errors).map(function(error) {
         var out, _ref1;
         out = {
@@ -385,8 +441,8 @@ var ActiveResource = function(){};
       });
     };
 
-    JsonApi.get = function(url, queryParams) {
-      var data;
+    JsonApi.prototype.get = function(url, queryParams) {
+      var data, _this;
       if (queryParams == null) {
         queryParams = {};
       }
@@ -412,10 +468,11 @@ var ActiveResource = function(){};
       if (queryParams['offset'] != null) {
         data['offset'] = queryParams['offset'];
       }
+      _this = this;
       return this.request(url, 'GET', data).then(function(response) {
         var built;
         built = ActiveResource.prototype.Collection.build(_.flatten([response.data])).map(function(object) {
-          object = buildResource(object, response.included);
+          object = _this.buildResource(object, response.included);
           object.assignResourceRelatedQueryParams(queryParams);
           return object;
         });
@@ -425,12 +482,12 @@ var ActiveResource = function(){};
           return built.first();
         }
       }, function(errors) {
-        return parameterErrors(errors.responseJSON['errors']);
+        return _this.parameterErrors(errors.responseJSON['errors']);
       });
     };
 
-    JsonApi.post = function(url, resourceData, options) {
-      var data, queryParams;
+    JsonApi.prototype.post = function(url, resourceData, options) {
+      var data, queryParams, _this;
       if (options == null) {
         options = {};
       }
@@ -446,23 +503,24 @@ var ActiveResource = function(){};
           data['include'] = buildIncludeTree(queryParams['include']);
         }
       }
+      _this = this;
       return this.request(url, 'POST', data).then(function(response) {
         if (options['onlyResourceIdentifiers']) {
           return response;
         } else {
-          return mergePersistedChanges(response, resourceData);
+          return _this.mergePersistedChanges(response, resourceData);
         }
       }, function(errors) {
         if (options['onlyResourceIdentifiers']) {
           return errors;
         } else {
-          return resourceErrors(resourceData, errors.responseJSON['errors']);
+          return _this.resourceErrors(resourceData, errors.responseJSON['errors']);
         }
       });
     };
 
-    JsonApi.patch = function(url, resourceData, options) {
-      var data, queryParams;
+    JsonApi.prototype.patch = function(url, resourceData, options) {
+      var data, queryParams, _this;
       if (options == null) {
         options = {};
       }
@@ -478,23 +536,24 @@ var ActiveResource = function(){};
           data['include'] = buildIncludeTree(queryParams['include']);
         }
       }
+      _this = this;
       return this.request(url, 'PATCH', data).then(function(response) {
         if (options['onlyResourceIdentifiers']) {
           return response;
         } else {
-          return mergePersistedChanges(response, resourceData);
+          return _this.mergePersistedChanges(response, resourceData);
         }
       }, function(errors) {
         if (options['onlyResourceIdentifiers']) {
           return errors;
         } else {
-          return resourceErrors(resourceData, errors.responseJSON['errors']);
+          return _this.resourceErrors(resourceData, errors.responseJSON['errors']);
         }
       });
     };
 
-    JsonApi.put = function(url, resourceData, options) {
-      var data, queryParams;
+    JsonApi.prototype.put = function(url, resourceData, options) {
+      var data, queryParams, _this;
       if (options == null) {
         options = {};
       }
@@ -510,32 +569,34 @@ var ActiveResource = function(){};
           data['include'] = buildIncludeTree(queryParams['include']);
         }
       }
+      _this = this;
       return this.request(url, 'PUT', data).then(function(response) {
         if (options['onlyResourceIdentifiers']) {
           return response;
         } else {
-          return mergePersistedChanges(response, resourceData);
+          return _this.mergePersistedChanges(response, resourceData);
         }
       }, function(errors) {
         if (options['onlyResourceIdentifiers']) {
           return errors;
         } else {
-          return resourceErrors(resourceData, errors.responseJSON['errors']);
+          return _this.resourceErrors(resourceData, errors.responseJSON['errors']);
         }
       });
     };
 
-    JsonApi["delete"] = function(url, resourceData, options) {
-      var data;
+    JsonApi.prototype["delete"] = function(url, resourceData, options) {
+      var data, _this;
       if (options == null) {
         options = {};
       }
       data = resourceData != null ? {
         data: buildResourceDocument(resourceData, true)
       } : {};
+      _this = this;
       return this.request(url, 'DELETE', data).then(null, function(errors) {
         if (errors.responseJSON) {
-          return parameterErrors(errors.responseJSON['errors']);
+          return _this.parameterErrors(errors.responseJSON['errors']);
         }
       });
     };
@@ -651,7 +712,7 @@ var ActiveResource = function(){};
         throw 'Cannot reload a resource that is not persisted';
       }
       resource = this;
-      return ActiveResource["interface"].get(this.links()['self'], this.queryParams()).then(function(reloaded) {
+      return this["interface"]().get(this.links()['self'], this.queryParams()).then(function(reloaded) {
         resource.assignAttributes(reloaded.attributes());
         return resource.klass().reflectOnAllAssociations().each(function(reflection) {
           var target;
@@ -811,16 +872,6 @@ var ActiveResource = function(){};
 }).call(this);
 
 (function() {
-  (function(config) {
-    config.baseUrl = null;
-    config.headers = {};
-    config.constantizeScope = window;
-    return config["interface"] = ActiveResource.prototype.Interfaces.prototype.JsonApi;
-  })(ActiveResource);
-
-}).call(this);
-
-(function() {
   ActiveResource.prototype.Errors = (function() {
     Errors.errors = function() {
       return this.__errors || (this.__errors = new ActiveResource.prototype.Errors(this));
@@ -908,7 +959,7 @@ var ActiveResource = function(){};
 
     Persistence.destroy = function() {
       var resource;
-      return ActiveResource["interface"]["delete"](this.links()['self'], (resource = this)).then(function() {
+      return this.klass().resourceLibrary["interface"]["delete"](this.links()['self'], (resource = this)).then(function() {
         resource.__links = {};
         return resource;
       });
@@ -917,9 +968,9 @@ var ActiveResource = function(){};
     Persistence.__createOrUpdate = function() {
       this.errors().reset();
       if (this.persisted()) {
-        return ActiveResource["interface"].put(this.links()['self'], this);
+        return this.klass().resourceLibrary["interface"].put(this.links()['self'], this);
       } else {
-        return ActiveResource["interface"].post(this.links()['related'], this);
+        return this.klass().resourceLibrary["interface"].post(this.links()['related'], this);
       }
     };
 
@@ -1093,7 +1144,7 @@ var ActiveResource = function(){};
       }
 
       AbstractReflection.prototype.klass = function() {
-        return ActiveResource.constantize(this.className());
+        return this.activeResource.resourceLibrary.constantize(this.className());
       };
 
       AbstractReflection.prototype.type = function() {
@@ -1329,6 +1380,10 @@ var ActiveResource = function(){};
       return this.base.links();
     };
 
+    Relation.prototype["interface"] = function() {
+      return this.base["interface"]();
+    };
+
     Relation.prototype.where = function(options) {
       return this.__newRelation(this.__extendObjectParam('filter', options));
     };
@@ -1426,7 +1481,7 @@ var ActiveResource = function(){};
       if (primaryKey == null) {
         return;
       }
-      return ActiveResource["interface"].get(this.links()['related'] + primaryKey.toString(), this.queryParams());
+      return this["interface"]().get(this.links()['related'] + primaryKey.toString(), this.queryParams());
     };
 
     Relation.prototype.findBy = function(conditions) {
@@ -1434,7 +1489,7 @@ var ActiveResource = function(){};
     };
 
     Relation.prototype.all = function() {
-      return ActiveResource["interface"].get(this.links()['related'], this.queryParams());
+      return this["interface"]().get(this.links()['related'], this.queryParams());
     };
 
     Relation.prototype.each = function(iteratee) {
@@ -1499,16 +1554,27 @@ var ActiveResource = function(){};
     function Base() {}
 
     Base.links = function() {
-      if (ActiveResource.baseUrl == null) {
-        throw 'ActiveResource.baseUrl is not set';
+      if (this.resourceLibrary.baseUrl == null) {
+        throw 'baseUrl is not set';
+      }
+      if (this.queryName == null) {
+        throw 'queryName is not set';
       }
       return this.__links || (this.__links = {
-        related: ActiveResource.baseUrl + this.queryName + '/'
+        related: this.resourceLibrary.baseUrl + this.queryName + '/'
       });
     };
 
     Base.prototype.links = function() {
       return this.__links || (this.__links = this.klass().links());
+    };
+
+    Base["interface"] = function() {
+      return this.resourceLibrary["interface"];
+    };
+
+    Base.prototype["interface"] = function() {
+      return this.klass()["interface"]();
     };
 
     Base.__newRelation = function(queryParams) {
@@ -1543,6 +1609,10 @@ var ActiveResource = function(){};
 
     Association.prototype.links = function() {
       return this.__links || (this.__links = this.klass().links());
+    };
+
+    Association.prototype["interface"] = function() {
+      return this.owner.klass()["interface"]();
     };
 
     Association.prototype.reset = function() {
@@ -1788,7 +1858,7 @@ var ActiveResource = function(){};
     CollectionAssociation.prototype.__findTarget = function() {
       var _this;
       _this = this;
-      return ActiveResource["interface"].get(this.links()['related'], this.owner.queryParamsForReflection(this.reflection)).then(function(resources) {
+      return this["interface"]().get(this.links()['related'], this.owner.queryParamsForReflection(this.reflection)).then(function(resources) {
         resources.each(function(r) {
           return _this.setInverseInstance(r);
         });
@@ -1819,19 +1889,19 @@ var ActiveResource = function(){};
     };
 
     CollectionAssociation.prototype.__persistAssignment = function(resources) {
-      return ActiveResource["interface"].patch(this.links()['self'], resources, {
+      return this["interface"]().patch(this.links()['self'], resources, {
         onlyResourceIdentifiers: true
       });
     };
 
     CollectionAssociation.prototype.__persistConcat = function(resources) {
-      return ActiveResource["interface"].post(this.links()['self'], resources, {
+      return this["interface"]().post(this.links()['self'], resources, {
         onlyResourceIdentifiers: true
       });
     };
 
     CollectionAssociation.prototype.__persistDelete = function(resources) {
-      return ActiveResource["interface"]["delete"](this.links()['self'], resources, {
+      return this["interface"]()["delete"](this.links()['self'], resources, {
         onlyResourceIdentifiers: true
       });
     };
@@ -2076,17 +2146,17 @@ var ActiveResource = function(){};
     };
 
     SingularAssociation.prototype.replace = function(resource) {
-      return raise('Subclasses must implement a __replace(resource) method');
+      return raise('Subclasses must implement a replace(resource) method');
     };
 
     SingularAssociation.prototype.__persistAssignment = function(resource) {
-      return ActiveResource["interface"].patch(this.links()['self'], resource, {
+      return this["interface"]().patch(this.links()['self'], resource, {
         onlyResourceIdentifiers: true
       });
     };
 
     SingularAssociation.prototype.__getResource = function() {
-      return ActiveResource["interface"].get(this.links()['related'], this.owner.queryParamsForReflection(this.reflection));
+      return this["interface"]().get(this.links()['related'], this.owner.queryParamsForReflection(this.reflection));
     };
 
     SingularAssociation.prototype.__findTarget = function() {
@@ -2190,7 +2260,7 @@ var ActiveResource = function(){};
       if (!this.owner.newResource()) {
         return BelongsToAssociation.__super__.__getResource.apply(this, arguments);
       } else {
-        return ActiveResource["interface"].get(this.links()['related'] + this.owner[this.reflection.foreignKey()], this.owner.queryParamsForReflection(this.reflection));
+        return this["interface"]().get(this.links()['related'] + this.owner[this.reflection.foreignKey()], this.owner.queryParamsForReflection(this.reflection));
       }
     };
 
@@ -2234,7 +2304,7 @@ var ActiveResource = function(){};
     BelongsToPolymorphicAssociation.prototype.klass = function() {
       var type;
       type = this.owner[this.reflection.foreignType()];
-      return ActiveResource.constantize(type);
+      return this.owner.klass().resourceLibrary.constantize(type);
     };
 
     BelongsToPolymorphicAssociation.prototype.__replaceKeys = function(resource) {
