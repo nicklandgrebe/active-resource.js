@@ -63,7 +63,7 @@ class ActiveResource::Attributes
     throw 'Cannot reload a resource that is not persisted' unless @persisted()
 
     resource = this
-    ActiveResource.interface.get(@links()['self'], @queryParams())
+    @interface().get(@links()['self'], @queryParams())
     .then (reloaded) ->
       resource.assignAttributes(reloaded.attributes())
       resource.klass().reflectOnAllAssociations().each (reflection) ->

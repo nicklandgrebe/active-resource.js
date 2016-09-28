@@ -77,7 +77,7 @@ class ActiveResource::Reflection
     #
     # @return [Class] The klass that this reflection reflects on
     klass: ->
-      ActiveResource.constantize(@className())
+      @activeResource.resourceLibrary.constantize(@className())
 
     type: ->
       @__type ||= @options['as'] && (@options['foreignType'] || "#{@options['as']}Type")

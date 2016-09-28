@@ -46,17 +46,17 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
   # private
 
   replace: (resource) ->
-    raise 'Subclasses must implement a __replace(resource) method'
+    raise 'Subclasses must implement a replace(resource) method'
 
   # Persists the new association by patching the owner's relationship endpoint
   __persistAssignment: (resource) ->
-    ActiveResource.interface.patch @links()['self'], resource, onlyResourceIdentifiers: true
+    @interface().patch @links()['self'], resource, onlyResourceIdentifiers: true
 
   # Gets the resource that is the target
   #
   # @return [Promise] a promise to return the resource **or** error 404
   __getResource: ->
-    ActiveResource.interface.get @links()['related'], @owner.queryParamsForReflection(@reflection)
+    @interface().get @links()['related'], @owner.queryParamsForReflection(@reflection)
 
   # Finds target using either the owner's relationship endpoint
   #

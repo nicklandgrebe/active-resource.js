@@ -1,47 +1,38 @@
 # Imply that a singular version of the word 'Class' is still 'Class'
 _.singular('Class', 'Class');
 
-ActiveResource.baseUrl = 'https://example.com/api/v1/'
+window.MyLibrary = ActiveResource.createResourceLibrary('https://example.com/api/v1')
 
-class window.MyLibrary
-  class @::Comment extends ActiveResource::Base
-    this.className = 'Comment'
-    this.queryName = 'comments'
+class MyLibrary::Comment extends MyLibrary.Base
+  this.className = 'Comment'
+  this.queryName = 'comments'
 
-    this.belongsTo 'resource', polymorphic: true
+  this.belongsTo 'resource', polymorphic: true
 
-  class @::GiftCard extends ActiveResource::Base
-    this.className = 'GiftCard'
-    this.queryName = 'gift_cards'
+class MyLibrary::GiftCard extends MyLibrary.Base
+  this.className = 'GiftCard'
+  this.queryName = 'gift_cards'
 
-    this.hasOne 'order'
+  this.hasOne 'order'
 
-  class @::Order extends ActiveResource::Base
-    this.className = 'Order'
-    this.queryName = 'orders'
+class MyLibrary::Order extends MyLibrary.Base
+  this.className = 'Order'
+  this.queryName = 'orders'
 
-    this.belongsTo 'giftCard'
-    this.belongsTo 'product'
+  this.belongsTo 'giftCard'
+  this.belongsTo 'product'
 
-    this.hasMany 'comments', as: 'resource'
-    this.hasMany 'orderItems'
+  this.hasMany 'comments', as: 'resource'
+  this.hasMany 'orderItems'
 
-  class @::Comment extends ActiveResource::Base
-    this.className = 'Comment'
-    this.queryName = 'comments'
+class MyLibrary::OrderItem extends MyLibrary.Base
+  this.className = 'OrderItem'
+  this.queryName = 'order_items'
 
-    this.belongsTo 'resource', polymorphic: true
+  this.belongsTo 'order'
 
-  class @::OrderItem extends ActiveResource::Base
-    this.className = 'OrderItem'
-    this.queryName = 'order_items'
+class MyLibrary::Product extends MyLibrary.Base
+  this.className = 'Product'
+  this.queryName = 'products'
 
-    this.belongsTo 'order'
-
-  class @::Product extends ActiveResource::Base
-    this.className = 'Product'
-    this.queryName = 'products'
-
-    this.hasMany 'orders'
-
-ActiveResource.constantizeScope = window.MyLibrary::
+  this.hasMany 'orders'

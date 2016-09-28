@@ -10,12 +10,12 @@ var ActiveResource = function(){};
 
 @include modulizing.js
 @include typing.js
+@include resource_library.js
 @include interfaces/base.js
 @include interfaces/json_api.js
 @include associations.js
 @include attributes.js
 @include collection.js
-@include config.js
 @include errors.js
 @include persistence.js
 @include query_params.js

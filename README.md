@@ -19,6 +19,35 @@ ActiveResource.js relies heavily on naming in that it uses class and association
 respective resource endpoints, subresource endpoints, and foreign key properties. Although these mappings can be defined
 explicitly, it's recommended to follow naming conventions, especially when getting started with the library.
 
+* * *
+
+New in 2.0: Resource Libraries (Getting Started)
+
+In order to use ActiveResource, you must first create a resource library to hold configuration data for accessing your resources:
+
+```coffee
+MyLibrary = ActiveResource.createResourceLibrary(
+  'https://example.com/api/v1/', # base url for your server
+  headers: { Authorization: 'Basic ...' }
+)
+```
+
+Then, you create a resource class for each resource in your library:
+
+```coffee
+class MyLibrary.Product extends MyLibrary.Base
+  this.className = 'Product'
+  this.queryName = 'products'
+
+# **or**
+
+class MyLibrary::Product extends MyLibrary.Base
+  this.className = 'Product'
+  this.queryName = 'products'
+```
+
+Both `className` and `queryName` are required, and you can see what they do in the [configuration section of this page](#config).
+
 Some of the major features include:
 
 * * *
@@ -26,9 +55,7 @@ Some of the major features include:
 * Automated mapping between classes and endpoints, attributes and relationships
 
 ```coffee
-ActiveResource.baseUrl = 'http://example.com/api/v1/'
-
-class Product extends ActiveResource::Base
+class MyLibrary.Product extends MyLibrary.Base
   this.className = 'Product'
   this.queryName = 'products'
 ```
@@ -108,10 +135,10 @@ Product.first()
 * Associations between objects defined by simple class methods
 
 ```coffee
-class Product extends ActiveResource::Base
+class MyLibrary.Product extends MyLibrary.Base
   @hasMany 'orders'
 
-class Order extends ActiveResource::Base
+class MyLibrary.Order extends MyLibrary.Base
   @belongsTo 'product'
 ```
 
@@ -203,6 +230,8 @@ order.buildProduct()  # local construction
 order.createProduct() # persist construction
 ```
 
+**You should never make a direct assignment like `product=`, because ActiveResource is not aware when this happens and it may cause unexpected results.**
+
 * * *
 
 * Reflections on associations
@@ -239,28 +268,22 @@ Order.build().klass() # == Order
 ```
 
 ```coffee
-class window.Order extends ActiveResource::Base
+class MyLibrary.Order extends MyLibrary.Base
+  this.className = 'Order'
 
-ActiveResource.constantizeScope # == window
-ActiveResource.constantize('Order') # == window.Order
-
-class MyLibrary
-  class @::Order extends ActiveResource::Base
-
-ActiveResource.constantizeScope = MyLibrary
-ActiveResource.constantize('Order') # == MyLibrary::Order
+MyLibrary.constantize('Order') # == MyLibrary.Order
 ```
 
 ```coffee
 class MyModule
   @method1: ->
 
-class Order extends ActiveResource::Base
+class Order extends MyLibrary.Base
   ActiveResource.extend(this, MyModule)
 
 Order.method1 # defined
 
-class Product extends ActiveResource::Base
+class Product extends MyLibrary.Base
   ActiveResource.include(this, MyModule)
 
 Order.build().method1 # defined
@@ -292,70 +315,79 @@ c.clear()
 c.select (i) -> ...
 c.detect (i) -> ...
 ```
-[Learn more](http://docs.ruby-lang.org/en/2.0.0/Array.html)
+These make use of Underscore.js. [Learn more](http://docs.ruby-lang.org/en/2.0.0/Array.html)
 
 This is the class that will be returned from `Relation#all()`, etc.
 
 * * *
 
+<a name="config"></a>
+
 * Customization through properties/options on the library itself, as well as base classes and associations:
 
-#### `ActiveResource.baseUrl`
+#### `ResourceLibrary.baseUrl`
 
 ```coffee
-ActiveResource.baseUrl = 'http://example.com/api/v1'
+ActiveResource.createResourceLibrary(
+  'http://example.com/api/v1'
+)
 ```
 
-**This property is required.** It specifies the root URL to the resource server, and all requests will be made relative to this URL.
+**This property is required.** It specifies the root URL to the resource server, and all requests for resources in the library will be made relative to this URL.
 
-#### `ActiveResource.headers`
+#### `ResourceLibrary.headers`
 
 ```coffee
-ActiveResource.headers = {
-  'Authorization': 'Basic xxx'
-}
+ActiveResource.createResourceLibrary(
+  headers: {
+    'Authorization': 'Basic xxx'
+  }
+)
 ```
 
-*This property is optional.* It specifies any headers that should be added to every request. The most obvious use case is providing an
+*This property is optional.* It specifies any headers that should be added to every request for resources in the library. The most obvious use case is providing an
 `Authorization` header if your resource server requires authentication.
 
-#### `ActiveResource.constantizeScope`
+#### `ResourceLibrary.constantizeScope`
 
 ```coffee
-class MyLibrary
-  class @::Product extends ActiveResource::Base
+MyLibrary = ActiveResource.createResourceLibrary(
+  constantizeScope: window
+)
 
-ActiveResource.constantizeScope = MyLibrary
+class window.Product extends MyLibrary.Base
+  this.className = 'Product'
+
+MyLibrary.constantize('Product') # == window.Product
 ```
 
-*This property is optional, and defaults to `window`.* It specifies the object to search properties of when looking up a class name to find a class constant.
+*This property is optional, and defaults to null.* It specifies the object to search properties of when looking up a class name to find a class constant. If null, ActiveResource will search both `MyLibrary` and `MyLibrary::`, if your resource library variable were named `MyLibrary`.
 
-#### `ActiveResource.interface`
+#### `ResourceLibrary.interface`
 
 ```coffee
-ActiveResource.interface = MyCustomInterface
+ActiveResource.createResourceLibrary(
+  interface: MyCustomInterface
+)
 ```
 
-*This property is optional and defaults to `ActiveResource::Interfaces::JsonApi`.* `Interface`s allow you to define the interface between
+*This property is optional and defaults to `ActiveResource.Interfaces.JsonApi`.* `Interface`s allow you to define the interface between
 a server and ActiveResource, constructing requests from input data, and constructing objects from response data. Right now, the only
 interface that is supported is `JsonApi`, which is in accordance with the [JSON API specification](http://jsonapi.org/).
 
 #### `Base.className`
 
 ```coffee
-class Product extends ActiveResource::Base
+class Product extends MyLibrary.Base
   this.className = 'Product'
 ```
 
-**This property is required.** Since Javascript doesn't really have `class`, and Coffeescript is just mocking this behavior,
-there is no reliability in relying on `Product.build().klass().name`, which could be anything, especially in a minified environment. This
-property makes it so the name of a class will always be accurate, and the property should always be consistent with the name of the
-Coffeescript class.
+**This property is required.** It is so the library will continue to work in minified environments, where a call to `constructor.name` might yield a random result instead of the intended class name.
 
 #### `Base.queryName`
 
 ```coffee
-class Product extends ActiveResource::Base
+class Product extends MyLibrary.Base
   this.queryName = 'products'
 ```
 
@@ -364,7 +396,7 @@ class Product extends ActiveResource::Base
 #### `Base.primaryKey`
 
 ```coffee
-class Product extends ActiveResource::Base
+class Product extends MyLibrary.Base
   this.primaryKey = 'token'
 ```
 
@@ -374,10 +406,10 @@ as well as telling ActiveResource which key to use when making foreign key assig
 #### `Association.className`
 
 ```coffee
-class Product extends ActiveResource::Base
+class Product extends MyLibrary.Base
   @hasMany 'specialOrders', className: 'Order'
 
-class Order extends ActiveResource::Base
+class Order extends MyLibrary.Base
   @belongsTo 'product'
 ```
 
@@ -386,13 +418,13 @@ This option allows you to name an association by one name, but have that associa
 #### `Association.as` && `Association.polymorphic`
 
 ```coffee
-class Product extends ActiveResource::Base
+class Product extends MyLibrary.Base
   @hasMany 'orders', as: 'resource'
 
-class Store extends ActiveResource::Base
+class Store extends MyLibrary.Base
   @hasMany 'orders', as: 'resource'
 
-class Order extends ActiveResource::Base
+class Order extends MyLibrary.Base
   @belongsTo 'resource', polymorphic: true
 ```
 
@@ -401,10 +433,10 @@ These options work together to allow for polymorphic associations between models
 #### `Association.inverseOf`
 
 ```coffee
-class Product extends ActiveResource::Base
+class Product extends MyLibrary.Base
   @hasMany 'orders', inverseOf: 'product'
 
-class Order extends ActiveResource::Base
+class Order extends MyLibrary.Base
   @belongsTo 'product', inverseOf: 'orders'
 ```
 
@@ -414,10 +446,10 @@ like polymorphic relationships, where this cannot be done automatically, and it 
 #### `Association.foreignKey`
 
 ```coffee
-class Product extends ActiveResource::Base
+class Product extends MyLibrary.Base
   @hasMany 'orders', foreignKey: 'ownerProductId'
 
-class Order extends ActiveResource::Base
+class Order extends MyLibrary.Base
   @belongsTo 'ownerProduct', className: 'Product'
 
 Product.first()
@@ -431,10 +463,10 @@ made.
 #### `Association.primaryKey`
 
 ```coffee
-class Product extends ActiveResource::Base
+class Product extends MyLibrary.Base
   @hasMany 'orders', primaryKey: 'token', foreignKey: 'ownerProductId'
 
-class Order extends ActiveResource::Base
+class Order extends MyLibrary.Base
   @belongsTo 'ownerProduct', className: 'Product'
 
 Product.first()
@@ -448,10 +480,10 @@ when assignments/constructions are made.
 #### `Association.autosave`
 
 ```coffee
-class Order extends ActiveResource::Base
+class Order extends MyLibrary.Base
   @hasMany 'orderItems', autosave: true
 
-class OrderItem extends ActiveResource::Base
+class OrderItem extends MyLibrary.Base
   @belongsTo 'order'
 
 order = Order.build(orderItems: [OrderItem.build(amount: 5.0)])

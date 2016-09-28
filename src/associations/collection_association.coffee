@@ -141,7 +141,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
 
   __findTarget: ->
     _this = this
-    ActiveResource.interface.get(@links()['related'], @owner.queryParamsForReflection(@reflection))
+    @interface().get(@links()['related'], @owner.queryParamsForReflection(@reflection))
     .then (resources) ->
       resources.each (r) -> _this.setInverseInstance(r)
       resources
@@ -182,19 +182,19 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
   #
   # @param [Array] resources the resource to delete from the association
   __persistAssignment: (resources) ->
-    ActiveResource.interface.patch @links()['self'], resources, onlyResourceIdentifiers: true
+    @interface().patch @links()['self'], resources, onlyResourceIdentifiers: true
 
   # Persists a concat to the association by posting to the owner's relationship endpoint
   #
   # @param [Array] resources the resource to delete from the association
   __persistConcat: (resources) ->
-    ActiveResource.interface.post @links()['self'], resources, onlyResourceIdentifiers: true
+    @interface().post @links()['self'], resources, onlyResourceIdentifiers: true
 
   # Persists deleting resources from the association by deleting it on the owner's relationship endpoint
   #
   # @param [Array] resources the resource to delete from the association
   __persistDelete: (resources) ->
-    ActiveResource.interface.delete @links()['self'], resources, onlyResourceIdentifiers: true
+    @interface().delete @links()['self'], resources, onlyResourceIdentifiers: true
 
   # @see #create
   __createResource: (attributes, queryParams, callback) ->

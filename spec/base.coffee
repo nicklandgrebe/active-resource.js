@@ -16,7 +16,7 @@ describe 'ActiveResource', ->
 
     describe 'with a different primaryKey', ->
       beforeEach ->
-        class MyLibrary::Venue extends ActiveResource::Base
+        class MyLibrary::Venue extends MyLibrary.Base
           this.className = 'Venue'
           this.queryName = 'venues'
 
@@ -24,7 +24,7 @@ describe 'ActiveResource', ->
 
           @hasOne 'owner'
 
-        class MyLibrary::Owner extends ActiveResource::Base
+        class MyLibrary::Owner extends MyLibrary.Base
           this.className = 'Owner'
           this.queryName = 'owners'
 

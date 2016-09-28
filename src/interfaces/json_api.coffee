@@ -25,7 +25,7 @@
 #     ]
 #   }
 #
-class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Base
+ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Base
   # Makes an HTTP request to a url with data
   #
   # @note Uses base request, but checks to make sure response is in JSON API format
@@ -33,7 +33,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # @param [String] url the url to query
   # @param [String] method the HTTP verb to use for the request
   # @param [Object] data the data to send to the server
-  @request: (url, method, data) ->
+  request: (url, method, data) ->
     super
     .then (response, textStatus, xhr) ->
       throw "Response from #{url} was not in JSON API format" unless response?.data? || xhr.status == 204
@@ -298,15 +298,15 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # 7. Assign the links provided in the response to the resource
   # 8. Assign the relationship links provided in the response to the resource
   # 9. Return the built resource
-  buildResource = (data, includes, existingResource) ->
-    resource = existingResource || ActiveResource.constantize(_.singularize(s.classify(data['type']))).build()
+  buildResource: (data, includes, existingResource) ->
+    resource = existingResource || @resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build()
 
     # If primaryKey is `id`, we want it as an int. If it were, say, `token`, we leave it alone
     if resource.klass().primaryKey == 'id'
       data['id'] = parseInt(data['id'])
 
     attributes = _.extend(_.omit(data, 'type', 'attributes', 'links', 'relationships'), data['attributes'])
-    attributes = addRelationshipsToAttributes(attributes, data['relationships'], includes, resource)
+    attributes = @addRelationshipsToAttributes(attributes, data['relationships'], includes, resource)
 
     resource.assignAttributes(toCamelCase(attributes))
 
@@ -375,18 +375,18 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # 3. If the relationship is singular, find it in `includes`
   # 4. Only assign the relationship to the attributes if it is not null/empty
   # 5. Return the attributes with all existing relationships built into it
-  addRelationshipsToAttributes = (attributes, relationships, includes, resource) ->
-    _.each relationships, (relationship, relationshipName) ->
+  addRelationshipsToAttributes: (attributes, relationships, includes, resource) ->
+    _.each relationships, (relationship, relationshipName) =>
       if _.isArray(relationship['data']) # plural association
         relationshipItems =
           ActiveResource::Collection.build(relationship['data'])
-          .map((relationshipMember) ->
-            findIncludeFromRelationship(relationshipMember, includes, resource)
+          .map((relationshipMember) =>
+            @findIncludeFromRelationship(relationshipMember, includes, resource)
           ).compact()
 
         attributes[relationshipName] = relationshipItems unless relationshipItems.empty?()
       else if relationship['data']? # singular association
-        include = findIncludeFromRelationship(relationship['data'], includes, resource)
+        include = @findIncludeFromRelationship(relationship['data'], includes, resource)
         attributes[relationshipName] = include if include?
 
     attributes
@@ -408,12 +408,12 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # 2. Find the include in `includes` using the resource identifier
   # 3. Build the include into an ActiveResource if it exists
   # 4. Return the built include or null
-  findIncludeFromRelationship = (relationshipData, includes, resource) ->
+  findIncludeFromRelationship: (relationshipData, includes, resource) ->
     findConditions = { type: relationshipData.type }
     findConditions[resource.klass().primaryKey] = relationshipData[resource.klass().primaryKey]
 
     if(include = _.findWhere(includes, findConditions))?
-      include = buildResource(include, includes)
+      include = @buildResource(include, includes)
     include
 
   # Merges the changes made from a POST/PUT/PATCH call into the resource that called it
@@ -422,10 +422,10 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # @param [ActiveResource::Base] the resource to merge persisted changes into
   # @return [ActiveResource::Base] the resource, now persisted, with updated changes
   #
-  # 1. Use buildresource to build the changed attributes, relationships, and links into the existing resource
+  # 1. Use buildResource to build the changed attributes, relationships, and links into the existing resource
   # 2. Return the built resource
-  mergePersistedChanges = (response, resource) ->
-    buildResource(response['data'], response['included'], resource)
+  mergePersistedChanges: (response, resource) ->
+    @buildResource(response['data'], response['included'], resource)
 
   # Adds errors in making a POST/PUT/PATCH call into the resource that called it
   #
@@ -453,7 +453,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # @param [Object] response The response to pull errors from
   # @param [ActiveResource::Base] the resource to add errors onto
   # @return [ActiveResource::Base] the unpersisted resource, now with errors
-  resourceErrors = (resource, errors) ->
+  resourceErrors: (resource, errors) ->
     _.each errors, (error) ->
 
       attribute = []
@@ -483,7 +483,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   #
   # @param [Array] errors the errors to de-serialize
   # @return [Collection] the collection of errors
-  parameterErrors = (errors) ->
+  parameterErrors: (errors) ->
     ActiveResource::Collection.build(errors).map((error) ->
       out = { details: error['detail'] }
       out['parameter'] = s.camelize(error['source']['parameter']) if error['source']?['parameter']?
@@ -502,7 +502,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   #
   # @param [String] url the url to query
   # @param [Object] queryParams query params to send to the server
-  @get: (url, queryParams = {}) ->
+  get: (url, queryParams = {}) ->
     data = {}
     data['filter']  = toUnderscored(queryParams['filter'])       if queryParams['filter']?
     data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
@@ -513,18 +513,19 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
     data['limit']   = queryParams['limit']                       if queryParams['limit']?
     data['offset']  = queryParams['offset']                      if queryParams['offset']?
 
+    _this = this
     @request(url, 'GET', data)
     .then (response) ->
       built =
         ActiveResource::Collection.build(_.flatten([response.data]))
         .map (object) ->
-          object = buildResource(object, response.included)
+          object = _this.buildResource(object, response.included)
           object.assignResourceRelatedQueryParams(queryParams)
           object
 
       if _.isArray(response.data) then built else built.first()
     , (errors) ->
-      parameterErrors(errors.responseJSON['errors'])
+      _this.parameterErrors(errors.responseJSON['errors'])
 
   # Make POST request
   #
@@ -533,7 +534,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # @param [Object] options options that may modify the data sent to the server
   # @option [Boolean] onlyResourceIdentifiers if false, render the attributes and relationships
   #   of each resource into the resource document
-  @post: (url, resourceData, options = {}) ->
+  post: (url, resourceData, options = {}) ->
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
@@ -542,17 +543,18 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
       data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
       data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
+    _this = this
     @request(url, 'POST', data)
     .then (response) ->
       if options['onlyResourceIdentifiers']
         response
       else
-        mergePersistedChanges(response, resourceData)
+        _this.mergePersistedChanges(response, resourceData)
     , (errors) ->
       if options['onlyResourceIdentifiers']
         errors
       else
-        resourceErrors(resourceData, errors.responseJSON['errors'])
+        _this.resourceErrors(resourceData, errors.responseJSON['errors'])
 
   # Make PATCH request
   #
@@ -560,7 +562,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # @param [Object] resourceData the resourceData to send to the server
   # @param [Object] options options that may modify the data sent to the server
   #   @see #post
-  @patch: (url, resourceData, options = {}) ->
+  patch: (url, resourceData, options = {}) ->
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
@@ -569,17 +571,18 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
       data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
       data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
+    _this = this
     @request(url, 'PATCH', data)
     .then (response) ->
       if options['onlyResourceIdentifiers']
         response
       else
-        mergePersistedChanges(response, resourceData)
+        _this.mergePersistedChanges(response, resourceData)
     , (errors) ->
       if options['onlyResourceIdentifiers']
         errors
       else
-        resourceErrors(resourceData, errors.responseJSON['errors'])
+        _this.resourceErrors(resourceData, errors.responseJSON['errors'])
 
   # Make PUT request
   #
@@ -587,7 +590,7 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # @param [Object] resourceData the resourceData to send to the server
   # @param [Object] options options that may modify the data sent to the server
   #   @see #post
-  @put: (url, resourceData, options = {}) ->
+  put: (url, resourceData, options = {}) ->
     data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
@@ -596,17 +599,18 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
       data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
       data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
+    _this = this
     @request(url, 'PUT', data)
     .then (response) ->
       if options['onlyResourceIdentifiers']
         response
       else
-        mergePersistedChanges(response, resourceData)
+        _this.mergePersistedChanges(response, resourceData)
     , (errors) ->
       if options['onlyResourceIdentifiers']
         errors
       else
-        resourceErrors(resourceData, errors.responseJSON['errors'])
+        _this.resourceErrors(resourceData, errors.responseJSON['errors'])
 
   # Make DELETE request
   #
@@ -620,14 +624,15 @@ class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Ba
   # @param [Object] resourceData the resourceData to send to the server
   # @param [Object] options options that may modify the data sent to the server
   #   @see #post
-  @delete: (url, resourceData, options = {}) ->
+  delete: (url, resourceData, options = {}) ->
     data =
       if resourceData?
         { data: buildResourceDocument(resourceData, true) }
       else
         {}
 
+    _this = this
     @request(url, 'DELETE', data)
     .then null
     , (errors) ->
-      parameterErrors(errors.responseJSON['errors']) if errors.responseJSON
+      _this.parameterErrors(errors.responseJSON['errors']) if errors.responseJSON

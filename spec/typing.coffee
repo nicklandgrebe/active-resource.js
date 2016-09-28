@@ -3,7 +3,6 @@ describe 'ActiveResource', ->
     beforeEach ->
       @instance = new MyLibrary::Product()
 
-      class MyLibrary::Order extends ActiveResource::Base
       @otherInstance = new MyLibrary::Order()
 
     describe '#klass()', ->

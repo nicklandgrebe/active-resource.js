@@ -10,11 +10,30 @@ describe 'ActiveResource', ->
     jasmine.Ajax.uninstall()
 
   describe 'Interfaces::JsonApi', ->
+    beforeEach ->
+      @lib = ActiveResource.createResourceLibrary(
+        'https://www.example.com/api/v1/'
+        interface: ActiveResource.Interfaces.JsonApi
+      )
+      class @lib::Product extends @lib.Base
+        @className = 'Product'
+        @queryName = 'products'
+
+        @hasMany 'orders'
+
+      class @lib::Order extends @lib.Base
+        @className = 'Order'
+        @queryName = 'orders'
+
+        @belongsTo 'product'
+
+      @interface = @lib.interface
+
     describe '#get()', ->
       describe 'getting resources', ->
         beforeEach ->
-          ActiveResource::Interfaces::JsonApi
-          .get(MyLibrary::Product.links()['related'])
+          @interface
+          .get(@lib::Product.links()['related'])
           .done(window.onSuccess)
           .fail(window.onFailure)
 
@@ -29,7 +48,7 @@ describe 'ActiveResource', ->
 
           it 'returns a collection of resources of the queried type', ->
             @collection.each (resource) =>
-              expect(resource.isA?(MyLibrary::Product)).toBeTruthy()
+              expect(resource.isA?(@lib::Product)).toBeTruthy()
 
           it 'returns a collection of resources with links', ->
             @collection.each (resource) =>
@@ -37,8 +56,8 @@ describe 'ActiveResource', ->
 
       describe 'getting a resource', ->
         beforeEach ->
-          ActiveResource::Interfaces::JsonApi
-          .get(MyLibrary::Product.links()['related'] + '1')
+          @interface
+          .get(@lib::Product.links()['related'] + '1')
           .done(window.onSuccess)
           .fail(window.onFailure)
 
@@ -49,7 +68,7 @@ describe 'ActiveResource', ->
             @resource = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns a resource of the queried type', ->
-            expect(@resource.isA?(MyLibrary::Product)).toBeTruthy()
+            expect(@resource.isA?(@lib::Product)).toBeTruthy()
 
           it 'returns a resource with a link', ->
             expect(@resource.links()['self']).toBeDefined()
@@ -73,8 +92,8 @@ describe 'ActiveResource', ->
               product: ['title','updatedAt'],
               orders: ['price','createdAt']
 
-          ActiveResource::Interfaces::JsonApi
-          .get(MyLibrary::Product.links()['related'], queryParams)
+          @interface
+          .get(@lib::Product.links()['related'], queryParams)
           .done(window.onSuccess)
           .fail(window.onFailure)
 
@@ -88,8 +107,8 @@ describe 'ActiveResource', ->
           queryParams =
             include: ['merchant', 'attributeValues', { orders: 'transactions' }]
 
-          ActiveResource::Interfaces::JsonApi
-          .get(MyLibrary::Product.links()['related'], queryParams)
+          @interface
+          .get(@lib::Product.links()['related'], queryParams)
           .done(window.onSuccess)
           .fail(window.onFailure)
 
@@ -103,8 +122,8 @@ describe 'ActiveResource', ->
           queryParams =
             sort: { updatedAt: 'asc', createdAt: 'desc' }
 
-          ActiveResource::Interfaces::JsonApi
-          .get(MyLibrary::Product.links()['related'], queryParams)
+          @interface
+          .get(@lib::Product.links()['related'], queryParams)
           .done(window.onSuccess)
           .fail(window.onFailure)
 
@@ -116,11 +135,11 @@ describe 'ActiveResource', ->
     describe '#post', ->
       describe 'persisting resource data', ->
         beforeEach ->
-          @product = MyLibrary::Product.build(title: 'Another title')
-          @product.orders().assign([MyLibrary::Order.build(id: 3)])
+          @product = @lib::Product.build(title: 'Another title')
+          @product.orders().assign([@lib::Order.build(id: 3)])
 
-          ActiveResource::Interfaces::JsonApi
-          .post(MyLibrary::Product.links()['related'], @product)
+          @interface
+          .post(@lib::Product.links()['related'], @product)
           .done(window.onSuccess)
           .fail(window.onFailure)
 
@@ -176,11 +195,11 @@ describe 'ActiveResource', ->
 
       describe 'persisting changes involving resource identifiers', ->
         beforeEach ->
-          @product = MyLibrary::Product.build(id: 1, title: 'A product title')
-          @product2 = MyLibrary::Product.build(id: 2, title: 'Another title')
+          @product = @lib::Product.build(id: 1, title: 'A product title')
+          @product2 = @lib::Product.build(id: 2, title: 'Another title')
 
-          ActiveResource::Interfaces::JsonApi
-          .post(MyLibrary::Product.links()['related'], [@product, @product2], onlyResourceIdentifiers: true)
+          @interface
+          .post(@lib::Product.links()['related'], [@product, @product2], onlyResourceIdentifiers: true)
           .done(window.onSuccess)
           .fail(window.onFailure)
 
@@ -202,15 +221,15 @@ describe 'ActiveResource', ->
 
     describe '#delete', ->
       beforeEach ->
-        MyLibrary::Product.last().then window.onSuccess
+        @lib::Product.last().then window.onSuccess
 
         jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
         @resource = window.onSuccess.calls.mostRecent().args[0]
 
       describe 'with resource data', ->
         beforeEach ->
-          ActiveResource::Interfaces::JsonApi
-          .delete(MyLibrary::Product.links()['self'], @resource)
+          @interface
+          .delete(@lib::Product.links()['self'], @resource)
           .done(window.onSuccess)
           .fail(window.onFailure)
 
@@ -226,8 +245,8 @@ describe 'ActiveResource', ->
 
       describe 'without resource data', ->
         beforeEach ->
-          ActiveResource::Interfaces::JsonApi
-          .delete(MyLibrary::Product.links()['self'])
+          @interface
+          .delete(@lib::Product.links()['self'])
           .done(window.onSuccess)
           .fail(window.onFailure)
 
