@@ -56,14 +56,14 @@ describe 'ActiveResource', ->
         beforeEach ->
           @resource.__links = {}
 
-        it 'returns the attribute', ->
+        it 'does not return the attribute', ->
           expect(@resource.attributes()['__links']).toBeUndefined()
 
       describe 'if attribute is a function', ->
         beforeEach ->
           @resource.myMethod = ->
 
-        it 'returns the attribute', ->
+        it 'does not return the attribute', ->
           expect(@resource.attributes()['myMethod']).toBeUndefined()
 
     describe '#reload()', ->
