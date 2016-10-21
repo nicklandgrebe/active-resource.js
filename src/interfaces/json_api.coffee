@@ -60,7 +60,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
         if _.isArray(v)
           _.map v, (i) ->
             toUnderscored(i)
-        else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection)
+        else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection) && !_.isDate(v)
           toUnderscored(v)
         else
           v

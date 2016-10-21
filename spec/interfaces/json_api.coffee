@@ -138,6 +138,8 @@ describe 'ActiveResource', ->
           @product = @lib::Product.build(title: 'Another title')
           @product.orders().assign([@lib::Order.build(id: 3)])
 
+          @product.timestamp = new Date()
+
           @interface
           .post(@lib::Product.links()['related'], @product)
           .done(window.onSuccess)
@@ -149,7 +151,8 @@ describe 'ActiveResource', ->
               data: {
                 type: 'products',
                 attributes: {
-                  title: 'Another title'
+                  title: 'Another title',
+                  timestamp: @product.timestamp.toJSON()
                 },
                 relationships: {
                   orders: {
