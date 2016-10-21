@@ -205,7 +205,7 @@ var ActiveResource = function(){};
         v = object[k];
         underscored[s.underscored(k)] = _.isArray(v) ? _.map(v, function(i) {
           return toUnderscored(i);
-        }) : _.isObject(v) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Collection) : void 0) ? toUnderscored(v) : v;
+        }) : _.isObject(v) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Collection) : void 0) && !_.isDate(v) ? toUnderscored(v) : v;
       }
       return underscored;
     };
