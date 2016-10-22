@@ -26,6 +26,8 @@ New in 2.0: Resource Libraries (Getting Started)
 In order to use ActiveResource, you must first create a resource library to hold configuration data for accessing your resources:
 
 ```coffee
+# lib/myLibrary.coffee
+
 MyLibrary = ActiveResource.createResourceLibrary(
   'https://example.com/api/v1/', # base url for your server
   headers: { Authorization: 'Basic ...' }
@@ -35,6 +37,9 @@ MyLibrary = ActiveResource.createResourceLibrary(
 Then, you create a resource class for each resource in your library:
 
 ```coffee
+
+# lib/myLibrary/product.coffee
+
 class MyLibrary.Product extends MyLibrary.Base
   this.className = 'Product'
   this.queryName = 'products'
