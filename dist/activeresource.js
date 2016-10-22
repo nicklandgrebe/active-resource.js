@@ -1,5 +1,5 @@
 /*
-	ActiveResource.js 2.0.2
+	ActiveResource.js 2.0.3
 	(c) 2016 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	ActiveResource.js may be freely distributed under the MIT license
 	Portions of ActiveResource.js were inspired by or borrowed from Rail's ActiveRecord library
@@ -418,7 +418,7 @@ var ActiveResource = function(){};
           _.each(error['source']['pointer'].split('/data'), function(i) {
             var m;
             if ((m = i.match(/\/(attributes|relationships|)\/(\w+)/)) != null) {
-              return attribute.push(m[2]);
+              return attribute.push(s.camelize(m[2]));
             }
           });
         }
