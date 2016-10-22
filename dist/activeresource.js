@@ -1,5 +1,5 @@
 /*
-	ActiveResource.js 2.0.1
+	ActiveResource.js 2.0.2
 	(c) 2016 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	ActiveResource.js may be freely distributed under the MIT license
 	Portions of ActiveResource.js were inspired by or borrowed from Rail's ActiveRecord library
@@ -890,6 +890,10 @@ var ActiveResource = function(){};
       return this.__errors = {};
     };
 
+    Errors.prototype.clear = function() {
+      return this.reset();
+    };
+
     Errors.prototype.add = function(attribute, code, detail) {
       var error, _base;
       if (detail == null) {
@@ -898,31 +902,70 @@ var ActiveResource = function(){};
       (_base = this.__errors)[attribute] || (_base[attribute] = []);
       this.__errors[attribute].push(error = {
         code: code,
-        detail: detail
+        detail: detail,
+        message: detail
       });
       return error;
     };
 
+    Errors.prototype.added = function(attribute, code) {
+      return ActiveResource.prototype.Collection.build(this.__errors[attribute]).detect(function(e) {
+        return e.code === code;
+      }) != null;
+    };
+
+    Errors.prototype.include = function(attribute) {
+      return (this.__errors[attribute] != null) && _.size(this.__errors[attribute]) > 0;
+    };
+
     Errors.prototype.empty = function() {
-      var empty, k, v, _ref;
-      empty = true;
-      _ref = this.__errors;
-      for (k in _ref) {
-        v = _ref[k];
-        empty = empty && !v.length;
-      }
-      return empty;
+      return this.size() === 0;
+    };
+
+    Errors.prototype.size = function() {
+      return _.size(this.toArray());
+    };
+
+    Errors.prototype["delete"] = function(attribute) {
+      return this.__errors[attribute] = [];
+    };
+
+    Errors.prototype.each = function(iterator) {
+      return _.each(this.__errors, function(errors, attribute) {
+        var error, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = errors.length; _i < _len; _i++) {
+          error = errors[_i];
+          _results.push(iterator(attribute, error));
+        }
+        return _results;
+      });
     };
 
     Errors.prototype.forAttribute = function(attribute) {
       return ActiveResource.prototype.Collection.build(this.__errors[attribute]).inject({}, function(out, error) {
-        out[error.code] = error.detail;
+        out[error.code] = error.message;
         return out;
       });
     };
 
     Errors.prototype.forBase = function() {
       return this.forAttribute('base');
+    };
+
+    Errors.prototype.toArray = function() {
+      var attribute, errors, output, _ref;
+      output = [];
+      _ref = this.__errors;
+      for (attribute in _ref) {
+        errors = _ref[attribute];
+        output.push.apply(output, errors);
+      }
+      return output;
+    };
+
+    Errors.prototype.toCollection = function() {
+      return ActiveResource.prototype.Collection.build(this.toArray());
     };
 
     return Errors;
