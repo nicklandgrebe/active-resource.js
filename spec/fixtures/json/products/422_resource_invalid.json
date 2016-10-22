@@ -16,6 +16,11 @@
       "detail": "Description cannot be blank."
     },
     {
+      "source": { "pointer": "/data/attributes/phone_number" },
+      "code": "invalid",
+      "detail": "Phone number is invalid."
+    },
+    {
       "source": { "pointer": "/data/relationships/orders/data/attributes/price" },
       "code": "blank",
       "detail": "Price cannot be blank."

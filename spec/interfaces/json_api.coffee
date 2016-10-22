@@ -193,6 +193,9 @@ describe 'ActiveResource', ->
           it 'converts a pointer to a attribute error field', ->
             expect(@resource.errors().forAttribute('title')).toEqual({ blank: 'Title cannot be blank.' })
 
+          it 'camelizes an underscored attribute name', ->
+            expect(@resource.errors().include('phoneNumber')).toBeTruthy()
+
           it 'converts a pointer to a relationship error field', ->
             expect(@resource.errors().forAttribute('orders.price')).toEqual({ blank: 'Price cannot be blank.' })
 

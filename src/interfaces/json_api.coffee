@@ -462,7 +462,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
       else
         _.each error['source']['pointer'].split('/data'), (i) ->
           if(m = i.match(/\/(attributes|relationships|)\/(\w+)/))?
-            attribute.push m[2]
+            attribute.push s.camelize(m[2])
 
       resource.errors().add(attribute.join('.'), s.camelize(error['code']), error['detail'])
     resource

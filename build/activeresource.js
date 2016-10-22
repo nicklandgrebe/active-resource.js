@@ -411,7 +411,7 @@ var ActiveResource = function(){};
           _.each(error['source']['pointer'].split('/data'), function(i) {
             var m;
             if ((m = i.match(/\/(attributes|relationships|)\/(\w+)/)) != null) {
-              return attribute.push(m[2]);
+              return attribute.push(s.camelize(m[2]));
             }
           });
         }
