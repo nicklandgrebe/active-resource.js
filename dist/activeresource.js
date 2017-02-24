@@ -1,6 +1,6 @@
 /*
-	ActiveResource.js 2.0.3
-	(c) 2016 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
+	ActiveResource.js 2.0.5
+	(c) 2017 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	ActiveResource.js may be freely distributed under the MIT license
 	Portions of ActiveResource.js were inspired by or borrowed from Rail's ActiveRecord library
 */
@@ -2059,7 +2059,7 @@ var ActiveResource = function(){};
       attributes = _.isArray(attributes) ? _.map(attributes, function(attr) {
         return _.extend(attr, _this.queryParams()['filter']);
       }) : _.extend(attributes, this.queryParams()['filter']);
-      resources = this.base.build(attributes);
+      resources = ActiveResource.prototype.Collection.build(this.base.build(attributes));
       resources.each(function(r) {
         return r.assignResourceRelatedQueryParams(_this.queryParams());
       });
