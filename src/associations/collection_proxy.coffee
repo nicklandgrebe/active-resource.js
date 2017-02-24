@@ -111,7 +111,7 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
       else
         _.extend(attributes, @queryParams()['filter'])
 
-    resources = @base.build(attributes)
+    resources = ActiveResource::Collection.build(@base.build(attributes))
     resources.each (r) =>
       r.assignResourceRelatedQueryParams(@queryParams())
 
