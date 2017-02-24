@@ -21,6 +21,11 @@ explicitly, it's recommended to follow naming conventions, especially when getti
 
 * * *
 
+WARNING: ActiveResource.js currently only works in browsers. A new release will soon allow it to work in Node, plus change some design decisions
+to use more universal idioms.
+
+* * *
+
 New in 2.0: Resource Libraries (Getting Started)
 
 In order to use ActiveResource, you must first create a resource library to hold configuration data for accessing your resources:
