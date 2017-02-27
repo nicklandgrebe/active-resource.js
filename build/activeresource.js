@@ -347,9 +347,6 @@ var ActiveResource = function(){};
     JsonApi.prototype.buildResource = function(data, includes, existingResource) {
       var attributes, resource;
       resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
-      if (resource.klass().primaryKey === 'id') {
-        data['id'] = parseInt(data['id']);
-      }
       attributes = _.extend(_.omit(data, 'type', 'attributes', 'links', 'relationships'), data['attributes']);
       attributes = this.addRelationshipsToAttributes(attributes, data['relationships'], includes, resource);
       resource.assignAttributes(toCamelCase(attributes));

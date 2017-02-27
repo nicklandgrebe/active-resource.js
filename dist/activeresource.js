@@ -1,5 +1,5 @@
 /*
-	ActiveResource.js 2.0.6
+	ActiveResource.js 2.0.7
 	(c) 2017 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	ActiveResource.js may be freely distributed under the MIT license
 	Portions of ActiveResource.js were inspired by or borrowed from Rail's ActiveRecord library
@@ -354,9 +354,6 @@ var ActiveResource = function(){};
     JsonApi.prototype.buildResource = function(data, includes, existingResource) {
       var attributes, resource;
       resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
-      if (resource.klass().primaryKey === 'id') {
-        data['id'] = parseInt(data['id']);
-      }
       attributes = _.extend(_.omit(data, 'type', 'attributes', 'links', 'relationships'), data['attributes']);
       attributes = this.addRelationshipsToAttributes(attributes, data['relationships'], includes, resource);
       resource.assignAttributes(toCamelCase(attributes));
