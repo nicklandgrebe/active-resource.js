@@ -228,7 +228,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
               .all(cached: true).map((target) ->
                 output = buildResourceIdentifier(target)
                 if reflection.autosave?()
-                  output['attributes'] = _.omit(target.attributes(), resource.klass().primaryKey)
+                  output['attributes'] = toUnderscored(_.omit(target.attributes(), resource.klass().primaryKey))
+                  output['relationships'] = buildResourceRelationships(target)
                 output
               ).toArray()
       else
@@ -236,7 +237,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
           target = resource.association(reflection.name).reader()
           output = buildResourceIdentifier(target)
           if reflection.autosave?()
-            output['attributes'] = _.omit(target.attributes(), resource.klass().primaryKey)
+            output['attributes'] = toUnderscored(_.omit(target.attributes(), resource.klass().primaryKey))
+            output['relationships'] = buildResourceRelationships(target)
 
           relationships[s.underscored(reflection.name)] = { data: output }
 
