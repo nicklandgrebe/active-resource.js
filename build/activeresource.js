@@ -299,7 +299,8 @@ var ActiveResource = function(){};
                 var output;
                 output = buildResourceIdentifier(target);
                 if (typeof reflection.autosave === "function" ? reflection.autosave() : void 0) {
-                  output['attributes'] = _.omit(target.attributes(), resource.klass().primaryKey);
+                  output['attributes'] = toUnderscored(_.omit(target.attributes(), resource.klass().primaryKey));
+                  output['relationships'] = buildResourceRelationships(target);
                 }
                 return output;
               }).toArray()
@@ -310,7 +311,8 @@ var ActiveResource = function(){};
             target = resource.association(reflection.name).reader();
             output = buildResourceIdentifier(target);
             if (typeof reflection.autosave === "function" ? reflection.autosave() : void 0) {
-              output['attributes'] = _.omit(target.attributes(), resource.klass().primaryKey);
+              output['attributes'] = toUnderscored(_.omit(target.attributes(), resource.klass().primaryKey));
+              output['relationships'] = buildResourceRelationships(target);
             }
             return relationships[s.underscored(reflection.name)] = {
               data: output
@@ -1033,10 +1035,10 @@ var ActiveResource = function(){};
     };
 
     QueryParams.queryParamsForReflection = function(reflection) {
-      var queryParams, _ref;
+      var includes, queryParams, _ref;
       queryParams = {};
       if (this.queryParams()['include'] != null) {
-        queryParams['include'] = ActiveResource.prototype.Collection.build(this.queryParams()['include']).inject([], function(out, i) {
+        includes = ActiveResource.prototype.Collection.build(this.queryParams()['include']).inject([], function(out, i) {
           if (_.isObject(i)) {
             _.each(_.keys(i), function(i2) {
               if (i2 === reflection.name) {
@@ -1046,6 +1048,9 @@ var ActiveResource = function(){};
           }
           return out;
         });
+        if (includes.length !== 0) {
+          queryParams['include'] = includes;
+        }
       }
       if (!(typeof reflection.polymorphic === "function" ? reflection.polymorphic() : void 0) && (((_ref = this.queryParams()['fields']) != null ? _ref[reflection.klass().queryName] : void 0) != null)) {
         queryParams['fields'] = _.pick(this.queryParams()['fields'], reflection.klass().queryName);
