@@ -303,10 +303,6 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   buildResource: (data, includes, existingResource) ->
     resource = existingResource || @resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build()
 
-    # If primaryKey is `id`, we want it as an int. If it were, say, `token`, we leave it alone
-    if resource.klass().primaryKey == 'id'
-      data['id'] = parseInt(data['id'])
-
     attributes = _.extend(_.omit(data, 'type', 'attributes', 'links', 'relationships'), data['attributes'])
     attributes = @addRelationshipsToAttributes(attributes, data['relationships'], includes, resource)
 
