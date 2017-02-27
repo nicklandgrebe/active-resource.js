@@ -21,7 +21,7 @@ describe 'ActiveResource', ->
           @reflections = MyLibrary::Order.reflectOnAllAssociations('hasMany')
 
         it 'scopes to reflections of that macro', ->
-          expect(@reflections.size()).toEqual(2)
+          expect(@reflections.size()).toEqual(3)
 
     describe '#reflectOnAssociation', ->
       it 'gets the specific reflection', ->

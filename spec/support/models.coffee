@@ -24,6 +24,7 @@ class MyLibrary::Order extends MyLibrary.Base
 
   this.hasMany 'comments', as: 'resource'
   this.hasMany 'orderItems'
+  this.hasMany 'transactions', autosave: true
 
 class MyLibrary::OrderItem extends MyLibrary.Base
   this.className = 'OrderItem'
@@ -31,8 +32,21 @@ class MyLibrary::OrderItem extends MyLibrary.Base
 
   this.belongsTo 'order'
 
+class MyLibrary::PaymentMethod extends MyLibrary.Base
+  this.className = 'PaymentMethod'
+  this.queryName = 'payment_methods'
+
+  this.hasMany 'transactions'
+
 class MyLibrary::Product extends MyLibrary.Base
   this.className = 'Product'
   this.queryName = 'products'
 
   this.hasMany 'orders'
+
+class MyLibrary::Transaction extends MyLibrary.Base
+  this.className = 'Transaction'
+  this.queryName = 'transactions'
+
+  this.belongsTo 'order'
+  this.belongsTo 'paymentMethod'

@@ -11,22 +11,7 @@ describe 'ActiveResource', ->
 
   describe 'Interfaces::JsonApi', ->
     beforeEach ->
-      @lib = ActiveResource.createResourceLibrary(
-        'https://www.example.com/api/v1/'
-        interface: ActiveResource.Interfaces.JsonApi
-      )
-      class @lib::Product extends @lib.Base
-        @className = 'Product'
-        @queryName = 'products'
-
-        @hasMany 'orders'
-
-      class @lib::Order extends @lib.Base
-        @className = 'Order'
-        @queryName = 'orders'
-
-        @belongsTo 'product'
-
+      @lib = window.MyLibrary
       @interface = @lib.interface
 
     describe '#get()', ->
@@ -135,13 +120,20 @@ describe 'ActiveResource', ->
     describe '#post', ->
       describe 'persisting resource data', ->
         beforeEach ->
-          @product = @lib::Product.build(title: 'Another title')
-          @product.orders().assign([@lib::Order.build(id: 3)])
+          @order = @lib::Order.build(price: 1.0)
+          @order.transactions().assign(
+            [
+              @lib::Transaction.build(
+                amount: 1.0,
+                paymentMethod: @lib::PaymentMethod.build(id: 100)
+              )
+            ]
+          )
 
-          @product.timestamp = new Date()
+          @order.timestamp = new Date()
 
           @interface
-          .post(@lib::Product.links()['related'], @product)
+          .post(@lib::Order.links()['related'], @order)
           .done(window.onSuccess)
           .fail(window.onFailure)
 
@@ -149,17 +141,25 @@ describe 'ActiveResource', ->
           resourceDocument =
             {
               data: {
-                type: 'products',
+                type: 'orders',
                 attributes: {
-                  title: 'Another title',
-                  timestamp: @product.timestamp.toJSON()
+                  price: 1.0,
+                  timestamp: @order.timestamp.toJSON()
                 },
                 relationships: {
-                  orders: {
+                  transactions: {
                     data: [
                       {
-                        id: 3,
-                        type: 'orders'
+                        type: 'transactions',
+                        attributes: {
+                          amount: 1.0,
+                          payment_method_id: 100
+                        },
+                        relationships: {
+                          payment_method: {
+                            data: { type: 'payment_methods', id: 100 }
+                          }
+                        }
                       }
                     ]
                   }

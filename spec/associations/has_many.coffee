@@ -139,7 +139,7 @@ describe 'ActiveResource', ->
             @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries the first relationship resource with filters', ->
-            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('filter[token]=abc123&limit=1')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('filter[token]=abc123&include=transactions&limit=1')
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -160,7 +160,7 @@ describe 'ActiveResource', ->
               @resource.orders().select('price','verificationCode').all()
 
             it 'uses the correct model name for shallow fields', ->
-              expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('fields[orders]=price,verification_code')
+              expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('fields[orders]=price,verification_code&include=transactions')
 
           describe '#includes()', ->
             beforeEach ->
@@ -430,7 +430,8 @@ describe 'ActiveResource', ->
                     data: { type: 'products', id: 1 }
                   }
                 }
-              }
+              },
+              include: 'transactions'
             }
             expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
@@ -494,24 +495,26 @@ describe 'ActiveResource', ->
                 product_id: 1
               },
               relationships: {
+                product: {
+                  data: { id: 1, type: 'products' }
+                },
                 order_items: {
                   data: [
                     {
                       type: 'order_items',
                       attributes: {
                         amount: 1.0
-                      }
+                      },
+                      relationships: {}
                     },
                     {
                       type: 'order_items',
                       attributes: {
                         amount: 2.0
-                      }
+                      },
+                      relationships: {}
                     }
                   ]
-                }
-                product: {
-                  data: { id: 1, type: 'products' }
                 }
               }
             }
