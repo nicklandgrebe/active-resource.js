@@ -78,7 +78,15 @@ describe 'ActiveResource', ->
           jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
           expect(@resource.title).not.toEqual(oldTitle)
 
-      describe 'when resource is not persisted', ->
+      describe 'when resource has ID', ->
+        beforeEach ->
+          @resource = MyLibrary::Product.build(id: 1)
+
+        it 'makes a call to GET the resource', ->
+          @resource.reload()
+          expect(jasmine.Ajax.requests.mostRecent().url).toEqual(@resource.links()['related'] + '1')
+
+      describe 'when resource is not persisted nor has ID', ->
         beforeEach ->
           @resource = MyLibrary::Product.build()
 

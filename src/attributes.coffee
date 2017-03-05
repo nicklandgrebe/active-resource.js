@@ -60,10 +60,12 @@ class ActiveResource::Attributes
   #
   # @return [Promise] a promise to return the reloaded ActiveResource **or** 404 NOT FOUND
   @reload: ->
-    throw 'Cannot reload a resource that is not persisted' unless @persisted()
+    throw 'Cannot reload a resource that is not persisted or has an ID' unless @persisted() || @id.toString().length > 0
 
     resource = this
-    @interface().get(@links()['self'], @queryParams())
+    link = @links()['self'] || (@links()['related'] + @id.toString())
+
+    @interface().get(link, @queryParams())
     .then (reloaded) ->
       resource.assignAttributes(reloaded.attributes())
       resource.klass().reflectOnAllAssociations().each (reflection) ->
