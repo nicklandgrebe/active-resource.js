@@ -157,7 +157,7 @@ describe 'ActiveResource', ->
             resourceDocument =
               {
                 data: {
-                  id: 2,
+                  id: '2',
                   type: 'orders'
                 }
               }
@@ -182,7 +182,7 @@ describe 'ActiveResource', ->
               jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.failure)
 
             it 'does not assign the target', ->
-              expect(@resource.order().id).toEqual(1)
+              expect(@resource.order().id).toEqual('1')
 
             it 'does not assign the inverse target', ->
               expect(@target.giftCard()).toBeNull()
@@ -275,13 +275,13 @@ describe 'ActiveResource', ->
                 data: {
                   type: 'orders'
                   attributes: {
-                    gift_card_id: 1,
+                    gift_card_id: '1',
                     price: 3,
                     verification_code: 'asd'
                   },
                   relationships: {
                     gift_card: {
-                      data: { id: 1, type: 'gift_cards' }
+                      data: { id: '1', type: 'gift_cards' }
                     }
                   }
                 }

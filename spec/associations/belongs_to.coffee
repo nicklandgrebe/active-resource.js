@@ -147,7 +147,7 @@ describe 'ActiveResource', ->
             resourceDocument =
               {
                 data: {
-                  id: 2,
+                  id: '2',
                   type: 'gift_cards'
                 }
               }
@@ -178,7 +178,7 @@ describe 'ActiveResource', ->
               expect(@target.order()).toBeNull()
 
             it 'does not assign the owner\'s foreign key', ->
-              expect(@resource.giftCardId).toEqual(1)
+              expect(@resource.giftCardId).toEqual('1')
 
         describe 'when assigning null', ->
           beforeEach ->
@@ -272,7 +272,7 @@ describe 'ActiveResource', ->
                   },
                   relationships: {
                     order: {
-                      data: { id: 1, type: 'orders' }
+                      data: { id: '1', type: 'orders' }
                     }
                   }
                 }

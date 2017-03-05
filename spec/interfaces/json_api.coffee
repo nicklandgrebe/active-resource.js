@@ -157,7 +157,7 @@ describe 'ActiveResource', ->
                         },
                         relationships: {
                           payment_method: {
-                            data: { type: 'payment_methods', id: 100 }
+                            data: { type: 'payment_methods', id: '100' }
                           }
                         }
                       }
@@ -214,11 +214,11 @@ describe 'ActiveResource', ->
             {
               data: [
                 {
-                  id: 1,
+                  id: '1',
                   type: 'products'
                 },
                 {
-                  id: 2,
+                  id: '2',
                   type: 'products'
                 }
               ]
@@ -243,7 +243,7 @@ describe 'ActiveResource', ->
           resourceDocument =
             {
               data: {
-                id: @resource.id,
+                id: @resource.id.toString(),
                 type: 'products'
               }
             }

@@ -307,11 +307,11 @@ describe 'ActiveResource', ->
             resourceDocument = {
               data: [
                 {
-                  id: 1,
+                  id: '1',
                   type: 'orders',
                 },
                 {
-                  id: 2,
+                  id: '2',
                   type: 'orders',
                 }
               ]
@@ -423,11 +423,11 @@ describe 'ActiveResource', ->
                 attributes: {
                   price: 3,
                   verification_code: 'abc123',
-                  product_id: 1
+                  product_id: '1'
                 },
                 relationships: {
                   product: {
-                    data: { type: 'products', id: 1 }
+                    data: { type: 'products', id: '1' }
                   }
                 }
               },
@@ -492,11 +492,11 @@ describe 'ActiveResource', ->
               type: 'orders',
               attributes: {
                 price: 3,
-                product_id: 1
+                product_id: '1'
               },
               relationships: {
                 product: {
-                  data: { id: 1, type: 'products' }
+                  data: { id: '1', type: 'products' }
                 },
                 order_items: {
                   data: [
@@ -563,8 +563,8 @@ describe 'ActiveResource', ->
           it 'sends a resource identifier document', ->
             resourceDocument = {
               data: [
-                { id: 1, type: 'orders' },
-                { id: 2, type: 'orders' }
+                { id: '1', type: 'orders' },
+                { id: '2', type: 'orders' }
               ]
             }
             expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
@@ -624,7 +624,7 @@ describe 'ActiveResource', ->
           it 'sends a resource identifier document', ->
             resourceDocument = {
               data: [
-                { id: 1, type: 'orders' }
+                { id: '1', type: 'orders' }
               ]
             }
             expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
@@ -665,8 +665,8 @@ describe 'ActiveResource', ->
           it 'sends a resource identifier document with all resources', ->
             resourceDocument = {
               data: [
-                { id: 1, type: 'orders' },
-                { id: 2, type: 'orders' }
+                { id: '1', type: 'orders' },
+                { id: '2', type: 'orders' }
               ]
             }
             expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)

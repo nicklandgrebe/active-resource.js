@@ -199,7 +199,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   buildResourceIdentifier = (resource) ->
     identifier = { type: resource.klass().queryName }
     if (primaryKeyValue = resource[resource.klass().primaryKey])
-      identifier[resource.klass().primaryKey] = primaryKeyValue
+      identifier[resource.klass().primaryKey] = primaryKeyValue.toString()
     identifier
 
   # Builds a relationship object for a resource, given a resource
@@ -303,7 +303,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   buildResource: (data, includes, existingResource) ->
     resource = existingResource || @resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build()
 
-    attributes = _.extend(_.omit(data, 'type', 'attributes', 'links', 'relationships'), data['attributes'])
+    attributes = data['attributes']
+    attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString()
     attributes = @addRelationshipsToAttributes(attributes, data['relationships'], includes, resource)
 
     resource.assignAttributes(toCamelCase(attributes))
