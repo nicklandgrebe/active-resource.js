@@ -1,5 +1,5 @@
 /*
-	ActiveResource.js 2.0.8
+	ActiveResource.js 2.0.9
 	(c) 2017 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	ActiveResource.js may be freely distributed under the MIT license
 	Portions of ActiveResource.js were inspired by or borrowed from Rail's ActiveRecord library
@@ -707,8 +707,8 @@ var ActiveResource = function(){};
     };
 
     Attributes.reload = function() {
-      var link, resource;
-      if (!(this.persisted() || this.id.toString().length > 0)) {
+      var link, resource, _ref;
+      if (!(this.persisted() || ((_ref = this.id) != null ? _ref.toString().length : void 0) > 0)) {
         throw 'Cannot reload a resource that is not persisted or has an ID';
       }
       resource = this;

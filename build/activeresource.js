@@ -700,8 +700,8 @@ var ActiveResource = function(){};
     };
 
     Attributes.reload = function() {
-      var link, resource;
-      if (!(this.persisted() || this.id.toString().length > 0)) {
+      var link, resource, _ref;
+      if (!(this.persisted() || ((_ref = this.id) != null ? _ref.toString().length : void 0) > 0)) {
         throw 'Cannot reload a resource that is not persisted or has an ID';
       }
       resource = this;
