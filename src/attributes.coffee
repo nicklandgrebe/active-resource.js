@@ -72,6 +72,7 @@ class ActiveResource::Attributes
         target = reloaded.association(reflection.name).reader()
         target = target.toArray() if reflection.collection?()
         resource.association(reflection.name).writer(target, false)
+      resource
 
   # private
 

@@ -708,7 +708,7 @@ var ActiveResource = function(){};
       link = this.links()['self'] || (this.links()['related'] + this.id.toString());
       return this["interface"]().get(link, this.queryParams()).then(function(reloaded) {
         resource.assignAttributes(reloaded.attributes());
-        return resource.klass().reflectOnAllAssociations().each(function(reflection) {
+        resource.klass().reflectOnAllAssociations().each(function(reflection) {
           var target;
           target = reloaded.association(reflection.name).reader();
           if (typeof reflection.collection === "function" ? reflection.collection() : void 0) {
@@ -716,6 +716,7 @@ var ActiveResource = function(){};
           }
           return resource.association(reflection.name).writer(target, false);
         });
+        return resource;
       });
     };
 
