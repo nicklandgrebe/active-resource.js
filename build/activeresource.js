@@ -1805,7 +1805,8 @@ var ActiveResource = function(){};
         if (save) {
           _this.loaded(true);
         }
-        return _this.replace(resources);
+        _this.replace(resources);
+        return resources;
       });
     };
 
@@ -2021,6 +2022,13 @@ var ActiveResource = function(){};
       } else {
         return CollectionProxy.__super__.all.apply(this, arguments);
       }
+    };
+
+    CollectionProxy.prototype.load = function() {
+      var _this = this;
+      return this.all().then(function(collection) {
+        return _this.base.writer(collection, false);
+      });
     };
 
     CollectionProxy.prototype.toArray = function() {

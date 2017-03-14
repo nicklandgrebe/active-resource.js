@@ -37,6 +37,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     .then ->
       _this.loaded(true) if save
       _this.replace(resources)
+      resources
 
   # Pushes resources onto the target
   #

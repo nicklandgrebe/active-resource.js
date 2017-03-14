@@ -78,6 +78,26 @@ describe 'ActiveResource', ->
           it 'does not assign the target', ->
             expect(@resource.orders().all(cached: true).size()).toEqual(0)
 
+        describe '#load()', ->
+          beforeEach ->
+            @resource.orders().where(some: 'value').load()
+            .done window.onSuccess
+
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+            @result = window.onSuccess.calls.mostRecent().args[0]
+
+          it 'returns a collection', ->
+            expect(@result.klass()).toBe(ActiveResource::Collection)
+
+          it 'returns a collection of resources of reflection klass type', ->
+            expect(@result.first().klass()).toBe(MyLibrary::Order)
+
+          it 'does assign the target', ->
+            expect(@resource.orders().all(cached: true).size()).not.toEqual(0)
+
+          it 'queries the first relationship resource with filters', ->
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('filter[some]=value&include=transactions')
+
         describe '#first()', ->
           beforeEach ->
             @resource.orders().first()

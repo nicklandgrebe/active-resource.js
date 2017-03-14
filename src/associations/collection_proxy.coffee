@@ -57,6 +57,17 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
     else
       super
 
+  # Loads into the target the result of `all` (which does not write its
+  # result to target)
+  #
+  # @note This differs from @base.loadTarget() because that does not use queryParams()
+  #   like Relation or CollectionProxy
+  # @return [Promise] the array of cached collection association items
+  load: ->
+    @all()
+    .then (collection) =>
+      @base.writer(collection, false)
+
   # Gets the cached association collection and returns it as an array
   #
   # @return [Array<ActiveResource::Base>] the array of cached collection association items
