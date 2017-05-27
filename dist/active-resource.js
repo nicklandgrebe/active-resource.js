@@ -1,8 +1,8 @@
 /*
-	ActiveResource.js 2.0.11
+	active-resource 0.9.0
 	(c) 2017 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
-	ActiveResource.js may be freely distributed under the MIT license
-	Portions of ActiveResource.js were inspired by or borrowed from Rail's ActiveRecord library
+	active-resource may be freely distributed under the MIT license
+	Portions of active-resource were inspired by or borrowed from Rail's ActiveRecord library
 */
 
 (function (root, factory) {
