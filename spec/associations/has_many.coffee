@@ -384,6 +384,27 @@ describe 'ActiveResource', ->
             it 'replaces the target with an empty collection', ->
               expect(@resource.orders().all(cached: true).size()).toEqual(0)
 
+        describe 'when assigning with save: false', ->
+          beforeEach ->
+            MyLibrary::Order.all()
+            .done window.onSuccess
+
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+            @target = window.onSuccess.calls.mostRecent().args[0]
+
+            @priorRequestsCount = jasmine.Ajax.requests.count()
+
+            @output = @resource.orders().assign(@target, false)
+
+          it 'does not make a request', ->
+            expect(jasmine.Ajax.requests.count()).toEqual(@priorRequestsCount)
+
+          it 'does return assigned resources', ->
+            expect(@output.klass()).toBe(ActiveResource::Collection)
+
+          it 'replaces the target', ->
+            expect(@resource.orders().all(cached: true).size()).toEqual(@target.size())
+
       describe 'building', ->
         beforeEach ->
           MyLibrary::Product.find(1)

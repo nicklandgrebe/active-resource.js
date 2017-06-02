@@ -26,18 +26,17 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
 
     persistedResources = resources.select((r) -> r.persisted?())
 
-    persistAssignment =
-      if save && !@owner.newResource?() && (resources.empty() || !persistedResources.empty())
-        @__persistAssignment(persistedResources.toArray())
-      else
-        $.when(resources)
-
     _this = this
-    persistAssignment
-    .then ->
+    localAssignment = ->
       _this.loaded(true) if save
       _this.replace(resources)
       resources
+
+    if save && !@owner.newResource?() && (resources.empty() || !persistedResources.empty())
+      @__persistAssignment(persistedResources.toArray())
+      .then localAssignment
+    else
+      localAssignment()
 
   # Pushes resources onto the target
   #

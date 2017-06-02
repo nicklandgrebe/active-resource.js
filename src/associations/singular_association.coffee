@@ -12,17 +12,16 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
   writer: (resource, save = true) ->
     @__raiseOnTypeMismatch(resource) if resource?
 
-    persistResource =
-      if save && !@owner.newResource?()
-        @__persistAssignment(resource)
-      else
-        $.when(resource)
-
     _this = this
-    persistResource
-    .then ->
+    localAssignment = ->
       _this.loaded(true) if save
       _this.replace(resource)
+
+    if save && !@owner.newResource?()
+      @__persistAssignment(resource)
+      .then localAssignment
+    else
+      localAssignment()
 
   # Builds a resource for the association
   #
