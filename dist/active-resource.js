@@ -1,5 +1,5 @@
 /*
-	active-resource 0.9.0
+	active-resource 0.9.1
 	(c) 2017 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	active-resource may be freely distributed under the MIT license
 	Portions of active-resource were inspired by or borrowed from Rail's ActiveRecord library
@@ -1794,7 +1794,7 @@ var ActiveResource = function(){};
     };
 
     CollectionAssociation.prototype.writer = function(resources, save) {
-      var persistAssignment, persistedResources, _base,
+      var localAssignment, persistedResources, _base,
         _this = this;
       if (save == null) {
         save = true;
@@ -1806,15 +1806,19 @@ var ActiveResource = function(){};
       persistedResources = resources.select(function(r) {
         return typeof r.persisted === "function" ? r.persisted() : void 0;
       });
-      persistAssignment = save && !(typeof (_base = this.owner).newResource === "function" ? _base.newResource() : void 0) && (resources.empty() || !persistedResources.empty()) ? this.__persistAssignment(persistedResources.toArray()) : $.when(resources);
       _this = this;
-      return persistAssignment.then(function() {
+      localAssignment = function() {
         if (save) {
           _this.loaded(true);
         }
         _this.replace(resources);
         return resources;
-      });
+      };
+      if (save && !(typeof (_base = this.owner).newResource === "function" ? _base.newResource() : void 0) && (resources.empty() || !persistedResources.empty())) {
+        return this.__persistAssignment(persistedResources.toArray()).then(localAssignment);
+      } else {
+        return localAssignment();
+      }
     };
 
     CollectionAssociation.prototype.concat = function(resources) {
@@ -2164,21 +2168,25 @@ var ActiveResource = function(){};
     };
 
     SingularAssociation.prototype.writer = function(resource, save) {
-      var persistResource, _base, _this;
+      var localAssignment, _base, _this;
       if (save == null) {
         save = true;
       }
       if (resource != null) {
         this.__raiseOnTypeMismatch(resource);
       }
-      persistResource = save && !(typeof (_base = this.owner).newResource === "function" ? _base.newResource() : void 0) ? this.__persistAssignment(resource) : $.when(resource);
       _this = this;
-      return persistResource.then(function() {
+      localAssignment = function() {
         if (save) {
           _this.loaded(true);
         }
         return _this.replace(resource);
-      });
+      };
+      if (save && !(typeof (_base = this.owner).newResource === "function" ? _base.newResource() : void 0)) {
+        return this.__persistAssignment(resource).then(localAssignment);
+      } else {
+        return localAssignment();
+      }
     };
 
     SingularAssociation.prototype.build = function(attributes) {
