@@ -1618,6 +1618,36 @@ var ActiveResource = function(){};
       return this.klass()["interface"]();
     };
 
+    Base.prototype.clone = function() {
+      return this.__createClone();
+    };
+
+    Base.prototype.__createClone = function(cloner) {
+      var clone,
+        _this = this;
+      clone = this.klass().build(this.attributes());
+      clone.__links = this.links();
+      this.klass().reflectOnAllAssociations().each(function(reflection) {
+        var new_association, new_target, old_association;
+        old_association = _this.association(reflection.name);
+        new_association = clone.association(reflection.name);
+        new_association.__links = old_association.links();
+        if (reflection.collection()) {
+          return old_association.target.each(function(resource) {
+            var new_target;
+            new_target = resource.__createClone(_this);
+            new_association.setInverseInstance(new_target);
+            return new_association.target.push(new_target);
+          });
+        } else if ((old_association.target != null) && old_association.target !== cloner) {
+          new_target = old_association.target.__createClone(_this);
+          new_association.setInverseInstance(new_target);
+          return new_association.target = new_target;
+        }
+      });
+      return clone;
+    };
+
     Base.__newRelation = function(queryParams) {
       return new ActiveResource.prototype.Relation(this, queryParams);
     };

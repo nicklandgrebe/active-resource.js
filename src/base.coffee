@@ -59,7 +59,37 @@ class ActiveResource::Base
   interface: ->
     @klass().interface()
 
+  # Clones the resource and its relationship resources recursively
+  clone: ->
+    @__createClone()
+
   # private
+
+  # Clones a resource recursively, taking in a cloner argument to protect against circular cloning
+  #   of relationships
+  #
+  # @param [ActiveResource::Base] cloner the resource cloning this resource (always a related resource)
+  # @return [ActiveResource::Base] the cloned resource
+  __createClone: (cloner) ->
+    clone = @klass().build(@attributes())
+    clone.__links = @links()
+
+    @klass().reflectOnAllAssociations().each (reflection) =>
+      old_association = @association(reflection.name)
+      new_association = clone.association(reflection.name)
+      new_association.__links = old_association.links()
+
+      if reflection.collection()
+        old_association.target.each (resource) =>
+          new_target = resource.__createClone(this)
+          new_association.setInverseInstance(new_target)
+          new_association.target.push(new_target)
+      else if old_association.target? && old_association.target != cloner
+        new_target = old_association.target.__createClone(this)
+        new_association.setInverseInstance(new_target)
+        new_association.target = new_target
+
+    clone
 
   # Creates a new ActiveResource::Relation with the extended queryParams passed in
   #
