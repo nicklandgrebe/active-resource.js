@@ -3,7 +3,7 @@
   "description": "Persistable object relational mapping in Javascript",
   "main": "dist/active-resource.min.js",
   "author": "Nick Landgrebe",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "homepage": "https://github.com/nicklandgrebe/activeresource.js",
   "license": "MIT",
   "dependencies": {

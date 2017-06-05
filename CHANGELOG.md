@@ -5,3 +5,7 @@
 ### 0.9.1
 
 * Removed promises from calls to `Association#assign(save: false)` in favor of synchronous assignment
+
+### 0.9.2
+
+* Added `Base#clone` to clone resources
