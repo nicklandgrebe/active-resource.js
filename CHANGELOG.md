@@ -9,3 +9,8 @@
 ### 0.9.2
 
 * Added `Base#clone` to clone resources
+
+### 0.9.3
+
+* Added `#errors` to list of objects/properties cloned in `Base#clone`
+* Added `afterRequest` callback to Resource classes

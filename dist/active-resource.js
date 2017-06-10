@@ -1,5 +1,5 @@
 /*
-	active-resource 0.9.2
+	active-resource 0.9.3
 	(c) 2017 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	active-resource may be freely distributed under the MIT license
 	Portions of active-resource were inspired by or borrowed from Rail's ActiveRecord library
@@ -738,6 +738,33 @@ var ActiveResource = function(){};
 }).call(this);
 
 (function() {
+  ActiveResource.prototype.Callbacks = (function() {
+    function Callbacks() {}
+
+    Callbacks.prototype.callbacks = function() {
+      return this.__callbacks || (this.__callbacks = {
+        afterBuild: ActiveResource.prototype.Collection.build()
+      });
+    };
+
+    Callbacks.prototype.afterBuild = function(func) {
+      return this.callbacks()['afterBuild'].push(func);
+    };
+
+    Callbacks.__executeCallbacks = function(type) {
+      var _this = this;
+      return this.klass().callbacks()[type].each(function(callback) {
+        return _.bind(callback, _this)();
+      });
+    };
+
+    return Callbacks;
+
+  })();
+
+}).call(this);
+
+(function() {
   var __slice = [].slice;
 
   ActiveResource.prototype.Collection = (function() {
@@ -903,10 +930,18 @@ var ActiveResource = function(){};
       }
       (_base = this.__errors)[attribute] || (_base[attribute] = []);
       this.__errors[attribute].push(error = {
+        attribute: attribute,
         code: code,
         detail: detail,
         message: detail
       });
+      return error;
+    };
+
+    Errors.prototype.push = function(error) {
+      var _base, _name;
+      (_base = this.__errors)[_name = error.attribute] || (_base[_name] = []);
+      this.__errors[error.attribute].push(error);
       return error;
     };
 
@@ -1244,7 +1279,7 @@ var ActiveResource = function(){};
       };
 
       AbstractReflection.prototype.buildAssociation = function() {
-        return new (this.klass())();
+        return this.klass().build();
       };
 
       AbstractReflection.prototype.hasInverse = function() {
@@ -1515,6 +1550,7 @@ var ActiveResource = function(){};
       resource = this.base != null ? new this.base() : new this();
       resource.assignAttributes(_.extend(attributes, this.queryParams()['filter']));
       resource.assignResourceRelatedQueryParams(this.queryParams());
+      resource.__executeCallbacks('afterBuild');
       return resource;
     };
 
@@ -1577,6 +1613,8 @@ var ActiveResource = function(){};
   ActiveResource.prototype.Base = (function() {
     ActiveResource.extend(Base, ActiveResource.prototype.Associations);
 
+    ActiveResource.extend(Base, ActiveResource.prototype.Callbacks.prototype);
+
     ActiveResource.extend(Base, ActiveResource.prototype.Reflection.prototype);
 
     ActiveResource.extend(Base, ActiveResource.prototype.Relation.prototype);
@@ -1584,6 +1622,8 @@ var ActiveResource = function(){};
     ActiveResource.include(Base, ActiveResource.prototype.Associations.prototype);
 
     ActiveResource.include(Base, ActiveResource.prototype.Attributes);
+
+    ActiveResource.include(Base, ActiveResource.prototype.Callbacks);
 
     ActiveResource.include(Base, ActiveResource.prototype.Errors);
 
@@ -1634,6 +1674,9 @@ var ActiveResource = function(){};
         _this = this;
       clone = this.klass().build(this.attributes());
       clone.__links = this.links();
+      this.errors().each(function(attribute, e) {
+        return clone.errors().push(_.clone(e));
+      });
       this.klass().reflectOnAllAssociations().each(function(reflection) {
         var new_association, new_target, old_association;
         old_association = _this.association(reflection.name);
