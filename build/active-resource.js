@@ -731,6 +731,33 @@ var ActiveResource = function(){};
 }).call(this);
 
 (function() {
+  ActiveResource.prototype.Callbacks = (function() {
+    function Callbacks() {}
+
+    Callbacks.prototype.callbacks = function() {
+      return this.__callbacks || (this.__callbacks = {
+        afterBuild: ActiveResource.prototype.Collection.build()
+      });
+    };
+
+    Callbacks.prototype.afterBuild = function(func) {
+      return this.callbacks()['afterBuild'].push(func);
+    };
+
+    Callbacks.__executeCallbacks = function(type) {
+      var _this = this;
+      return this.klass().callbacks()[type].each(function(callback) {
+        return _.bind(callback, _this)();
+      });
+    };
+
+    return Callbacks;
+
+  })();
+
+}).call(this);
+
+(function() {
   var __slice = [].slice;
 
   ActiveResource.prototype.Collection = (function() {
@@ -1237,7 +1264,7 @@ var ActiveResource = function(){};
       };
 
       AbstractReflection.prototype.buildAssociation = function() {
-        return new (this.klass())();
+        return this.klass().build();
       };
 
       AbstractReflection.prototype.hasInverse = function() {
@@ -1508,6 +1535,7 @@ var ActiveResource = function(){};
       resource = this.base != null ? new this.base() : new this();
       resource.assignAttributes(_.extend(attributes, this.queryParams()['filter']));
       resource.assignResourceRelatedQueryParams(this.queryParams());
+      resource.__executeCallbacks('afterBuild');
       return resource;
     };
 
@@ -1570,6 +1598,8 @@ var ActiveResource = function(){};
   ActiveResource.prototype.Base = (function() {
     ActiveResource.extend(Base, ActiveResource.prototype.Associations);
 
+    ActiveResource.extend(Base, ActiveResource.prototype.Callbacks.prototype);
+
     ActiveResource.extend(Base, ActiveResource.prototype.Reflection.prototype);
 
     ActiveResource.extend(Base, ActiveResource.prototype.Relation.prototype);
@@ -1577,6 +1607,8 @@ var ActiveResource = function(){};
     ActiveResource.include(Base, ActiveResource.prototype.Associations.prototype);
 
     ActiveResource.include(Base, ActiveResource.prototype.Attributes);
+
+    ActiveResource.include(Base, ActiveResource.prototype.Callbacks);
 
     ActiveResource.include(Base, ActiveResource.prototype.Errors);
 

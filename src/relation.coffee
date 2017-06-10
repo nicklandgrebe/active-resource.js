@@ -231,6 +231,9 @@ class ActiveResource::Relation
 
     resource.assignAttributes(_.extend(attributes, @queryParams()['filter']))
     resource.assignResourceRelatedQueryParams(@queryParams())
+
+    resource.__executeCallbacks('afterBuild')
+
     resource
 
   # Builds a new ActiveResource of the type for this relation and persists it on the server
