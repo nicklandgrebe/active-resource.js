@@ -75,6 +75,7 @@ class ActiveResource::Base
   __createClone: (cloner) ->
     clone = @klass().build(@attributes())
     clone.__links = @links()
+    @errors().each (attribute, e) => clone.errors().push(_.clone(e))
 
     @klass().reflectOnAllAssociations().each (reflection) =>
       old_association = @association(reflection.name)

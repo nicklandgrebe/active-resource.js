@@ -72,11 +72,11 @@ describe 'ActiveResource', ->
 
     describe '#toArray()', ->
       it 'returns an array of errors for the resource', ->
-        expect(@resource.errors().toArray()).toEqual([{ code: 'blank', message: 'Title cannot be blank', detail: 'Title cannot be blank' }])
+        expect(@resource.errors().toArray()).toEqual([{ attribute: 'title', code: 'blank', message: 'Title cannot be blank', detail: 'Title cannot be blank' }])
 
     describe '#toCollection()', ->
       it 'returns a collection', ->
         expect(@resource.errors().toCollection().klass()).toBe(ActiveResource::Collection)
 
       it 'returns a collection of errors for the resource', ->
-        expect(@resource.errors().toCollection().toArray()).toEqual([{ code: 'blank', message: 'Title cannot be blank', detail: 'Title cannot be blank' }])
+        expect(@resource.errors().toCollection().toArray()).toEqual([{ attribute: 'title', code: 'blank', message: 'Title cannot be blank', detail: 'Title cannot be blank' }])

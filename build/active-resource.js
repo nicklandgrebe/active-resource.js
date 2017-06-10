@@ -923,10 +923,18 @@ var ActiveResource = function(){};
       }
       (_base = this.__errors)[attribute] || (_base[attribute] = []);
       this.__errors[attribute].push(error = {
+        attribute: attribute,
         code: code,
         detail: detail,
         message: detail
       });
+      return error;
+    };
+
+    Errors.prototype.push = function(error) {
+      var _base, _name;
+      (_base = this.__errors)[_name = error.attribute] || (_base[_name] = []);
+      this.__errors[error.attribute].push(error);
       return error;
     };
 
@@ -1659,6 +1667,9 @@ var ActiveResource = function(){};
         _this = this;
       clone = this.klass().build(this.attributes());
       clone.__links = this.links();
+      this.errors().each(function(attribute, e) {
+        return clone.errors().push(_.clone(e));
+      });
       this.klass().reflectOnAllAssociations().each(function(reflection) {
         var new_association, new_target, old_association;
         old_association = _this.association(reflection.name);

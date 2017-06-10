@@ -44,7 +44,16 @@ class ActiveResource::Errors
   # @return [Object] the error object created and added to storage
   add: (attribute, code, detail = '') ->
     @__errors[attribute] ||= []
-    @__errors[attribute].push(error = { code: code, detail: detail, message: detail })
+    @__errors[attribute].push(error = { attribute: attribute, code: code, detail: detail, message: detail })
+    error
+
+  # Adds an existing error with attribute to this errors object
+  #
+  # @param [Object] error the error to push onto this errors object
+  # @return [Object] the error object
+  push: (error) ->
+    @__errors[error.attribute] ||= []
+    @__errors[error.attribute].push(error)
     error
 
   # Indicates whether or not the error with code `code` is on the `attribute`

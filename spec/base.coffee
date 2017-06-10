@@ -67,6 +67,8 @@ describe 'ActiveResource', ->
         jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
         @resource = window.onSuccess.calls.mostRecent().args[0]
 
+        @resource.errors().add('attribute', 'invalid')
+
         @clone = @resource.clone()
 
       it 'returns a new resource', ->
@@ -80,6 +82,9 @@ describe 'ActiveResource', ->
 
       it 'clones links', ->
         expect(@clone.links()).toEqual(@resource.links())
+
+      it 'clones errors', ->
+        expect(@clone.errors().size()).toEqual(1)
 
       it 'clones relationship resources', ->
         @clone.klass().reflectOnAllAssociations().each (reflection) =>
