@@ -51,6 +51,7 @@ class ActiveResource::Fields
       newField = @[field]
 
       try
+        # Relationship field if association found
         association = @association(field)
 
         newField = @[field]()
@@ -67,5 +68,6 @@ class ActiveResource::Fields
           oldField != newField ||
             association.reflection.autosave() && newField.changed()
       catch
+        # Attribute field if association not found
         oldField != newField
     )
