@@ -11,6 +11,7 @@
 #
 class ActiveResource::Base
   ActiveResource.extend(@, ActiveResource::Associations)
+  ActiveResource.extend(@, ActiveResource::Attributes.prototype)
   ActiveResource.extend(@, ActiveResource::Reflection.prototype)
   ActiveResource.extend(@, ActiveResource::Relation.prototype)
   ActiveResource.include(@, ActiveResource::Associations.prototype)
