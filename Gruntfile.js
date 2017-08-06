@@ -10,7 +10,7 @@ module.exports = function(grunt) {
       build: {
         src: [
           'build/**/*.js', '!build/module.js',
-          '!build/activeresource.js', '!build/activeresource.min.js'
+          '!build/active-resource.js', '!build/active-resource.min.js'
         ]
       },
       specs: {
@@ -35,7 +35,7 @@ module.exports = function(grunt) {
       build: {
         options: {},
         files: {
-          'build/activeresource.js': 'build/module.js'
+          'build/active-resource.js': 'build/module.js'
         }
       },
       specs: {
@@ -51,7 +51,7 @@ module.exports = function(grunt) {
           mangle: false
         },
         files: {
-          'build/activeresource.min.js': 'build/activeresource.js'
+          'build/active-resource.min.js': 'build/active-resource.js'
         }
       }
     },
@@ -59,19 +59,19 @@ module.exports = function(grunt) {
       options: {
         banner:
           '/*\n' +
-          '\tActiveResource.js <%= pkg.version %>\n' +
+          '\tactive-resource <%= pkg.version %>\n' +
           '\t(c) <%= grunt.template.today("yyyy") %> Nick Landgrebe && Peak Labs, LLC DBA Occasion App\n' +
-          '\tActiveResource.js may be freely distributed under the MIT license\n' +
-          '\tPortions of ActiveResource.js were inspired by or borrowed from Rail\'s ActiveRecord library\n' +
+          '\tactive-resource may be freely distributed under the MIT license\n' +
+          '\tPortions of active-resource were inspired by or borrowed from Rail\'s ActiveRecord library\n' +
           '*/\n\n'
       },
       raw: {
-        src: 'build/activeresource.js',
-        dest: 'dist/activeresource.js'
+        src: 'build/active-resource.js',
+        dest: 'dist/active-resource.js'
       },
       min: {
-        src: 'build/activeresource.min.js',
-        dest: 'dist/activeresource.min.js'
+        src: 'build/active-resource.min.js',
+        dest: 'dist/active-resource.min.js'
       }
     },
     watch: {
@@ -105,7 +105,7 @@ module.exports = function(grunt) {
                 "underscore": '/node_modules/underscore/underscore-min',
                 "underscore.string": '/node_modules/underscore.string/dist/underscore.string',
                 "underscore.inflection": '/node_modules/underscore.inflection/lib/underscore.inflection',
-                "activeresource": '/build/activeresource',
+                "activeresource": '/build/active-resource',
                 "jasmine-jquery": '/node_modules/jasmine-jquery/lib/jasmine-jquery',
                 "jasmine-ajax": '/node_modules/jasmine-ajax/lib/mock-ajax'
               }

@@ -26,7 +26,13 @@ to use more universal idioms.
 
 * * *
 
-New in 2.0: Resource Libraries (Getting Started)
+## Installation
+
+```
+npm i active-resource --save
+```
+
+## Getting Started
 
 In order to use ActiveResource, you must first create a resource library to hold configuration data for accessing your resources:
 

@@ -128,7 +128,7 @@ class ActiveResource::Reflection
       @options['autosave'] || false
 
     buildAssociation: ->
-      new (@klass())()
+      @klass().build()
 
     # Whether or not the reflection has an inverse
     hasInverse: ->

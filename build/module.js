@@ -15,6 +15,7 @@ var ActiveResource = function(){};
 @include interfaces/json_api.js
 @include associations.js
 @include attributes.js
+@include callbacks.js
 @include collection.js
 @include errors.js
 @include fields.js

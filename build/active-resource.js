@@ -1,10 +1,3 @@
-/*
-	ActiveResource.js 2.0.11
-	(c) 2017 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
-	ActiveResource.js may be freely distributed under the MIT license
-	Portions of ActiveResource.js were inspired by or borrowed from Rail's ActiveRecord library
-*/
-
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -738,6 +731,33 @@ var ActiveResource = function(){};
 }).call(this);
 
 (function() {
+  ActiveResource.prototype.Callbacks = (function() {
+    function Callbacks() {}
+
+    Callbacks.prototype.callbacks = function() {
+      return this.__callbacks || (this.__callbacks = {
+        afterBuild: ActiveResource.prototype.Collection.build()
+      });
+    };
+
+    Callbacks.prototype.afterBuild = function(func) {
+      return this.callbacks()['afterBuild'].push(func);
+    };
+
+    Callbacks.__executeCallbacks = function(type) {
+      var _this = this;
+      return this.klass().callbacks()[type].each(function(callback) {
+        return _.bind(callback, _this)();
+      });
+    };
+
+    return Callbacks;
+
+  })();
+
+}).call(this);
+
+(function() {
   var __slice = [].slice;
 
   ActiveResource.prototype.Collection = (function() {
@@ -903,10 +923,18 @@ var ActiveResource = function(){};
       }
       (_base = this.__errors)[attribute] || (_base[attribute] = []);
       this.__errors[attribute].push(error = {
+        attribute: attribute,
         code: code,
         detail: detail,
         message: detail
       });
+      return error;
+    };
+
+    Errors.prototype.push = function(error) {
+      var _base, _name;
+      (_base = this.__errors)[_name = error.attribute] || (_base[_name] = []);
+      this.__errors[error.attribute].push(error);
       return error;
     };
 
@@ -1244,7 +1272,7 @@ var ActiveResource = function(){};
       };
 
       AbstractReflection.prototype.buildAssociation = function() {
-        return new (this.klass())();
+        return this.klass().build();
       };
 
       AbstractReflection.prototype.hasInverse = function() {
@@ -1515,6 +1543,7 @@ var ActiveResource = function(){};
       resource = this.base != null ? new this.base() : new this();
       resource.assignAttributes(_.extend(attributes, this.queryParams()['filter']));
       resource.assignResourceRelatedQueryParams(this.queryParams());
+      resource.__executeCallbacks('afterBuild');
       return resource;
     };
 
@@ -1577,6 +1606,8 @@ var ActiveResource = function(){};
   ActiveResource.prototype.Base = (function() {
     ActiveResource.extend(Base, ActiveResource.prototype.Associations);
 
+    ActiveResource.extend(Base, ActiveResource.prototype.Callbacks.prototype);
+
     ActiveResource.extend(Base, ActiveResource.prototype.Reflection.prototype);
 
     ActiveResource.extend(Base, ActiveResource.prototype.Relation.prototype);
@@ -1584,6 +1615,8 @@ var ActiveResource = function(){};
     ActiveResource.include(Base, ActiveResource.prototype.Associations.prototype);
 
     ActiveResource.include(Base, ActiveResource.prototype.Attributes);
+
+    ActiveResource.include(Base, ActiveResource.prototype.Callbacks);
 
     ActiveResource.include(Base, ActiveResource.prototype.Errors);
 
@@ -1623,6 +1656,39 @@ var ActiveResource = function(){};
 
     Base.prototype["interface"] = function() {
       return this.klass()["interface"]();
+    };
+
+    Base.prototype.clone = function() {
+      return this.__createClone();
+    };
+
+    Base.prototype.__createClone = function(cloner) {
+      var clone,
+        _this = this;
+      clone = this.klass().build(this.attributes());
+      clone.__links = this.links();
+      this.errors().each(function(attribute, e) {
+        return clone.errors().push(_.clone(e));
+      });
+      this.klass().reflectOnAllAssociations().each(function(reflection) {
+        var new_association, new_target, old_association;
+        old_association = _this.association(reflection.name);
+        new_association = clone.association(reflection.name);
+        new_association.__links = old_association.links();
+        if (reflection.collection()) {
+          return old_association.target.each(function(resource) {
+            var new_target;
+            new_target = resource.__createClone(_this);
+            new_association.setInverseInstance(new_target);
+            return new_association.target.push(new_target);
+          });
+        } else if ((old_association.target != null) && old_association.target !== cloner) {
+          new_target = old_association.target.__createClone(_this);
+          new_association.setInverseInstance(new_target);
+          return new_association.target = new_target;
+        }
+      });
+      return clone;
     };
 
     Base.__newRelation = function(queryParams) {
@@ -1794,7 +1860,7 @@ var ActiveResource = function(){};
     };
 
     CollectionAssociation.prototype.writer = function(resources, save) {
-      var persistAssignment, persistedResources, _base,
+      var localAssignment, persistedResources, _base,
         _this = this;
       if (save == null) {
         save = true;
@@ -1806,15 +1872,19 @@ var ActiveResource = function(){};
       persistedResources = resources.select(function(r) {
         return typeof r.persisted === "function" ? r.persisted() : void 0;
       });
-      persistAssignment = save && !(typeof (_base = this.owner).newResource === "function" ? _base.newResource() : void 0) && (resources.empty() || !persistedResources.empty()) ? this.__persistAssignment(persistedResources.toArray()) : $.when(resources);
       _this = this;
-      return persistAssignment.then(function() {
+      localAssignment = function() {
         if (save) {
           _this.loaded(true);
         }
         _this.replace(resources);
         return resources;
-      });
+      };
+      if (save && !(typeof (_base = this.owner).newResource === "function" ? _base.newResource() : void 0) && (resources.empty() || !persistedResources.empty())) {
+        return this.__persistAssignment(persistedResources.toArray()).then(localAssignment);
+      } else {
+        return localAssignment();
+      }
     };
 
     CollectionAssociation.prototype.concat = function(resources) {
@@ -2164,21 +2234,25 @@ var ActiveResource = function(){};
     };
 
     SingularAssociation.prototype.writer = function(resource, save) {
-      var persistResource, _base, _this;
+      var localAssignment, _base, _this;
       if (save == null) {
         save = true;
       }
       if (resource != null) {
         this.__raiseOnTypeMismatch(resource);
       }
-      persistResource = save && !(typeof (_base = this.owner).newResource === "function" ? _base.newResource() : void 0) ? this.__persistAssignment(resource) : $.when(resource);
       _this = this;
-      return persistResource.then(function() {
+      localAssignment = function() {
         if (save) {
           _this.loaded(true);
         }
         return _this.replace(resource);
-      });
+      };
+      if (save && !(typeof (_base = this.owner).newResource === "function" ? _base.newResource() : void 0)) {
+        return this.__persistAssignment(resource).then(localAssignment);
+      } else {
+        return localAssignment();
+      }
     };
 
     SingularAssociation.prototype.build = function(attributes) {

@@ -12,11 +12,13 @@
 class ActiveResource::Base
   ActiveResource.extend(@, ActiveResource::Associations)
   ActiveResource.extend(@, ActiveResource::Attributes.prototype)
+  ActiveResource.extend(@, ActiveResource::Callbacks.prototype)
   ActiveResource.extend(@, ActiveResource::Fields.prototype)
   ActiveResource.extend(@, ActiveResource::Reflection.prototype)
   ActiveResource.extend(@, ActiveResource::Relation.prototype)
   ActiveResource.include(@, ActiveResource::Associations.prototype)
   ActiveResource.include(@, ActiveResource::Attributes)
+  ActiveResource.include(@, ActiveResource::Callbacks)
   ActiveResource.include(@, ActiveResource::Errors)
   ActiveResource.include(@, ActiveResource::Fields)
   ActiveResource.include(@, ActiveResource::Persistence)
@@ -63,7 +65,38 @@ class ActiveResource::Base
   interface: ->
     @klass().interface()
 
+  # Clones the resource and its relationship resources recursively
+  clone: ->
+    @__createClone()
+
   # private
+
+  # Clones a resource recursively, taking in a cloner argument to protect against circular cloning
+  #   of relationships
+  #
+  # @param [ActiveResource::Base] cloner the resource cloning this resource (always a related resource)
+  # @return [ActiveResource::Base] the cloned resource
+  __createClone: (cloner) ->
+    clone = @klass().build(@attributes())
+    clone.__links = @links()
+    @errors().each (attribute, e) => clone.errors().push(_.clone(e))
+
+    @klass().reflectOnAllAssociations().each (reflection) =>
+      old_association = @association(reflection.name)
+      new_association = clone.association(reflection.name)
+      new_association.__links = old_association.links()
+
+      if reflection.collection()
+        old_association.target.each (resource) =>
+          new_target = resource.__createClone(this)
+          new_association.setInverseInstance(new_target)
+          new_association.target.push(new_target)
+      else if old_association.target? && old_association.target != cloner
+        new_target = old_association.target.__createClone(this)
+        new_association.setInverseInstance(new_target)
+        new_association.target = new_target
+
+    clone
 
   # Creates a new ActiveResource::Relation with the extended queryParams passed in
   #
