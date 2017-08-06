@@ -121,11 +121,11 @@ class ActiveResource::Reflection
 
     # @return [Boolean] whether or not the association is polymorphic
     polymorphic: ->
-      @options['polymorphic']
+      @options['polymorphic'] || false
 
     # @return [Boolean] whether or not this is an autosave association
     autosave: ->
-      @options['autosave']
+      @options['autosave'] || false
 
     buildAssociation: ->
       new (@klass())()
