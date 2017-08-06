@@ -68,9 +68,9 @@ describe 'ActiveResource', ->
           jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
           @resource = window.onSuccess.calls.mostRecent().args[0]
 
-        it 'makes a PUT request', ->
+        it 'makes a PATCH request', ->
           @resource.save()
-          expect(jasmine.Ajax.requests.mostRecent().method).toEqual('PUT')
+          expect(jasmine.Ajax.requests.mostRecent().method).toEqual('PATCH')
 
       describe 'when resource is not persisted', ->
         beforeEach ->
@@ -134,9 +134,9 @@ describe 'ActiveResource', ->
           jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
           @resource = window.onSuccess.calls.mostRecent().args[0]
 
-        it 'makes a PUT request', ->
+        it 'makes a PATCH request', ->
           @resource.update(title: 'Another title')
-          expect(jasmine.Ajax.requests.mostRecent().method).toEqual('PUT')
+          expect(jasmine.Ajax.requests.mostRecent().method).toEqual('PATCH')
 
       describe 'when resource is not persisted', ->
         beforeEach ->

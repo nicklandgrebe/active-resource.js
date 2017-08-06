@@ -206,43 +206,26 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   #
   # @param [ActiveResource::Base] resource the resource to get relationship data from
   # @return [Object] the built relationship object for the resource
-  #
-  # 1. Iterate over every reflection (a relationship definition) for the resource klass
-  # 2. If the reflection is a collection, ensure the association target is not empty, then map the
-  #    association to relationships[reflection.name] = { data: [...] }
-  # 3. If the reflection is not a collection, ensure the association target is present, then render
-  #    the association to relationships[reflection.name] = { data: { ... } }
-  # 4. Each association target is rendered first as a resource identifier ({ id: '...', type: '...' }),
-  #    then attributes are rendered with it, but ONLY if the association is autosaving (this is how
-  #    we save the object to the server)
-  # 5. Return the built relationship object
-  buildResourceRelationships = (resource) ->
-    relationships = {}
+  buildResourceRelationships = (resource, relationships, onlyChanged = false) ->
+    output = {}
 
-    resource.klass().reflectOnAllAssociations().each (reflection) ->
-      if reflection.collection()
-        unless resource.association(reflection.name).empty()
-          relationships[s.underscored(reflection.name)] =
-            data:
-              resource.association(reflection.name).reader()
-              .all(cached: true).map((target) ->
-                output = buildResourceIdentifier(target)
-                if reflection.autosave?()
-                  output['attributes'] = toUnderscored(_.omit(target.attributes(), resource.klass().primaryKey))
-                  output['relationships'] = buildResourceRelationships(target)
-                output
-              ).toArray()
-      else
-        if resource.association(reflection.name).reader()?
-          target = resource.association(reflection.name).reader()
-          output = buildResourceIdentifier(target)
-          if reflection.autosave?()
-            output['attributes'] = toUnderscored(_.omit(target.attributes(), resource.klass().primaryKey))
-            output['relationships'] = buildResourceRelationships(target)
+    _.each relationships, (relationship) ->
+      reflection = resource.klass().reflectOnAssociation(relationship)
 
-          relationships[s.underscored(reflection.name)] = { data: output }
+      target = resource.association(reflection.name).target
 
-    relationships
+      return if (reflection.collection() && target.empty()) || target == null
+
+      output[s.underscored(reflection.name)] = {
+        data: buildResourceDocument({
+          resourceData: target,
+          onlyResourceIdentifiers: !reflection.autosave(),
+          onlyChanged: onlyChanged,
+          parentReflection: reflection.inverseOf() || {name: reflection.options['as']}
+        })
+      }
+
+    output
 
   # Builds a resource document in JSON API format to be sent to the server in persistence calls
   #
@@ -250,25 +233,32 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Boolean] onlyResourceIdentifiers if true, only renders the primary key/type (a resource identifier)
   #   if false, also renders attributes and relationships
   # @return [Array] an array of resource identifiers, possibly with attributes/relationships
-  #
-  # 1. Iterate over each resource to be built into the resource document
-  # 2. Create a `documentResource` representation of form: { id: ..., type: ... } for the resource
-  # 3. Unless `onlyResourceIdentifiers`, add { attributes: { ... } } to the resource
-  # 4. Unless `onlyResourceIdentifiers`, add { relationships: { ... } } to the resource in form:
-  #    { relationships: { relationship_name: { data: [resource identifier(s)] } } }
-  # 5. Return built resource document, either as an object (singular resource), or array (collection of resources)
-  buildResourceDocument = (resourceData, onlyResourceIdentifiers = false) ->
+  buildResourceDocument = ({ resourceData, onlyResourceIdentifiers, onlyChanged, parentReflection }) ->
+    onlyResourceIdentifiers = onlyResourceIdentifiers || false
+    onlyChanged = onlyChanged || false
+
     data =
       ActiveResource::Collection.build(resourceData).compact().map (resource) ->
         documentResource = buildResourceIdentifier(resource)
 
         unless onlyResourceIdentifiers
-          documentResource['attributes'] = toUnderscored(_.omit(resource.attributes(), resource.klass().primaryKey))
-          documentResource['relationships'] = buildResourceRelationships(resource)
+          attributes = _.omit(resource.attributes(), resource.klass().primaryKey)
+          relationships = _.keys(resource.klass().reflections())
+
+          if parentReflection
+            relationships = _.without(relationships, parentReflection.name)
+
+          if onlyChanged
+            changedFields = resource.changedFields().toArray()
+            attributes = _.pick(attributes, changedFields...)
+            relationships = _.intersection(relationships, changedFields)
+
+          documentResource['attributes'] = toUnderscored(attributes)
+          documentResource['relationships'] = buildResourceRelationships(resource, relationships, onlyChanged)
 
         documentResource
 
-    if _.isArray(resourceData)
+    if _.isArray(resourceData) || (_.isObject(resourceData) && resourceData.isA?(ActiveResource::Collection))
       data.toArray()
     else
       data.first()
@@ -307,7 +297,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString()
     attributes = @addRelationshipsToAttributes(attributes, data['relationships'], includes, resource)
 
-    resource.assignAttributes(toCamelCase(attributes))
+    resource.__assignFields(toCamelCase(attributes))
 
     resource.__links = _.pick(data['links'], 'self')
     resource.klass().reflectOnAllAssociations().each (reflection) ->
@@ -534,7 +524,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @option [Boolean] onlyResourceIdentifiers if false, render the attributes and relationships
   #   of each resource into the resource document
   post: (url, resourceData, options = {}) ->
-    data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
+    data = { data: buildResourceDocument(resourceData: resourceData, onlyResourceIdentifiers: options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
       queryParams = resourceData.queryParams()
@@ -562,7 +552,13 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Object] options options that may modify the data sent to the server
   #   @see #post
   patch: (url, resourceData, options = {}) ->
-    data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
+    data = {
+      data: buildResourceDocument({
+        resourceData: resourceData,
+        onlyResourceIdentifiers: options['onlyResourceIdentifiers'],
+        onlyChanged: true
+      })
+    }
 
     unless options['onlyResourceIdentifiers']
       queryParams = resourceData.queryParams()
@@ -590,7 +586,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Object] options options that may modify the data sent to the server
   #   @see #post
   put: (url, resourceData, options = {}) ->
-    data = { data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers']) }
+    data = { data: buildResourceDocument(resourceData: resourceData, onlyResourceIdentifiers: options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
       queryParams = resourceData.queryParams()
@@ -626,7 +622,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   delete: (url, resourceData, options = {}) ->
     data =
       if resourceData?
-        { data: buildResourceDocument(resourceData, true) }
+        { data: buildResourceDocument(resourceData: resourceData, onlyResourceIdentifiers: true) }
       else
         {}
 

@@ -184,7 +184,8 @@ var ActiveResource = function(){};
 (function() {
   var _ref,
     __hasProp = {}.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __slice = [].slice;
 
   ActiveResource.Interfaces.JsonApi = ActiveResource.prototype.Interfaces.prototype.JsonApi = (function(_super) {
     var buildIncludeTree, buildResourceDocument, buildResourceIdentifier, buildResourceRelationships, buildSortList, buildSparseFieldset, toCamelCase, toUnderscored;
@@ -292,59 +293,58 @@ var ActiveResource = function(){};
       return identifier;
     };
 
-    buildResourceRelationships = function(resource) {
-      var relationships;
-      relationships = {};
-      resource.klass().reflectOnAllAssociations().each(function(reflection) {
-        var output, target;
-        if (reflection.collection()) {
-          if (!resource.association(reflection.name).empty()) {
-            return relationships[s.underscored(reflection.name)] = {
-              data: resource.association(reflection.name).reader().all({
-                cached: true
-              }).map(function(target) {
-                var output;
-                output = buildResourceIdentifier(target);
-                if (typeof reflection.autosave === "function" ? reflection.autosave() : void 0) {
-                  output['attributes'] = toUnderscored(_.omit(target.attributes(), resource.klass().primaryKey));
-                  output['relationships'] = buildResourceRelationships(target);
-                }
-                return output;
-              }).toArray()
-            };
-          }
-        } else {
-          if (resource.association(reflection.name).reader() != null) {
-            target = resource.association(reflection.name).reader();
-            output = buildResourceIdentifier(target);
-            if (typeof reflection.autosave === "function" ? reflection.autosave() : void 0) {
-              output['attributes'] = toUnderscored(_.omit(target.attributes(), resource.klass().primaryKey));
-              output['relationships'] = buildResourceRelationships(target);
-            }
-            return relationships[s.underscored(reflection.name)] = {
-              data: output
-            };
-          }
+    buildResourceRelationships = function(resource, relationships, onlyChanged) {
+      var output;
+      if (onlyChanged == null) {
+        onlyChanged = false;
+      }
+      output = {};
+      _.each(relationships, function(relationship) {
+        var reflection, target;
+        reflection = resource.klass().reflectOnAssociation(relationship);
+        target = resource.association(reflection.name).target;
+        if ((reflection.collection() && target.empty()) || target === null) {
+          return;
         }
+        return output[s.underscored(reflection.name)] = {
+          data: buildResourceDocument({
+            resourceData: target,
+            onlyResourceIdentifiers: !reflection.autosave(),
+            onlyChanged: onlyChanged,
+            parentReflection: reflection.inverseOf() || {
+              name: reflection.options['as']
+            }
+          })
+        };
       });
-      return relationships;
+      return output;
     };
 
-    buildResourceDocument = function(resourceData, onlyResourceIdentifiers) {
-      var data;
-      if (onlyResourceIdentifiers == null) {
-        onlyResourceIdentifiers = false;
-      }
+    buildResourceDocument = function(_arg) {
+      var data, onlyChanged, onlyResourceIdentifiers, parentReflection, resourceData;
+      resourceData = _arg.resourceData, onlyResourceIdentifiers = _arg.onlyResourceIdentifiers, onlyChanged = _arg.onlyChanged, parentReflection = _arg.parentReflection;
+      onlyResourceIdentifiers = onlyResourceIdentifiers || false;
+      onlyChanged = onlyChanged || false;
       data = ActiveResource.prototype.Collection.build(resourceData).compact().map(function(resource) {
-        var documentResource;
+        var attributes, changedFields, documentResource, relationships;
         documentResource = buildResourceIdentifier(resource);
         if (!onlyResourceIdentifiers) {
-          documentResource['attributes'] = toUnderscored(_.omit(resource.attributes(), resource.klass().primaryKey));
-          documentResource['relationships'] = buildResourceRelationships(resource);
+          attributes = _.omit(resource.attributes(), resource.klass().primaryKey);
+          relationships = _.keys(resource.klass().reflections());
+          if (parentReflection) {
+            relationships = _.without(relationships, parentReflection.name);
+          }
+          if (onlyChanged) {
+            changedFields = resource.changedFields().toArray();
+            attributes = _.pick.apply(_, [attributes].concat(__slice.call(changedFields)));
+            relationships = _.intersection(relationships, changedFields);
+          }
+          documentResource['attributes'] = toUnderscored(attributes);
+          documentResource['relationships'] = buildResourceRelationships(resource, relationships, onlyChanged);
         }
         return documentResource;
       });
-      if (_.isArray(resourceData)) {
+      if (_.isArray(resourceData) || (_.isObject(resourceData) && (typeof resourceData.isA === "function" ? resourceData.isA(ActiveResource.prototype.Collection) : void 0))) {
         return data.toArray();
       } else {
         return data.first();
@@ -357,7 +357,7 @@ var ActiveResource = function(){};
       attributes = data['attributes'];
       attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString();
       attributes = this.addRelationshipsToAttributes(attributes, data['relationships'], includes, resource);
-      resource.assignAttributes(toCamelCase(attributes));
+      resource.__assignFields(toCamelCase(attributes));
       resource.__links = _.pick(data['links'], 'self');
       resource.klass().reflectOnAllAssociations().each(function(reflection) {
         var association, relationship, relationshipEmpty, _ref1, _ref2, _ref3, _ref4;
@@ -492,7 +492,10 @@ var ActiveResource = function(){};
         options = {};
       }
       data = {
-        data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers'])
+        data: buildResourceDocument({
+          resourceData: resourceData,
+          onlyResourceIdentifiers: options['onlyResourceIdentifiers']
+        })
       };
       if (!options['onlyResourceIdentifiers']) {
         queryParams = resourceData.queryParams();
@@ -525,7 +528,11 @@ var ActiveResource = function(){};
         options = {};
       }
       data = {
-        data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers'])
+        data: buildResourceDocument({
+          resourceData: resourceData,
+          onlyResourceIdentifiers: options['onlyResourceIdentifiers'],
+          onlyChanged: true
+        })
       };
       if (!options['onlyResourceIdentifiers']) {
         queryParams = resourceData.queryParams();
@@ -558,7 +565,10 @@ var ActiveResource = function(){};
         options = {};
       }
       data = {
-        data: buildResourceDocument(resourceData, options['onlyResourceIdentifiers'])
+        data: buildResourceDocument({
+          resourceData: resourceData,
+          onlyResourceIdentifiers: options['onlyResourceIdentifiers']
+        })
       };
       if (!options['onlyResourceIdentifiers']) {
         queryParams = resourceData.queryParams();
@@ -591,7 +601,10 @@ var ActiveResource = function(){};
         options = {};
       }
       data = resourceData != null ? {
-        data: buildResourceDocument(resourceData, true)
+        data: buildResourceDocument({
+          resourceData: resourceData,
+          onlyResourceIdentifiers: true
+        })
       } : {};
       _this = this;
       return this.request(url, 'DELETE', data).then(null, function(errors) {
@@ -658,8 +671,21 @@ var ActiveResource = function(){};
 }).call(this);
 
 (function() {
+  var __slice = [].slice;
+
   ActiveResource.prototype.Attributes = (function() {
     function Attributes() {}
+
+    Attributes.prototype.attributes = function() {
+      var attributes, _ref;
+      attributes = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      if (this.__attributes != null) {
+        (_ref = this.__attributes).push.apply(_ref, attributes);
+      } else {
+        this.__attributes = ActiveResource.prototype.Collection.build(attributes);
+      }
+      return this.__attributes;
+    };
 
     Attributes.hasAttribute = function(attribute) {
       return this.__readAttribute(attribute) != null;
@@ -684,7 +710,7 @@ var ActiveResource = function(){};
 
     Attributes.attributes = function() {
       var k, output, reserved, v, validOutput;
-      reserved = ['__associations', '__errors', '__links', '__queryParams'];
+      reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams'];
       validOutput = function(k, v) {
         var e;
         return !_.isFunction(v) && !_.contains(reserved, k) && (function() {
@@ -714,7 +740,7 @@ var ActiveResource = function(){};
       resource = this;
       link = this.links()['self'] || (this.links()['related'] + this.id.toString());
       return this["interface"]().get(link, this.queryParams()).then(function(reloaded) {
-        resource.assignAttributes(reloaded.attributes());
+        resource.__assignFields(reloaded.attributes());
         resource.klass().reflectOnAllAssociations().each(function(reflection) {
           var target;
           target = reloaded.association(reflection.name).reader();
@@ -775,7 +801,7 @@ var ActiveResource = function(){};
         array = [];
       }
       if (typeof array.isA === "function" ? array.isA(this) : void 0) {
-        return array;
+        return array.clone();
       } else if (array.length != null) {
         return new this(array);
       } else {
@@ -892,6 +918,13 @@ var ActiveResource = function(){};
 
     Collection.prototype.detect = function(predicate) {
       return _.detect(this.__collection, predicate);
+    };
+
+    Collection.prototype.clone = function() {
+      var _this = this;
+      return ActiveResource.prototype.Collection.build(_.map(this.__collection, function(i) {
+        return i;
+      }));
     };
 
     return Collection;
@@ -1012,6 +1045,85 @@ var ActiveResource = function(){};
 }).call(this);
 
 (function() {
+  ActiveResource.prototype.Fields = (function() {
+    function Fields() {}
+
+    Fields.prototype.fields = function() {
+      var output;
+      output = ActiveResource.prototype.Collection.build(this.attributes());
+      output.push.apply(output, _.keys(this.reflections()));
+      return output;
+    };
+
+    Fields.__initializeFields = function() {
+      var _this = this;
+      this.__fields = {};
+      return this.klass().fields().each(function(field) {
+        var _ref;
+        if ((_ref = _this.klass().reflectOnAssociation(field)) != null ? _ref.collection() : void 0) {
+          return _this.__fields[field] = ActiveResource.prototype.Collection.build();
+        } else {
+          return _this.__fields[field] = null;
+        }
+      });
+    };
+
+    Fields.__assignFields = function(fields) {
+      var _this = this;
+      _.each(fields, function(v, k) {
+        if (!_.has(_this.__fields, k)) {
+          return;
+        }
+        try {
+          if (_this.association(k).reflection.collection()) {
+            return _this.__fields[k] = ActiveResource.prototype.Collection.build(v);
+          } else {
+            return _this.__fields[k] = v;
+          }
+        } catch (_error) {
+          return _this.__fields[k] = v;
+        }
+      });
+      return this.assignAttributes(fields);
+    };
+
+    Fields.changed = function() {
+      return !this.changedFields().empty();
+    };
+
+    Fields.changedFields = function() {
+      var _this = this;
+      return this.klass().fields().select(function(field) {
+        var association, newField, newTargets, oldField;
+        oldField = _this.__fields[field];
+        newField = _this[field];
+        try {
+          association = _this.association(field);
+          newField = _this[field]();
+          if (association.reflection.collection()) {
+            if (oldField.size() !== newField.size()) {
+              return true;
+            }
+            newTargets = newField.target().select(function(t) {
+              return !_this.__fields[k].include(t) || (association.reflection.autosave() && t.changed());
+            });
+            return !newTargets.empty();
+          } else {
+            return oldField !== newField || association.reflection.autosave() && newField.changed();
+          }
+        } catch (_error) {
+          return oldField !== newField;
+        }
+      });
+    };
+
+    return Fields;
+
+  })();
+
+}).call(this);
+
+(function() {
   ActiveResource.prototype.Persistence = (function() {
     function Persistence() {}
 
@@ -1048,7 +1160,7 @@ var ActiveResource = function(){};
     Persistence.__createOrUpdate = function() {
       this.errors().reset();
       if (this.persisted()) {
-        return this.klass().resourceLibrary["interface"].put(this.links()['self'], this);
+        return this.klass().resourceLibrary["interface"].patch(this.links()['self'], this);
       } else {
         return this.klass().resourceLibrary["interface"].post(this.links()['related'], this);
       }
@@ -1271,11 +1383,11 @@ var ActiveResource = function(){};
       };
 
       AbstractReflection.prototype.polymorphic = function() {
-        return this.options['polymorphic'];
+        return this.options['polymorphic'] || false;
       };
 
       AbstractReflection.prototype.autosave = function() {
-        return this.options['autosave'];
+        return this.options['autosave'] || false;
       };
 
       AbstractReflection.prototype.buildAssociation = function() {
@@ -1613,7 +1725,11 @@ var ActiveResource = function(){};
   ActiveResource.prototype.Base = (function() {
     ActiveResource.extend(Base, ActiveResource.prototype.Associations);
 
+    ActiveResource.extend(Base, ActiveResource.prototype.Attributes.prototype);
+
     ActiveResource.extend(Base, ActiveResource.prototype.Callbacks.prototype);
+
+    ActiveResource.extend(Base, ActiveResource.prototype.Fields.prototype);
 
     ActiveResource.extend(Base, ActiveResource.prototype.Reflection.prototype);
 
@@ -1627,6 +1743,8 @@ var ActiveResource = function(){};
 
     ActiveResource.include(Base, ActiveResource.prototype.Errors);
 
+    ActiveResource.include(Base, ActiveResource.prototype.Fields);
+
     ActiveResource.include(Base, ActiveResource.prototype.Persistence);
 
     ActiveResource.include(Base, ActiveResource.prototype.QueryParams);
@@ -1639,7 +1757,9 @@ var ActiveResource = function(){};
 
     Base.primaryKey = 'id';
 
-    function Base() {}
+    function Base() {
+      this.__initializeFields();
+    }
 
     Base.links = function() {
       if (this.resourceLibrary.baseUrl == null) {

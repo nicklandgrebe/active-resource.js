@@ -11,13 +11,16 @@
 #
 class ActiveResource::Base
   ActiveResource.extend(@, ActiveResource::Associations)
+  ActiveResource.extend(@, ActiveResource::Attributes.prototype)
   ActiveResource.extend(@, ActiveResource::Callbacks.prototype)
+  ActiveResource.extend(@, ActiveResource::Fields.prototype)
   ActiveResource.extend(@, ActiveResource::Reflection.prototype)
   ActiveResource.extend(@, ActiveResource::Relation.prototype)
   ActiveResource.include(@, ActiveResource::Associations.prototype)
   ActiveResource.include(@, ActiveResource::Attributes)
   ActiveResource.include(@, ActiveResource::Callbacks)
   ActiveResource.include(@, ActiveResource::Errors)
+  ActiveResource.include(@, ActiveResource::Fields)
   ActiveResource.include(@, ActiveResource::Persistence)
   ActiveResource.include(@, ActiveResource::QueryParams)
   ActiveResource.include(@, ActiveResource::Typing)
@@ -39,6 +42,7 @@ class ActiveResource::Base
   @primaryKey = 'id'
 
   constructor: ->
+    @__initializeFields()
 
   # Links to query the server for this model with
   #

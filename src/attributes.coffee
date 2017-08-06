@@ -1,5 +1,29 @@
 # ActiveResource methods for managing attributes of resources
 class ActiveResource::Attributes
+  # Used to establish attribute fields for a resource class
+  # @note Attribute fields are tracked along with relationships using `klass().fields()`
+  # @see fields.coffee
+  #
+  # @example Add attributes
+  #   class Order extends MyLibrary.Base {
+  #     static define() {
+  #       this.attributes('price', 'tax')
+  #     }
+  #   }
+  #
+  # @example Retrieve klass attributes
+  #   resource.klass().attributes()
+  #
+  # @param [Array<String>] attributes the attributes to add to the list of attributes the class tracks
+  # @return [Collection<String>] the klass attributes
+  attributes: (attributes...) ->
+    if @__attributes?
+      @__attributes.push(attributes...)
+    else
+      @__attributes = ActiveResource::Collection.build(attributes)
+
+    @__attributes
+
   # Checks if the resource has an attribute
   #
   # @param [String] attribute the attribute to check the existence of on the resource
@@ -31,7 +55,7 @@ class ActiveResource::Attributes
   #
   # @return [Object] the attributes of the resource
   @attributes: ->
-    reserved = ['__associations', '__errors', '__links', '__queryParams']
+    reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams']
 
     validOutput = (k, v) ->
       !_.isFunction(v) && !_.contains(reserved, k) &&
@@ -67,7 +91,7 @@ class ActiveResource::Attributes
 
     @interface().get(link, @queryParams())
     .then (reloaded) ->
-      resource.assignAttributes(reloaded.attributes())
+      resource.__assignFields(reloaded.attributes())
       resource.klass().reflectOnAllAssociations().each (reflection) ->
         target = reloaded.association(reflection.name).reader()
         target = target.toArray() if reflection.collection?()
