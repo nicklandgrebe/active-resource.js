@@ -8,7 +8,7 @@ class ActiveResource::Collection
   # @return [Collection] the built Collection
   @build: (array = []) ->
     if array.isA?(this)
-      array
+      array.clone()
     else if array.length?
       new this(array)
     else
@@ -157,3 +157,9 @@ class ActiveResource::Collection
   # @return [Object] the first resource that returned true in the predicate
   detect: (predicate) ->
     _.detect(@__collection, predicate)
+
+  # Duplicates the items of the collection into a new collection
+  #
+  # @return [Collection] the cloned collection of original items
+  clone: ->
+    ActiveResource::Collection.build(_.map(@__collection, (i) => i))
