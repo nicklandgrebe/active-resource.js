@@ -122,6 +122,6 @@ class ActiveResource::Persistence
     @errors().reset()
 
     if @persisted()
-      @klass().resourceLibrary.interface.put @links()['self'], this
+      @klass().resourceLibrary.interface.patch @links()['self'], this
     else
       @klass().resourceLibrary.interface.post @links()['related'], this

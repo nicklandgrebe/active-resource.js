@@ -19,6 +19,8 @@ class MyLibrary::Order extends MyLibrary.Base
   this.className = 'Order'
   this.queryName = 'orders'
 
+  this.attributes('price')
+
   this.belongsTo 'giftCard'
   this.belongsTo 'product'
 
@@ -47,6 +49,8 @@ class MyLibrary::Product extends MyLibrary.Base
 class MyLibrary::Transaction extends MyLibrary.Base
   this.className = 'Transaction'
   this.queryName = 'transactions'
+
+  this.attributes('amount')
 
   this.belongsTo 'order'
   this.belongsTo 'paymentMethod'

@@ -51,9 +51,7 @@ describe 'ActiveResource', ->
             data: {
               token: 'abc123',
               type: 'venues',
-              attributes: {
-                name: 'A venue'
-              },
+              attributes: {},
               relationships: {}
             }
           }
