@@ -101,13 +101,13 @@ class ActiveResource::Collection
   # @param [Function] iteratee the function to call with each item of the collection passed in
   # @return [ActiveResource::Collection] a collection mapped based on the iteratee
   map: (iteratee) ->
-    ActiveResource::Collection.build(_.map(@__collection, iteratee))
+    this.constructor.build(_.map(@__collection, iteratee))
 
   # Removes all null values from the array (undefined, null)
   #
   # @return [ActiveResource::Collection] a collection with all null values removed
   compact: (iteratee) ->
-    ActiveResource::Collection.build(_.without(@__collection,null,undefined))
+    this.constructor.build(_.without(@__collection,null,undefined))
 
   # Joins each item of the collection as a string, with a separator
   #
@@ -120,7 +120,7 @@ class ActiveResource::Collection
   #
   # @return [Collection] the shallow collection
   flatten: ->
-    ActiveResource::Collection.build(_.flatten(@__collection))
+    this.constructor.build(_.flatten(@__collection))
 
   # Push objects onto the end of this collection
   #
@@ -149,7 +149,7 @@ class ActiveResource::Collection
   # @param predicate [Function] the function to evaluate each item in the collection with
   # @return [ActiveResource::Collection] a collection with only item that return true in the predicate
   select: (predicate) ->
-    ActiveResource::Collection.build(_.filter(@__collection, predicate))
+    this.constructor.build(_.filter(@__collection, predicate))
 
   # Get the first item that returns true from the predicate
   #
@@ -162,4 +162,4 @@ class ActiveResource::Collection
   #
   # @return [Collection] the cloned collection of original items
   clone: ->
-    ActiveResource::Collection.build(_.map(@__collection, (i) => i))
+    this.constructor.build(_.map(@__collection, (i) => i))

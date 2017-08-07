@@ -50,6 +50,9 @@ window.JsonApiResponses =
       success:
         status: 200
         responseText: JSON.stringify(getJSONFixture('products/collection.json'))
+      paginated:
+        status: 200
+        responseText: JSON.stringify(getJSONFixture('products/paginated.json'))
     find:
       success:
         status: 200

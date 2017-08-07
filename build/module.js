@@ -17,6 +17,7 @@ var ActiveResource = function(){};
 @include attributes.js
 @include callbacks.js
 @include collection.js
+@include collection_response.js
 @include errors.js
 @include fields.js
 @include persistence.js

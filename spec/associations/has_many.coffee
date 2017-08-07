@@ -53,7 +53,7 @@ describe 'ActiveResource', ->
             @target = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns a collection', ->
-            expect(@target.klass()).toBe(ActiveResource::Collection)
+            expect(@target.klass()).toBe(ActiveResource::CollectionResponse)
 
           it 'returns a collection of resources of reflection klass type', ->
             expect(@target.first().klass()).toBe(MyLibrary::Order)
@@ -70,7 +70,7 @@ describe 'ActiveResource', ->
             @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns a collection', ->
-            expect(@result.klass()).toBe(ActiveResource::Collection)
+            expect(@result.klass()).toBe(ActiveResource::CollectionResponse)
 
           it 'returns a collection of resources of reflection klass type', ->
             expect(@result.first().klass()).toBe(MyLibrary::Order)
@@ -87,7 +87,7 @@ describe 'ActiveResource', ->
             @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns a collection', ->
-            expect(@result.klass()).toBe(ActiveResource::Collection)
+            expect(@result.klass()).toBe(ActiveResource::CollectionResponse)
 
           it 'returns a collection of resources of reflection klass type', ->
             expect(@result.first().klass()).toBe(MyLibrary::Order)
@@ -394,7 +394,7 @@ describe 'ActiveResource', ->
 
             @priorRequestsCount = jasmine.Ajax.requests.count()
 
-            @output = @resource.orders().assign(@target, false)
+            @output = @resource.orders().assign(@target.toCollection(), false)
 
           it 'does not make a request', ->
             expect(jasmine.Ajax.requests.count()).toEqual(@priorRequestsCount)
