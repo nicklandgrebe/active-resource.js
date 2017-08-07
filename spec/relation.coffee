@@ -161,10 +161,54 @@ describe 'ActiveResource', ->
         expect(@paramStr).toContain('include=merchant,orders.attribute_values,orders.gift_cards')
 
     describe '#page()', ->
-      it 'adds a page number to the query', ->
+      beforeEach ->
         MyLibrary::Product.page(2).all()
+        .done window.onSuccess
+
+      it 'adds a page number to the query', ->
         @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
         expect(@paramStr).toContain('page[number]=2')
+
+      describe 'when no links in response', ->
+        beforeEach ->
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          @resources = window.onSuccess.calls.mostRecent().args[0]
+
+        it 'hasNextPage returns false', ->
+          expect(@resources.hasNextPage()).toBeFalsy();
+
+        it 'nextPage returns null', ->
+          expect(@resources.nextPage()).toBeUndefined();
+
+        it 'hasPrevPage returns false', ->
+          expect(@resources.hasPrevPage()).toBeFalsy();
+
+        it 'prevPage returns null', ->
+          expect(@resources.prevPage()).toBeUndefined();
+
+      describe 'when next link in response', ->
+        beforeEach ->
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.paginated)
+          @resources = window.onSuccess.calls.mostRecent().args[0]
+
+        it 'hasNextPage returns true', ->
+          expect(@resources.hasNextPage()).toBeTruthy();
+
+        it 'nextPage requests next link', ->
+          @resources.nextPage()
+          expect(jasmine.Ajax.requests.mostRecent().url).toEqual('https://example.com/api/v1/products?page[number]=3&page[size]=2')
+
+      describe 'when prev link in response', ->
+        beforeEach ->
+          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.paginated)
+          @resources = window.onSuccess.calls.mostRecent().args[0]
+
+        it 'hasPrevPage returns true', ->
+          expect(@resources.hasPrevPage()).toBeTruthy();
+
+        it 'prevPage requests next link', ->
+          @resources.prevPage()
+          expect(jasmine.Ajax.requests.mostRecent().url).toEqual('https://example.com/api/v1/products?page[number]=1&page[size]=2')
 
     describe '#perPage()', ->
       it 'adds a page size to the query', ->

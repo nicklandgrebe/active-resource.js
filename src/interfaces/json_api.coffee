@@ -506,11 +506,13 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     @request(url, 'GET', data)
     .then (response) ->
       built =
-        ActiveResource::Collection.build(_.flatten([response.data]))
+        ActiveResource::CollectionResponse.build(_.flatten([response.data]))
         .map (object) ->
           object = _this.buildResource(object, response.included)
           object.assignResourceRelatedQueryParams(queryParams)
           object
+
+      built.links(response.links)
 
       if _.isArray(response.data) then built else built.first()
     , (errors) ->
