@@ -44,7 +44,7 @@ class ActiveResource::Fields
     !@changedFields().empty()
 
   # Returns all of the fields that have been changed since the last server response
-  # @return [Array<String>] the changed fields for the resource
+  # @return [Collection<String>] the changed fields for the resource
   @changedFields: () ->
     @klass().fields().select((field) =>
       oldField = @__fields[field]
