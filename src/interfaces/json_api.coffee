@@ -53,15 +53,15 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   #
   # @param [Object] the object to convert the attributes of to underscore format
   # @return [Object] the object with attributes in underscore format
-  toUnderscored = (object) ->
+  toUnderscored: (object) ->
     underscored = {}
     for k, v of object
       underscored[s.underscored(k)] =
         if _.isArray(v)
           _.map v, (i) ->
-            toUnderscored(i)
+            this.toUnderscored(i)
         else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection) && !_.isDate(v)
-          toUnderscored(v)
+          this.toUnderscored(v)
         else
           v
 
@@ -74,15 +74,15 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   #
   # @param [Object] the object to convert the attributes of to camelCase format
   # @return [Object] the object with attributes in camelCase format
-  toCamelCase = (object) ->
+  toCamelCase: (object) ->
     camelized = {}
     for k, v of object
       camelized[s.camelize(k)] =
         if _.isArray(v)
           _.map v, (i) ->
-            toCamelCase(i)
+            this.toCamelCase(i)
         else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection)
-          toCamelCase(v)
+          this.toCamelCase(v)
         else
           v
 
@@ -107,7 +107,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   #
   # 1. Go through each key of the object, map its array of fields to underscored fields
   # 2. Take the mapped array of fields and join them, replacing the value of the key with the joined string
-  buildSparseFieldset = (fields) ->
+  buildSparseFieldset: (fields) ->
     _.mapObject fields, (fieldArray) ->
       _.map(fieldArray, (f) -> s.underscored(f)).join()
 
@@ -139,7 +139,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   #      eventually returning an array of strings ['transactions.deeperInclude.X','transactions.deeperInclude.Y']
   # 3. If include is string, it is formatted
   # 4. Return the includeStrArray as a ',' joined string
-  buildIncludeTree = (includes) ->
+  buildIncludeTree: (includes) ->
     buildNestedIncludes = (object) ->
       modelName = s.underscored(_.keys(object)[0])
       value = _.values(object)[0]
@@ -174,7 +174,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   #
   # @param [Object] sortObject the object defining sorting columns
   # @return [String] a JSON API formatted string that defines sorting
-  buildSortList = (sortObject) ->
+  buildSortList: (sortObject) ->
     output = []
     for column, dir of sortObject
       if dir == 'asc'
@@ -196,7 +196,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   #
   # @param [ActiveResource::Base] the resource to convert to a resource identifier
   # @return [Object] the resource identifier for the object
-  buildResourceIdentifier = (resource) ->
+  buildResourceIdentifier: (resource) ->
     identifier = { type: resource.klass().queryName }
     if (primaryKeyValue = resource[resource.klass().primaryKey])
       identifier[resource.klass().primaryKey] = primaryKeyValue.toString()
@@ -206,10 +206,10 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   #
   # @param [ActiveResource::Base] resource the resource to get relationship data from
   # @return [Object] the built relationship object for the resource
-  buildResourceRelationships = (resource, relationships, onlyChanged = false) ->
+  buildResourceRelationships: (resource, relationships, onlyChanged = false) ->
     output = {}
 
-    _.each relationships, (relationship) ->
+    _.each relationships, (relationship) =>
       reflection = resource.klass().reflectOnAssociation(relationship)
 
       target = resource.association(reflection.name).target
@@ -217,11 +217,11 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
       return if (reflection.collection() && target.empty()) || target == null
 
       output[s.underscored(reflection.name)] = {
-        data: buildResourceDocument({
+        data: this.buildResourceDocument({
           resourceData: target,
           onlyResourceIdentifiers: !reflection.autosave(),
           onlyChanged: onlyChanged,
-          parentReflection: reflection.inverseOf() || {name: reflection.options['as']}
+          parentReflection: reflection.inverseOf() || { name: reflection.options['as'] }
         })
       }
 
@@ -233,13 +233,13 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Boolean] onlyResourceIdentifiers if true, only renders the primary key/type (a resource identifier)
   #   if false, also renders attributes and relationships
   # @return [Array] an array of resource identifiers, possibly with attributes/relationships
-  buildResourceDocument = ({ resourceData, onlyResourceIdentifiers, onlyChanged, parentReflection }) ->
+  buildResourceDocument: ({ resourceData, onlyResourceIdentifiers, onlyChanged, parentReflection }) ->
     onlyResourceIdentifiers = onlyResourceIdentifiers || false
     onlyChanged = onlyChanged || false
 
     data =
-      ActiveResource::Collection.build(resourceData).compact().map (resource) ->
-        documentResource = buildResourceIdentifier(resource)
+      ActiveResource::Collection.build(resourceData).compact().map (resource) =>
+        documentResource = this.buildResourceIdentifier(resource)
 
         unless onlyResourceIdentifiers
           attributes = _.omit(resource.attributes(), resource.klass().primaryKey)
@@ -253,8 +253,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
             attributes = _.pick(attributes, changedFields...)
             relationships = _.intersection(relationships, changedFields)
 
-          documentResource['attributes'] = toUnderscored(attributes)
-          documentResource['relationships'] = buildResourceRelationships(resource, relationships, onlyChanged)
+          documentResource['attributes'] = this.toUnderscored(attributes)
+          documentResource['relationships'] = this.buildResourceRelationships(resource, relationships, onlyChanged)
 
         documentResource
 
@@ -297,7 +297,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString()
     attributes = @addRelationshipsToAttributes(attributes, data['relationships'], includes, resource)
 
-    resource.__assignFields(toCamelCase(attributes))
+    resource.__assignFields(this.toCamelCase(attributes))
 
     resource.__links = _.pick(data['links'], 'self')
     resource.klass().reflectOnAllAssociations().each (reflection) ->
@@ -493,11 +493,11 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Object] queryParams query params to send to the server
   get: (url, queryParams = {}) ->
     data = {}
-    data['filter']  = toUnderscored(queryParams['filter'])       if queryParams['filter']?
-    data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
-    data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
+    data['filter']  = this.toUnderscored(queryParams['filter'])       if queryParams['filter']?
+    data['fields']  = this.buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
+    data['include'] = this.buildIncludeTree(queryParams['include'])   if queryParams['include']?
     if queryParams['sort']?
-      data['sort']    = buildSortList(queryParams['sort'])
+      data['sort']  = this.buildSortList(queryParams['sort'])
     data['page']    = queryParams['page']                        if queryParams['page']?
     data['limit']   = queryParams['limit']                       if queryParams['limit']?
     data['offset']  = queryParams['offset']                      if queryParams['offset']?
@@ -526,13 +526,13 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @option [Boolean] onlyResourceIdentifiers if false, render the attributes and relationships
   #   of each resource into the resource document
   post: (url, resourceData, options = {}) ->
-    data = { data: buildResourceDocument(resourceData: resourceData, onlyResourceIdentifiers: options['onlyResourceIdentifiers']) }
+    data = { data: this.buildResourceDocument(resourceData: resourceData, onlyResourceIdentifiers: options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
       queryParams = resourceData.queryParams()
 
-      data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
-      data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
+      data['fields']  = this.buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
+      data['include'] = this.buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
     _this = this
     @request(url, 'POST', data)
@@ -555,7 +555,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   #   @see #post
   patch: (url, resourceData, options = {}) ->
     data = {
-      data: buildResourceDocument({
+      data: this.buildResourceDocument({
         resourceData: resourceData,
         onlyResourceIdentifiers: options['onlyResourceIdentifiers'],
         onlyChanged: true
@@ -565,8 +565,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     unless options['onlyResourceIdentifiers']
       queryParams = resourceData.queryParams()
 
-      data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
-      data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
+      data['fields']  = this.buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
+      data['include'] = this.buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
     _this = this
     @request(url, 'PATCH', data)
@@ -588,13 +588,13 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Object] options options that may modify the data sent to the server
   #   @see #post
   put: (url, resourceData, options = {}) ->
-    data = { data: buildResourceDocument(resourceData: resourceData, onlyResourceIdentifiers: options['onlyResourceIdentifiers']) }
+    data = { data: this.buildResourceDocument(resourceData: resourceData, onlyResourceIdentifiers: options['onlyResourceIdentifiers']) }
 
     unless options['onlyResourceIdentifiers']
       queryParams = resourceData.queryParams()
 
-      data['fields']  = buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
-      data['include'] = buildIncludeTree(queryParams['include'])   if queryParams['include']?
+      data['fields']  = this.buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
+      data['include'] = this.buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
     _this = this
     @request(url, 'PUT', data)
@@ -624,7 +624,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   delete: (url, resourceData, options = {}) ->
     data =
       if resourceData?
-        { data: buildResourceDocument(resourceData: resourceData, onlyResourceIdentifiers: true) }
+        { data: this.buildResourceDocument(resourceData: resourceData, onlyResourceIdentifiers: true) }
       else
         {}
 
