@@ -181,8 +181,6 @@ var ActiveResource = function(){};
     __slice = [].slice;
 
   ActiveResource.Interfaces.JsonApi = ActiveResource.prototype.Interfaces.prototype.JsonApi = (function(_super) {
-    var buildIncludeTree, buildResourceDocument, buildResourceIdentifier, buildResourceRelationships, buildSortList, buildSparseFieldset, toCamelCase, toUnderscored;
-
     __extends(JsonApi, _super);
 
     function JsonApi() {
@@ -199,31 +197,31 @@ var ActiveResource = function(){};
       });
     };
 
-    toUnderscored = function(object) {
+    JsonApi.prototype.toUnderscored = function(object) {
       var k, underscored, v;
       underscored = {};
       for (k in object) {
         v = object[k];
         underscored[s.underscored(k)] = _.isArray(v) ? _.map(v, function(i) {
-          return toUnderscored(i);
-        }) : _.isObject(v) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Collection) : void 0) && !_.isDate(v) ? toUnderscored(v) : v;
+          return this.toUnderscored(i);
+        }) : _.isObject(v) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Collection) : void 0) && !_.isDate(v) ? this.toUnderscored(v) : v;
       }
       return underscored;
     };
 
-    toCamelCase = function(object) {
+    JsonApi.prototype.toCamelCase = function(object) {
       var camelized, k, v;
       camelized = {};
       for (k in object) {
         v = object[k];
         camelized[s.camelize(k)] = _.isArray(v) ? _.map(v, function(i) {
-          return toCamelCase(i);
-        }) : _.isObject(v) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Collection) : void 0) ? toCamelCase(v) : v;
+          return this.toCamelCase(i);
+        }) : _.isObject(v) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Collection) : void 0) ? this.toCamelCase(v) : v;
       }
       return camelized;
     };
 
-    buildSparseFieldset = function(fields) {
+    JsonApi.prototype.buildSparseFieldset = function(fields) {
       return _.mapObject(fields, function(fieldArray) {
         return _.map(fieldArray, function(f) {
           return s.underscored(f);
@@ -231,7 +229,7 @@ var ActiveResource = function(){};
       });
     };
 
-    buildIncludeTree = function(includes) {
+    JsonApi.prototype.buildIncludeTree = function(includes) {
       var buildNestedIncludes;
       buildNestedIncludes = function(object) {
         var includeCollection, modelName, value;
@@ -261,7 +259,7 @@ var ActiveResource = function(){};
       }).join();
     };
 
-    buildSortList = function(sortObject) {
+    JsonApi.prototype.buildSortList = function(sortObject) {
       var column, dir, output;
       output = [];
       for (column in sortObject) {
@@ -275,7 +273,7 @@ var ActiveResource = function(){};
       return output.join(',');
     };
 
-    buildResourceIdentifier = function(resource) {
+    JsonApi.prototype.buildResourceIdentifier = function(resource) {
       var identifier, primaryKeyValue;
       identifier = {
         type: resource.klass().queryName
@@ -286,8 +284,9 @@ var ActiveResource = function(){};
       return identifier;
     };
 
-    buildResourceRelationships = function(resource, relationships, onlyChanged) {
-      var output;
+    JsonApi.prototype.buildResourceRelationships = function(resource, relationships, onlyChanged) {
+      var output,
+        _this = this;
       if (onlyChanged == null) {
         onlyChanged = false;
       }
@@ -300,7 +299,7 @@ var ActiveResource = function(){};
           return;
         }
         return output[s.underscored(reflection.name)] = {
-          data: buildResourceDocument({
+          data: _this.buildResourceDocument({
             resourceData: target,
             onlyResourceIdentifiers: !reflection.autosave(),
             onlyChanged: onlyChanged,
@@ -313,14 +312,15 @@ var ActiveResource = function(){};
       return output;
     };
 
-    buildResourceDocument = function(_arg) {
-      var data, onlyChanged, onlyResourceIdentifiers, parentReflection, resourceData;
+    JsonApi.prototype.buildResourceDocument = function(_arg) {
+      var data, onlyChanged, onlyResourceIdentifiers, parentReflection, resourceData,
+        _this = this;
       resourceData = _arg.resourceData, onlyResourceIdentifiers = _arg.onlyResourceIdentifiers, onlyChanged = _arg.onlyChanged, parentReflection = _arg.parentReflection;
       onlyResourceIdentifiers = onlyResourceIdentifiers || false;
       onlyChanged = onlyChanged || false;
       data = ActiveResource.prototype.Collection.build(resourceData).compact().map(function(resource) {
         var attributes, changedFields, documentResource, relationships;
-        documentResource = buildResourceIdentifier(resource);
+        documentResource = _this.buildResourceIdentifier(resource);
         if (!onlyResourceIdentifiers) {
           attributes = _.omit(resource.attributes(), resource.klass().primaryKey);
           relationships = _.keys(resource.klass().reflections());
@@ -332,8 +332,8 @@ var ActiveResource = function(){};
             attributes = _.pick.apply(_, [attributes].concat(__slice.call(changedFields)));
             relationships = _.intersection(relationships, changedFields);
           }
-          documentResource['attributes'] = toUnderscored(attributes);
-          documentResource['relationships'] = buildResourceRelationships(resource, relationships, onlyChanged);
+          documentResource['attributes'] = _this.toUnderscored(attributes);
+          documentResource['relationships'] = _this.buildResourceRelationships(resource, relationships, onlyChanged);
         }
         return documentResource;
       });
@@ -350,7 +350,7 @@ var ActiveResource = function(){};
       attributes = data['attributes'];
       attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString();
       attributes = this.addRelationshipsToAttributes(attributes, data['relationships'], includes, resource);
-      resource.__assignFields(toCamelCase(attributes));
+      resource.__assignFields(this.toCamelCase(attributes));
       resource.__links = _.pick(data['links'], 'self');
       resource.klass().reflectOnAllAssociations().each(function(reflection) {
         var association, relationship, relationshipEmpty, _ref1, _ref2, _ref3, _ref4;
@@ -441,16 +441,16 @@ var ActiveResource = function(){};
       }
       data = {};
       if (queryParams['filter'] != null) {
-        data['filter'] = toUnderscored(queryParams['filter']);
+        data['filter'] = this.toUnderscored(queryParams['filter']);
       }
       if (queryParams['fields'] != null) {
-        data['fields'] = buildSparseFieldset(queryParams['fields']);
+        data['fields'] = this.buildSparseFieldset(queryParams['fields']);
       }
       if (queryParams['include'] != null) {
-        data['include'] = buildIncludeTree(queryParams['include']);
+        data['include'] = this.buildIncludeTree(queryParams['include']);
       }
       if (queryParams['sort'] != null) {
-        data['sort'] = buildSortList(queryParams['sort']);
+        data['sort'] = this.buildSortList(queryParams['sort']);
       }
       if (queryParams['page'] != null) {
         data['page'] = queryParams['page'];
@@ -464,11 +464,12 @@ var ActiveResource = function(){};
       _this = this;
       return this.request(url, 'GET', data).then(function(response) {
         var built;
-        built = ActiveResource.prototype.Collection.build(_.flatten([response.data])).map(function(object) {
+        built = ActiveResource.prototype.CollectionResponse.build(_.flatten([response.data])).map(function(object) {
           object = _this.buildResource(object, response.included);
           object.assignResourceRelatedQueryParams(queryParams);
           return object;
         });
+        built.links(response.links);
         if (_.isArray(response.data)) {
           return built;
         } else {
@@ -485,7 +486,7 @@ var ActiveResource = function(){};
         options = {};
       }
       data = {
-        data: buildResourceDocument({
+        data: this.buildResourceDocument({
           resourceData: resourceData,
           onlyResourceIdentifiers: options['onlyResourceIdentifiers']
         })
@@ -493,10 +494,10 @@ var ActiveResource = function(){};
       if (!options['onlyResourceIdentifiers']) {
         queryParams = resourceData.queryParams();
         if (queryParams['fields'] != null) {
-          data['fields'] = buildSparseFieldset(queryParams['fields']);
+          data['fields'] = this.buildSparseFieldset(queryParams['fields']);
         }
         if (queryParams['include'] != null) {
-          data['include'] = buildIncludeTree(queryParams['include']);
+          data['include'] = this.buildIncludeTree(queryParams['include']);
         }
       }
       _this = this;
@@ -521,7 +522,7 @@ var ActiveResource = function(){};
         options = {};
       }
       data = {
-        data: buildResourceDocument({
+        data: this.buildResourceDocument({
           resourceData: resourceData,
           onlyResourceIdentifiers: options['onlyResourceIdentifiers'],
           onlyChanged: true
@@ -530,10 +531,10 @@ var ActiveResource = function(){};
       if (!options['onlyResourceIdentifiers']) {
         queryParams = resourceData.queryParams();
         if (queryParams['fields'] != null) {
-          data['fields'] = buildSparseFieldset(queryParams['fields']);
+          data['fields'] = this.buildSparseFieldset(queryParams['fields']);
         }
         if (queryParams['include'] != null) {
-          data['include'] = buildIncludeTree(queryParams['include']);
+          data['include'] = this.buildIncludeTree(queryParams['include']);
         }
       }
       _this = this;
@@ -558,7 +559,7 @@ var ActiveResource = function(){};
         options = {};
       }
       data = {
-        data: buildResourceDocument({
+        data: this.buildResourceDocument({
           resourceData: resourceData,
           onlyResourceIdentifiers: options['onlyResourceIdentifiers']
         })
@@ -566,10 +567,10 @@ var ActiveResource = function(){};
       if (!options['onlyResourceIdentifiers']) {
         queryParams = resourceData.queryParams();
         if (queryParams['fields'] != null) {
-          data['fields'] = buildSparseFieldset(queryParams['fields']);
+          data['fields'] = this.buildSparseFieldset(queryParams['fields']);
         }
         if (queryParams['include'] != null) {
-          data['include'] = buildIncludeTree(queryParams['include']);
+          data['include'] = this.buildIncludeTree(queryParams['include']);
         }
       }
       _this = this;
@@ -594,7 +595,7 @@ var ActiveResource = function(){};
         options = {};
       }
       data = resourceData != null ? {
-        data: buildResourceDocument({
+        data: this.buildResourceDocument({
           resourceData: resourceData,
           onlyResourceIdentifiers: true
         })
@@ -867,11 +868,11 @@ var ActiveResource = function(){};
     };
 
     Collection.prototype.map = function(iteratee) {
-      return ActiveResource.prototype.Collection.build(_.map(this.__collection, iteratee));
+      return this.constructor.build(_.map(this.__collection, iteratee));
     };
 
     Collection.prototype.compact = function(iteratee) {
-      return ActiveResource.prototype.Collection.build(_.without(this.__collection, null, void 0));
+      return this.constructor.build(_.without(this.__collection, null, void 0));
     };
 
     Collection.prototype.join = function(separator) {
@@ -884,7 +885,7 @@ var ActiveResource = function(){};
     };
 
     Collection.prototype.flatten = function() {
-      return ActiveResource.prototype.Collection.build(_.flatten(this.__collection));
+      return this.constructor.build(_.flatten(this.__collection));
     };
 
     Collection.prototype.push = function() {
@@ -906,7 +907,7 @@ var ActiveResource = function(){};
     };
 
     Collection.prototype.select = function(predicate) {
-      return ActiveResource.prototype.Collection.build(_.filter(this.__collection, predicate));
+      return this.constructor.build(_.filter(this.__collection, predicate));
     };
 
     Collection.prototype.detect = function(predicate) {
@@ -915,7 +916,7 @@ var ActiveResource = function(){};
 
     Collection.prototype.clone = function() {
       var _this = this;
-      return ActiveResource.prototype.Collection.build(_.map(this.__collection, function(i) {
+      return this.constructor.build(_.map(this.__collection, function(i) {
         return i;
       }));
     };
@@ -923,6 +924,70 @@ var ActiveResource = function(){};
     return Collection;
 
   })();
+
+}).call(this);
+
+(function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  ActiveResource.prototype.CollectionResponse = (function(_super) {
+    __extends(CollectionResponse, _super);
+
+    function CollectionResponse() {
+      _ref = CollectionResponse.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    CollectionResponse.build = function(array) {
+      if (array == null) {
+        array = [];
+      }
+      if (typeof array.isA === "function" ? array.isA(ActiveResource.prototype.Collection) : void 0) {
+        return new this(array.toArray());
+      } else {
+        return CollectionResponse.__super__.constructor.build.apply(this, arguments);
+      }
+    };
+
+    CollectionResponse.prototype.links = function(data) {
+      if (data == null) {
+        data = {};
+      }
+      if (!_.isEmpty(data) || (this.__links == null)) {
+        this.__links = data;
+      }
+      return this.__links;
+    };
+
+    CollectionResponse.prototype.hasPrevPage = function() {
+      return this.links()['prev'] != null;
+    };
+
+    CollectionResponse.prototype.hasNextPage = function() {
+      return this.links()['next'] != null;
+    };
+
+    CollectionResponse.prototype.prevPage = function() {
+      if (this.hasPrevPage()) {
+        return this.first().klass().resourceLibrary["interface"].get(this.links()['prev']);
+      }
+    };
+
+    CollectionResponse.prototype.nextPage = function() {
+      if (this.hasNextPage()) {
+        return this.first().klass().resourceLibrary["interface"].get(this.links()['next']);
+      }
+    };
+
+    CollectionResponse.prototype.toCollection = function() {
+      return ActiveResource.prototype.Collection.build(this.toArray());
+    };
+
+    return CollectionResponse;
+
+  })(ActiveResource.prototype.Collection);
 
 }).call(this);
 
