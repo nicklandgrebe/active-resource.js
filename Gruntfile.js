@@ -101,13 +101,17 @@ module.exports = function(grunt) {
             requireConfig: {
               baseUrl: '/',
               paths: {
-                "jquery": '/node_modules/jquery/dist/jquery.min',
+                "axios": '/node_modules/axios/dist/axios',
+                "moxios": '/node_modules/moxios/dist/moxios.min',
+                "es6-promise": '/node_modules/es6-promise/dist/es6-promise',
                 "underscore": '/node_modules/underscore/underscore-min',
                 "underscore.string": '/node_modules/underscore.string/dist/underscore.string',
                 "underscore.inflection": '/node_modules/underscore.inflection/lib/underscore.inflection',
                 "activeresource": '/build/active-resource',
+                "jquery": '/node_modules/jquery/dist/jquery.min',
                 "jasmine-jquery": '/node_modules/jasmine-jquery/lib/jasmine-jquery',
-                "jasmine-ajax": '/node_modules/jasmine-ajax/lib/mock-ajax'
+                "jasmine-ajax": '/node_modules/jasmine-ajax/lib/mock-ajax',
+                "jasmine-promises": '/node_modules/jasmine-promises/dist/jasmine-promises',
               }
             }
           }

@@ -1,12 +1,15 @@
 @module ActiveResource
 @export ActiveResource
 
-@import jquery as jQuery
+@import axios as axios
+@import es6-promise as es6Promise
 @import underscore as _
 @import underscore.string as s
 @import underscore.inflection
 
 var ActiveResource = function(){};
+
+window.Promise = es6Promise.Promise;
 
 @include modulizing.js
 @include typing.js

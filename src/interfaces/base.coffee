@@ -11,19 +11,15 @@ ActiveResource.Interfaces = class ActiveResource::Interfaces
     # @param [Object] data the data to send to the server
     request: (url, method, data) ->
       options =
-        contentType: 'application/json'
-        dataType: 'json'
-        headers: @resourceLibrary.headers
+        responseType: 'json'
+        headers: _.extend(@resourceLibrary.headers, {
+          'Content-Type': 'application/json'
+        }),
         method: method
         url: url
+        data: data
 
-      options['data'] =
-        if method == 'GET'
-          data
-        else
-          JSON.stringify(data)
-
-      jQuery.ajax options
+      axios options
 
     # Make GET request
     #

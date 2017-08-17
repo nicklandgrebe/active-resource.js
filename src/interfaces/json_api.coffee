@@ -35,9 +35,9 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Object] data the data to send to the server
   request: (url, method, data) ->
     super
-    .then (response, textStatus, xhr) ->
-      throw "Response from #{url} was not in JSON API format" unless response?.data? || xhr.status == 204
-      response
+    .then (response) ->
+      throw "Response from #{url} was not in JSON API format" unless response.data?.data? || response.status == 204
+      response.data
 
   #---------------------------------------------------------------------------
   #---------------------------------------------------------------------------
@@ -516,7 +516,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
 
       if _.isArray(response.data) then built else built.first()
     , (errors) ->
-      _this.parameterErrors(errors.responseJSON['errors'])
+      Promise.reject(_this.parameterErrors(errors.response.data['errors']))
 
   # Make POST request
   #
@@ -543,9 +543,9 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
         _this.mergePersistedChanges(response, resourceData)
     , (errors) ->
       if options['onlyResourceIdentifiers']
-        errors
+        Promise.reject(errors)
       else
-        _this.resourceErrors(resourceData, errors.responseJSON['errors'])
+        Promise.reject(_this.resourceErrors(resourceData, errors.response.data['errors']))
 
   # Make PATCH request
   #
@@ -577,9 +577,9 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
         _this.mergePersistedChanges(response, resourceData)
     , (errors) ->
       if options['onlyResourceIdentifiers']
-        errors
+        Promise.reject(errors)
       else
-        _this.resourceErrors(resourceData, errors.responseJSON['errors'])
+        Promise.reject(_this.resourceErrors(resourceData, errors.response.data['errors']))
 
   # Make PUT request
   #
@@ -605,9 +605,9 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
         _this.mergePersistedChanges(response, resourceData)
     , (errors) ->
       if options['onlyResourceIdentifiers']
-        errors
+        Promise.reject(errors)
       else
-        _this.resourceErrors(resourceData, errors.responseJSON['errors'])
+        Promise.reject(_this.resourceErrors(resourceData, errors.response.data['errors']))
 
   # Make DELETE request
   #
@@ -632,4 +632,4 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     @request(url, 'DELETE', data)
     .then null
     , (errors) ->
-      _this.parameterErrors(errors.responseJSON['errors']) if errors.responseJSON
+      Promise.reject(_this.parameterErrors(errors.response.data['errors'])) if errors.response.data
