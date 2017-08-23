@@ -5,6 +5,7 @@
 @import es6-promise as es6Promise
 @import underscore as _
 @import underscore.string as s
+@import qs as Qs
 @import underscore.inflection
 
 var ActiveResource = function(){};
