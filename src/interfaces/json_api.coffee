@@ -632,4 +632,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     @request(url, 'DELETE', data)
     .then null
     , (errors) ->
-      Promise.reject(_this.parameterErrors(errors.response.data['errors'])) if errors.response.data
+      if errors.response.data
+        Promise.reject(_this.parameterErrors(errors.response.data['errors']))
+      else
+        Promise.reject(null)
