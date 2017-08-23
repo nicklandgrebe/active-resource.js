@@ -104,6 +104,7 @@ module.exports = function(grunt) {
                 "axios": '/node_modules/axios/dist/axios',
                 "moxios": '/node_modules/moxios/dist/moxios.min',
                 "es6-promise": '/node_modules/es6-promise/dist/es6-promise',
+                "qs": '/node_modules/qs/dist/qs',
                 "underscore": '/node_modules/underscore/underscore-min',
                 "underscore.string": '/node_modules/underscore.string/dist/underscore.string',
                 "underscore.inflection": '/node_modules/underscore.inflection/lib/underscore.inflection',

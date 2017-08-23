@@ -17,7 +17,13 @@ ActiveResource.Interfaces = class ActiveResource::Interfaces
         }),
         method: method
         url: url
-        data: data
+
+      if method == 'GET'
+        options.params = data
+        options.paramsSerializer = (params) ->
+          Qs.stringify(params, { arrayFormat: 'brackets' })
+      else
+        options.data = data
 
       axios options
 
