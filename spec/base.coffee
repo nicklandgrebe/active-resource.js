@@ -1,13 +1,13 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.install()
+    moxios.install()
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
 
   afterEach ->
-    jasmine.Ajax.uninstall()
+    moxios.uninstall()
 
   describe '::Base', ->
     describe '.links()', ->
@@ -37,79 +37,96 @@ describe 'ActiveResource', ->
       describe 'when interfacing', ->
         beforeEach ->
           MyLibrary::Venue.find(1)
-          .done window.onSuccess
+          .then window.onSuccess
 
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Venue.find.tokenized)
-          @resource = window.onSuccess.calls.mostRecent().args[0]
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Venue.find.tokenized)
+            .then =>
+              @resource = window.onSuccess.calls.mostRecent().args[0]
 
         it 'builds the primaryKey into the resource retrieved', ->
-          expect(@resource.token).toEqual('abc123')
+          @promise.then =>
+            expect(@resource.token).toEqual('abc123')
 
         it 'is rendered in a resource document with the primaryKey', ->
-          @resource.save()
-          resourceDocument = {
+          resourceDocument = JSON.stringify({
             data: {
-              token: 'abc123',
               type: 'venues',
+              token: 'abc123',
               attributes: {},
               relationships: {}
             }
-          }
-          expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+          })
+
+          @promise.then =>
+            @resource.save()
+
+            moxios.wait =>
+              expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
 
     describe '.clone()', ->
       beforeEach ->
         MyLibrary::Order.find(1)
-        .done window.onSuccess
+        .then window.onSuccess
 
-        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
-        @resource = window.onSuccess.calls.mostRecent().args[0]
+        @promise = moxios.wait =>
+          moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
+          .then =>
+            @resource = window.onSuccess.calls.mostRecent().args[0]
 
-        @resource.errors().add('attribute', 'invalid')
+            @resource.errors().add('attribute', 'invalid')
 
-        @clone = @resource.clone()
+            @clone = @resource.clone()
 
       it 'returns a new resource', ->
-        expect(@clone).not.toBe(@resource)
+        @promise.then =>
+          expect(@clone).not.toBe(@resource)
 
       it 'returns a klass of the same type as this', ->
-        expect(@clone.klass()).toBe(@resource.klass())
+        @promise.then =>
+          expect(@clone.klass()).toBe(@resource.klass())
 
       it 'clones attributes', ->
-        expect(@clone.attributes()).toEqual(@resource.attributes())
+        @promise.then =>
+          expect(@clone.attributes()).toEqual(@resource.attributes())
 
       it 'clones links', ->
-        expect(@clone.links()).toEqual(@resource.links())
+        @promise.then =>
+          expect(@clone.links()).toEqual(@resource.links())
 
       it 'clones errors', ->
-        expect(@clone.errors().size()).toEqual(1)
+        @promise.then =>
+          expect(@clone.errors().size()).toEqual(1)
 
       it 'clones relationship resources', ->
-        @clone.klass().reflectOnAllAssociations().each (reflection) =>
-          name = reflection.name
+        @promise.then =>
+          @clone.klass().reflectOnAllAssociations().each (reflection) =>
+            name = reflection.name
 
-          if reflection.collection()
-            i = 0
-            @clone.association(name).target.each (t) =>
-              expect(t).not.toBe(@resource.association(name).target.get(i))
-              i += 1
-          else if @resource.association(name).target?
-            expect(@clone.association(name).target).not.toBe(@resource.association(name).target)
+            if reflection.collection()
+              i = 0
+              @clone.association(name).target.each (t) =>
+                expect(t).not.toBe(@resource.association(name).target.get(i))
+                i += 1
+            else if @resource.association(name).target?
+              expect(@clone.association(name).target).not.toBe(@resource.association(name).target)
 
       it 'clones relationship resources attributes', ->
-        @clone.klass().reflectOnAllAssociations().each (reflection) =>
-          name = reflection.name
+        @promise.then =>
+          @clone.klass().reflectOnAllAssociations().each (reflection) =>
+            name = reflection.name
 
-          if reflection.collection()
-            i = 0
-            @clone.association(name).target.each (t) =>
-              expect(t.attributes()).toEqual(@resource.association(name).target.get(i).attributes())
-              i += 1
-          else if @resource.association(name).target?
-            expect(@clone.association(name).target.attributes()).toEqual(@resource.association(name).target.attributes())
+            if reflection.collection()
+              i = 0
+              @clone.association(name).target.each (t) =>
+                expect(t.attributes()).toEqual(@resource.association(name).target.get(i).attributes())
+                i += 1
+            else if @resource.association(name).target?
+              expect(@clone.association(name).target.attributes()).toEqual(@resource.association(name).target.attributes())
 
       it 'clones relationship links', ->
-        @clone.klass().reflectOnAllAssociations().each (reflection) =>
-          name = reflection.name
+        @promise.then =>
+          @clone.klass().reflectOnAllAssociations().each (reflection) =>
+            name = reflection.name
 
-          expect(@clone.association(name).links()).toEqual(@resource.association(name).links())
+            expect(@clone.association(name).links()).toEqual(@resource.association(name).links())

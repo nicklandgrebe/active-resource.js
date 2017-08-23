@@ -2,6 +2,8 @@
 
 jasmine.getJSONFixtures().fixturesPath = 'spec/fixtures/json'
 
+moxios.delay = 1
+
 window.JsonApiResponses =
   Comment:
     find:

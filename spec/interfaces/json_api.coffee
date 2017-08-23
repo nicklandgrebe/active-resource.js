@@ -1,13 +1,13 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.install()
+    moxios.install()
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
 
   afterEach ->
-    jasmine.Ajax.uninstall()
+    moxios.uninstall()
 
   describe 'Interfaces::JsonApi', ->
     beforeEach ->
@@ -19,56 +19,69 @@ describe 'ActiveResource', ->
         beforeEach ->
           @interface
           .get(@lib::Product.links()['related'])
-          .done(window.onSuccess)
-          .fail(window.onFailure)
+          .then(window.onSuccess)
+          .catch(window.onFailure)
+
+          @promise = moxios.wait =>
+            true
 
         describe 'on success', ->
           beforeEach ->
-            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
-            expect(window.onSuccess).toHaveBeenCalled()
-            @collection = window.onSuccess.calls.mostRecent().args[0]
+            @promise2 = @promise.then =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+              .then =>
+                @collection = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns a collection', ->
-            expect(@collection.isA?(ActiveResource::Collection)).toBeTruthy()
+            @promise2.then =>
+              expect(@collection.isA?(ActiveResource::Collection)).toBeTruthy()
 
           it 'returns a collection of resources of the queried type', ->
-            @collection.each (resource) =>
-              expect(resource.isA?(@lib::Product)).toBeTruthy()
+            @promise2.then =>
+              expect(@collection.last().isA?(@lib::Product)).toBeTruthy()
 
           it 'returns a collection of resources with links', ->
-            @collection.each (resource) =>
-              expect(resource.links()['self']).toBeDefined()
+            @promise2.then =>
+              expect(@collection.last().links()['self']).toBeDefined()
 
       describe 'getting a resource', ->
         beforeEach ->
           @interface
           .get(@lib::Product.links()['related'] + '1')
-          .done(window.onSuccess)
-          .fail(window.onFailure)
+          .then(window.onSuccess)
+          .catch(window.onFailure)
+
+          @promise = moxios.wait => true
 
         describe 'on success', ->
           beforeEach ->
-            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
-            expect(window.onSuccess).toHaveBeenCalled()
-            @resource = window.onSuccess.calls.mostRecent().args[0]
+            @promise2 = @promise.then =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
+              .then =>
+                @resource = window.onSuccess.calls.mostRecent().args[0]
 
           it 'returns a resource of the queried type', ->
-            expect(@resource.isA?(@lib::Product)).toBeTruthy()
+            @promise2.then =>
+              expect(@resource.isA?(@lib::Product)).toBeTruthy()
 
           it 'returns a resource with a link', ->
-            expect(@resource.links()['self']).toBeDefined()
+            @promise2.then =>
+              expect(@resource.links()['self']).toBeDefined()
 
         describe 'on failure', ->
           beforeEach ->
-            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.failure)
-            expect(window.onFailure).toHaveBeenCalled()
+            @promise2 = @promise.then =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.find.failure)
+              .catch =>
+                Promise.reject(@errors = window.onFailure.calls.mostRecent().args[0])
 
           it 'returns a collection of errors', ->
-            expect(window.onFailure.calls.mostRecent().args[0].klass()).toBe(ActiveResource::Collection)
+            @promise2.catch =>
+              expect(@errors.klass()).toBe(ActiveResource::Collection)
 
           it 'returns a parameter error', ->
-            error = window.onFailure.calls.mostRecent().args[0].first()
-            expect(error.parameter).toEqual('id')
+            @promise2.catch =>
+              expect(@errors.first().parameter).toEqual('id')
 
       describe 'using fields queryParam', ->
         beforeEach ->
@@ -79,13 +92,15 @@ describe 'ActiveResource', ->
 
           @interface
           .get(@lib::Product.links()['related'], queryParams)
-          .done(window.onSuccess)
-          .fail(window.onFailure)
+          .then(window.onSuccess)
+          .catch(window.onFailure)
 
-          @paramStr = decodeURIComponent(jasmine.Ajax.requests.mostRecent().url.split('?')[1])
+          @promise = moxios.wait =>
+            @paramStr = requestParams(moxios.requests.mostRecent())
 
         it 'builds a field set into the query URL', ->
-          expect(@paramStr).toEqual('fields[product]=title,updated_at&fields[orders]=price,created_at')
+          @promise.then =>
+            expect(@paramStr).toEqual('fields[product]=title,updated_at&fields[orders]=price,created_at')
 
       describe 'using include queryParam', ->
         beforeEach ->
@@ -94,13 +109,15 @@ describe 'ActiveResource', ->
 
           @interface
           .get(@lib::Product.links()['related'], queryParams)
-          .done(window.onSuccess)
-          .fail(window.onFailure)
+          .then(window.onSuccess)
+          .catch(window.onFailure)
 
-          @paramStr = decodeURIComponent(jasmine.Ajax.requests.mostRecent().url.split('?')[1])
+          @promise = moxios.wait =>
+            @paramStr = requestParams(moxios.requests.mostRecent())
 
         it 'builds an include tree into the query URL', ->
-          expect(@paramStr).toEqual('include=merchant,attribute_values,orders.transactions')
+          @promise.then =>
+            expect(@paramStr).toEqual('include=merchant,attribute_values,orders.transactions')
 
       describe 'using sort queryParam', ->
         beforeEach ->
@@ -109,13 +126,15 @@ describe 'ActiveResource', ->
 
           @interface
           .get(@lib::Product.links()['related'], queryParams)
-          .done(window.onSuccess)
-          .fail(window.onFailure)
+          .then(window.onSuccess)
+          .catch(window.onFailure)
 
-          @paramStr = decodeURIComponent(jasmine.Ajax.requests.mostRecent().url.split('?')[1])
+          @promise = moxios.wait =>
+            @paramStr = requestParams(moxios.requests.mostRecent())
 
         it 'builds an include tree into the query URL', ->
-          expect(@paramStr).toEqual('sort=updated_at,-created_at')
+          @promise.then =>
+            expect(@paramStr).toEqual('sort=updated_at,-created_at')
 
     describe '#post', ->
       describe 'persisting resource data', ->
@@ -134,70 +153,83 @@ describe 'ActiveResource', ->
 
           @interface
           .post(@lib::Order.links()['related'], @order)
-          .done(window.onSuccess)
-          .fail(window.onFailure)
+          .then(window.onSuccess)
+          .catch(window.onFailure)
+
+          @promise = moxios.wait => true
 
         it 'builds a resource document', ->
           resourceDocument =
             {
-              data: {
-                type: 'orders',
-                attributes: {
-                  price: 1.0,
-                  timestamp: @order.timestamp.toJSON()
-                },
-                relationships: {
-                  transactions: {
-                    data: [
-                      {
-                        type: 'transactions',
-                        attributes: {
-                          amount: 1.0,
-                          payment_method_id: 100
-                        },
-                        relationships: {
-                          payment_method: {
-                            data: { type: 'payment_methods', id: '100' }
-                          }
+              type: 'orders',
+              attributes: {
+                price: 1.0,
+                timestamp: @order.timestamp.toJSON()
+              },
+              relationships: {
+                transactions: {
+                  data: [
+                    {
+                      type: 'transactions',
+                      attributes: {
+                        amount: 1.0,
+                        payment_method_id: 100
+                      },
+                      relationships: {
+                        payment_method: {
+                          data: { type: 'payment_methods', id: '100' }
                         }
                       }
-                    ]
-                  }
+                    }
+                  ]
                 }
               }
             }
-          expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+
+          @promise.then =>
+            expect(JSON.parse(moxios.requests.mostRecent().data).data).toEqual(resourceDocument)
 
         describe 'when persistence succeeds', ->
           beforeEach ->
-            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
-            @resource = window.onSuccess.calls.mostRecent().args[0]
+            @promise2 = @promise.then =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
+              .then =>
+                @resource = window.onSuccess.calls.mostRecent().args[0]
 
           it 'indicates the resource is persisted', ->
-            expect(@resource.persisted?()).toBeTruthy()
+            @promise2.then =>
+              expect(@resource.persisted?()).toBeTruthy()
 
           it 'updates the resource with attributes from the server', ->
-            expect(@resource.description).toEqual('Another description')
+            @promise2.then =>
+              expect(@resource.description).toEqual('Another description')
 
         describe 'when persistence fails', ->
           beforeEach ->
-            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.failure)
-            @resource = window.onFailure.calls.mostRecent().args[0]
+            @promise2 = @promise.then =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.save.failure)
+              .catch =>
+                Promise.reject(@resource = window.onFailure.calls.mostRecent().args[0])
 
           it 'adds errors the resource', ->
-            expect(@resource.errors().empty?()).toBeFalsy()
+            @promise2.catch =>
+              expect(@resource.errors().empty?()).toBeFalsy()
 
           it 'converts a pointer to a base error field', ->
-            expect(@resource.errors().forBase()).toEqual({ invalid: "A problem occurred with the base of the product." })
+            @promise2.catch =>
+              expect(@resource.errors().forBase()).toEqual({ invalid: "A problem occurred with the base of the product." })
 
           it 'converts a pointer to a attribute error field', ->
-            expect(@resource.errors().forAttribute('title')).toEqual({ blank: 'Title cannot be blank.' })
+            @promise2.catch =>
+              expect(@resource.errors().forAttribute('title')).toEqual({ blank: 'Title cannot be blank.' })
 
           it 'camelizes an underscored attribute name', ->
-            expect(@resource.errors().include('phoneNumber')).toBeTruthy()
+            @promise2.catch =>
+              expect(@resource.errors().include('phoneNumber')).toBeTruthy()
 
           it 'converts a pointer to a relationship error field', ->
-            expect(@resource.errors().forAttribute('orders.price')).toEqual({ blank: 'Price cannot be blank.' })
+            @promise2.catch =>
+              expect(@resource.errors().forAttribute('orders.price')).toEqual({ blank: 'Price cannot be blank.' })
 
       describe 'persisting changes involving resource identifiers', ->
         beforeEach ->
@@ -206,55 +238,70 @@ describe 'ActiveResource', ->
 
           @interface
           .post(@lib::Product.links()['related'], [@product, @product2], onlyResourceIdentifiers: true)
-          .done(window.onSuccess)
-          .fail(window.onFailure)
+          .then(window.onSuccess)
+          .catch(window.onFailure)
+
+          @promise = moxios.wait => true
 
         it 'builds a resource identifier document', ->
           resourceDocument =
-            {
+            JSON.stringify({
               data: [
                 {
-                  id: '1',
-                  type: 'products'
+                  type: 'products',
+                  id: '1'
                 },
                 {
-                  id: '2',
-                  type: 'products'
+                  type: 'products',
+                  id: '2'
                 }
               ]
-            }
-          expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+            })
+
+          @promise.then =>
+            expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
 
     describe '#delete', ->
-      beforeEach ->
-        @lib::Product.last().then window.onSuccess
-
-        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
-        @resource = window.onSuccess.calls.mostRecent().args[0]
-
       describe 'with resource data', ->
         beforeEach ->
-          @interface
-          .delete(@lib::Product.links()['self'], @resource)
-          .done(window.onSuccess)
-          .fail(window.onFailure)
+          @lib::Product.last()
+          .then window.onSuccess
+
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+            .then =>
+              @resource = window.onSuccess.calls.mostRecent().args[0]
+
+          @promise2 = @promise.then =>
+            @interface
+            .delete(@resource.links()['self'], @resource)
+            .then(window.onSuccess)
+            .catch(window.onFailure)
+
+            moxios.wait => true
 
         it 'builds a resource identifier document', ->
           resourceDocument =
-            {
+            JSON.stringify({
               data: {
-                id: @resource.id.toString(),
-                type: 'products'
+                type: 'products',
+                id: @resource.id.toString()
               }
-            }
-          expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+            })
+
+          @promise2.then =>
+            expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
 
       describe 'without resource data', ->
         beforeEach ->
           @interface
-          .delete(@lib::Product.links()['self'])
-          .done(window.onSuccess)
-          .fail(window.onFailure)
+          .delete(@lib::Product.links()['related'])
+          .then(window.onSuccess)
+          .catch(window.onFailure)
+
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
         it 'sends no data', ->
-          expect(jasmine.Ajax.requests.mostRecent().data()).toEqual({})
+          @promise.then =>
+            expect(moxios.requests.mostRecent().data).toEqual(JSON.stringify({}))
