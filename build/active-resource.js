@@ -1,20 +1,22 @@
 (function (root, factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
-        define(['jquery', 'underscore', 'underscore.string', 'underscore.inflection'], factory);
+        define(['axios', 'es6-promise', 'underscore', 'underscore.string', 'qs', 'underscore.inflection'], factory);
     } else if (typeof exports === 'object') {
         // Node. Does not work with strict CommonJS, but
         // only CommonJS-like enviroments that support module.exports,
         // like Node.
         require('underscore.inflection');
-        module.exports = factory(require('jquery'), require('underscore'), require('underscore.string'));
+        module.exports = factory(require('axios'), require('es6-promise'), require('underscore'), require('underscore.string'), require('qs'));
     } else {
         // Browser globals (root is window)
-        root.ActiveResource = factory(root.jQuery, root._, root.s);
+        root.ActiveResource = factory(root.axios, root.es6Promise, root._, root.s, root.Qs);
     }
-}(this, function(jQuery, _, s) {
+}(this, function(axios, es6Promise, _, s, Qs) {
 
 var ActiveResource = function(){};
+
+window.Promise = es6Promise.Promise;
 
 (function() {
   ActiveResource.extend = function(klass, mixin) {
@@ -134,14 +136,24 @@ var ActiveResource = function(){};
       Base.prototype.request = function(url, method, data) {
         var options;
         options = {
-          contentType: 'application/json',
-          dataType: 'json',
-          headers: this.resourceLibrary.headers,
+          responseType: 'json',
+          headers: _.extend(this.resourceLibrary.headers, {
+            'Content-Type': 'application/json'
+          }),
           method: method,
           url: url
         };
-        options['data'] = method === 'GET' ? data : JSON.stringify(data);
-        return jQuery.ajax(options);
+        if (method === 'GET') {
+          options.params = data;
+          options.paramsSerializer = function(params) {
+            return Qs.stringify(params, {
+              arrayFormat: 'brackets'
+            });
+          };
+        } else {
+          options.data = data;
+        }
+        return axios(options);
       };
 
       Base.prototype.get = function(url, queryParams) {
@@ -189,11 +201,12 @@ var ActiveResource = function(){};
     }
 
     JsonApi.prototype.request = function(url, method, data) {
-      return JsonApi.__super__.request.apply(this, arguments).then(function(response, textStatus, xhr) {
-        if (!(((response != null ? response.data : void 0) != null) || xhr.status === 204)) {
+      return JsonApi.__super__.request.apply(this, arguments).then(function(response) {
+        var _ref1;
+        if (!((((_ref1 = response.data) != null ? _ref1.data : void 0) != null) || response.status === 204)) {
           throw "Response from " + url + " was not in JSON API format";
         }
-        return response;
+        return response.data;
       });
     };
 
@@ -476,7 +489,7 @@ var ActiveResource = function(){};
           return built.first();
         }
       }, function(errors) {
-        return _this.parameterErrors(errors.responseJSON['errors']);
+        return Promise.reject(_this.parameterErrors(errors.response.data['errors']));
       });
     };
 
@@ -509,9 +522,9 @@ var ActiveResource = function(){};
         }
       }, function(errors) {
         if (options['onlyResourceIdentifiers']) {
-          return errors;
+          return Promise.reject(errors);
         } else {
-          return _this.resourceErrors(resourceData, errors.responseJSON['errors']);
+          return Promise.reject(_this.resourceErrors(resourceData, errors.response.data['errors']));
         }
       });
     };
@@ -546,9 +559,9 @@ var ActiveResource = function(){};
         }
       }, function(errors) {
         if (options['onlyResourceIdentifiers']) {
-          return errors;
+          return Promise.reject(errors);
         } else {
-          return _this.resourceErrors(resourceData, errors.responseJSON['errors']);
+          return Promise.reject(_this.resourceErrors(resourceData, errors.response.data['errors']));
         }
       });
     };
@@ -582,9 +595,9 @@ var ActiveResource = function(){};
         }
       }, function(errors) {
         if (options['onlyResourceIdentifiers']) {
-          return errors;
+          return Promise.reject(errors);
         } else {
-          return _this.resourceErrors(resourceData, errors.responseJSON['errors']);
+          return Promise.reject(_this.resourceErrors(resourceData, errors.response.data['errors']));
         }
       });
     };
@@ -602,8 +615,10 @@ var ActiveResource = function(){};
       } : {};
       _this = this;
       return this.request(url, 'DELETE', data).then(null, function(errors) {
-        if (errors.responseJSON) {
-          return _this.parameterErrors(errors.responseJSON['errors']);
+        if (errors.response.data) {
+          return Promise.reject(_this.parameterErrors(errors.response.data['errors']));
+        } else {
+          return Promise.reject(null);
         }
       });
     };
@@ -1194,7 +1209,7 @@ var ActiveResource = function(){};
     };
 
     Persistence.save = function(callback) {
-      return this.__createOrUpdate().always(callback);
+      return this.__createOrUpdate().then(callback, callback);
     };
 
     Persistence.update = function(attributes, callback) {
@@ -1204,7 +1219,7 @@ var ActiveResource = function(){};
       return this.__createOrUpdate().then(null, function(resource) {
         resource.assignAttributes(oldAttributes);
         return resource;
-      }).always(callback);
+      }).then(callback, callback);
     };
 
     Persistence.destroy = function() {
@@ -1946,7 +1961,7 @@ var ActiveResource = function(){};
           _this.target = loadedTarget;
           _this.loaded(true);
           return loadedTarget;
-        }).fail(function() {
+        })["catch"](function() {
           return _this.reset();
         });
       } else {
