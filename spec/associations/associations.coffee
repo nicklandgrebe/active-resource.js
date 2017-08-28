@@ -6,5 +6,5 @@ describe 'ActiveResource', ->
         expect(
           order
           .association('product')
-          .isA?(ActiveResource::Associations::BelongsToAssociation)
+          .isA(ActiveResource::Associations::BelongsToAssociation)
         ).toBeTruthy()

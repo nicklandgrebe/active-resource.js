@@ -1,13 +1,13 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.install()
+    moxios.install()
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
 
   afterEach ->
-    jasmine.Ajax.uninstall()
+    moxios.uninstall()
 
   describe '::Relation', ->
     describe 'when calling Relation extension methods on Base', ->
@@ -21,212 +21,275 @@ describe 'ActiveResource', ->
     describe '#all()', ->
       beforeEach ->
         MyLibrary::Product.all()
-        .done window.onSuccess
+        .then window.onSuccess
 
-        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
-        expect(window.onSuccess).toHaveBeenCalled()
-        @result = window.onSuccess.calls.mostRecent().args[0]
+        @promise = moxios.wait =>
+          moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          .then =>
+            @result = window.onSuccess.calls.mostRecent().args[0]
 
       it 'makes a call to retrieve all resources', ->
-        expect(jasmine.Ajax.requests.mostRecent().url).toEqual(MyLibrary::Product.links()['related'])
+        @promise.then =>
+          expect(moxios.requests.mostRecent().url).toEqual(MyLibrary::Product.links()['related'])
 
       it 'returns a collection of the type requested', ->
-        expect(@result.isA?(ActiveResource::Collection)).toBeTruthy()
+        @promise.then =>
+          expect(@result.isA?(ActiveResource::Collection)).toBeTruthy()
 
     describe '#each()', ->
       beforeEach ->
         @i = 0
-        MyLibrary::Product.each =>
+        MyLibrary::Product.each (p) =>
           @i += 1
 
-        @response = JsonApiResponses.Product.all.success
-        jasmine.Ajax.requests.mostRecent().respondWith(@response)
+        @promise = moxios.wait =>
+          @response = JsonApiResponses.Product.all.success
+          moxios.requests.mostRecent().respondWith(@response)
 
       it 'makes a call to retrieve all resources', ->
-        expect(jasmine.Ajax.requests.mostRecent().url).toEqual(MyLibrary::Product.links()['related'])
+        @promise.then =>
+          expect(moxios.requests.mostRecent().url).toEqual(MyLibrary::Product.links()['related'])
 
       it 'iterates over each resource returned', ->
-        expect(@i).toEqual(JSON.parse(@response.responseText).data.length)
+        @promise.then =>
+          expect(@i).toEqual(@response.response.data.length)
 
     describe '#find()', ->
       beforeEach ->
         MyLibrary::Product.find(1)
-        .done window.onSuccess
+        .then window.onSuccess
 
-        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
-        expect(window.onSuccess).toHaveBeenCalled()
-        @result = window.onSuccess.calls.mostRecent().args[0]
+        @promise = moxios.wait =>
+          moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
+          .then =>
+            @result = window.onSuccess.calls.mostRecent().args[0]
 
       it 'makes a call to retrieve a resource', ->
-        expect(jasmine.Ajax.requests.mostRecent().url).toEqual(MyLibrary::Product.links()['related'] + '1')
+        @promise.then =>
+          expect(moxios.requests.mostRecent().url).toEqual(MyLibrary::Product.links()['related'] + '1')
 
       it 'returns a resource of the type requested', ->
-        expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
+        @promise.then =>
+          expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
 
     describe '#findBy()', ->
       beforeEach ->
         MyLibrary::Product.findBy(token: 'jshf8e')
-        .done window.onSuccess
+        .then window.onSuccess
 
-        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
-        expect(window.onSuccess).toHaveBeenCalled()
-        @result = window.onSuccess.calls.mostRecent().args[0]
+        @promise = moxios.wait =>
+          moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          .then =>
+            @result = window.onSuccess.calls.mostRecent().args[0]
 
       it 'makes a call to retrieve filtered resources', ->
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('filter[token]=jshf8e')
+        @promise.then =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('filter[token]=jshf8e')
 
       it 'returns a resource of the type requested', ->
-        expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
+        @promise.then =>
+          expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
 
     describe '#first()', ->
       beforeEach ->
         MyLibrary::Product.first()
-        .done window.onSuccess
+        .then window.onSuccess
 
-        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
-        expect(window.onSuccess).toHaveBeenCalled()
-        @result = window.onSuccess.calls.mostRecent().args[0]
+        @promise = moxios.wait =>
+          moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          .then =>
+            @result = window.onSuccess.calls.mostRecent().args[0]
 
       it 'makes a call to retrieve a single resource via index', ->
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('limit=1')
+        @promise.then =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('limit=1')
 
       it 'returns a resource of the type requested', ->
-        expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
+        @promise.then =>
+          expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
 
     describe '#last()', ->
       beforeEach ->
         MyLibrary::Product.last()
-        .done window.onSuccess
+        .then window.onSuccess
 
-        jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
-        expect(window.onSuccess).toHaveBeenCalled()
-        @result = window.onSuccess.calls.mostRecent().args[0]
+        @promise = moxios.wait =>
+          moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+          .then =>
+            @result = window.onSuccess.calls.mostRecent().args[0]
 
       it 'makes a call to retrieve a single resource starting from the back, via index', ->
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('limit=1&offset=-1')
+        @promise.then =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('limit=1&offset=-1')
 
       it 'returns a resource of the type requested', ->
-        expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
+        @promise.then =>
+          expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
 
     describe '#where()', ->
       it 'adds filters to a query', ->
         MyLibrary::Product.where(token: 'jshf8e').all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('filter[token]=jshf8e')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('filter[token]=jshf8e')
 
       it 'merges filters', ->
         MyLibrary::Product.where(token: 'jshf8e').where(another: 'param').all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('filter[token]=jshf8e&filter[another]=param')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('filter[token]=jshf8e&filter[another]=param')
 
     describe '#order()', ->
       it 'adds sort params to a query', ->
         MyLibrary::Product.order(createdAt: 'asc').all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('sort=created_at')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('sort=created_at')
 
       it 'merges sorts', ->
         MyLibrary::Product.order(createdAt: 'asc').order(updatedAt: 'desc').all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('sort=created_at,-updated_at')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('sort=created_at,-updated_at')
 
     describe '#select()', ->
       it 'determines the root model to apply fields to', ->
         MyLibrary::Product.select('id', 'createdAt').all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('fields[products]=id,created_at')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('fields[products]=id,created_at')
 
       it 'determines the model to apply nested fields to', ->
         MyLibrary::Product.select('id', { orders: 'price' }).all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('fields[products]=id&fields[orders]=price')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('fields[products]=id&fields[orders]=price')
 
       it 'merges fields', ->
         MyLibrary::Product.select('id', 'createdAt').select(orders: 'price').all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('fields[products]=id,created_at&fields[orders]=price')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('fields[products]=id,created_at&fields[orders]=price')
 
     describe '#includes()', ->
       it 'adds root level includes', ->
         MyLibrary::Product.includes('merchant', 'attributeValues').all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('include=merchant,attribute_values')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('include=merchant,attribute_values')
 
       it 'adds nested includes', ->
         MyLibrary::Product.includes('merchant', { orders: ['attributeValues','giftCards'] }).all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('include=merchant,orders.attribute_values,orders.gift_cards')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('include=merchant,orders.attribute_values,orders.gift_cards')
 
     describe '#page()', ->
       beforeEach ->
         MyLibrary::Product.page(2).all()
-        .done window.onSuccess
+        .then window.onSuccess
+
+        @promise = moxios.wait => true
 
       it 'adds a page number to the query', ->
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('page[number]=2')
+        @promise.then =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('page[number]=2')
 
       describe 'when no links in response', ->
         beforeEach ->
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
-          @resources = window.onSuccess.calls.mostRecent().args[0]
+          @promise2 = @promise.then =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
+            .then =>
+              @resources = window.onSuccess.calls.mostRecent().args[0]
 
         it 'hasNextPage returns false', ->
-          expect(@resources.hasNextPage()).toBeFalsy();
+          @promise2.then =>
+            expect(@resources.hasNextPage()).toBeFalsy();
 
         it 'nextPage returns null', ->
-          expect(@resources.nextPage()).toBeUndefined();
+          @promise2.then =>
+            expect(@resources.nextPage()).toBeUndefined();
 
         it 'hasPrevPage returns false', ->
-          expect(@resources.hasPrevPage()).toBeFalsy();
+          @promise2.then =>
+            expect(@resources.hasPrevPage()).toBeFalsy();
 
         it 'prevPage returns null', ->
-          expect(@resources.prevPage()).toBeUndefined();
+          @promise2.then =>
+            expect(@resources.prevPage()).toBeUndefined();
 
       describe 'when next link in response', ->
         beforeEach ->
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.paginated)
-          @resources = window.onSuccess.calls.mostRecent().args[0]
+          @promise2 = @promise.then =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.paginated)
+            .then =>
+              @resources = window.onSuccess.calls.mostRecent().args[0]
 
         it 'hasNextPage returns true', ->
-          expect(@resources.hasNextPage()).toBeTruthy();
+          @promise2.then =>
+            expect(@resources.hasNextPage()).toBeTruthy();
 
         it 'nextPage requests next link', ->
-          @resources.nextPage()
-          expect(jasmine.Ajax.requests.mostRecent().url).toEqual('https://example.com/api/v1/products?page[number]=3&page[size]=2')
+          @promise2.then =>
+            @resources.nextPage()
+
+            moxios.wait =>
+              expect(moxios.requests.mostRecent().url).toEqual('https://example.com/api/v1/products?page[number]=3&page[size]=2')
 
       describe 'when prev link in response', ->
         beforeEach ->
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.all.paginated)
-          @resources = window.onSuccess.calls.mostRecent().args[0]
+          @promise2 = @promise.then =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.paginated)
+            .then =>
+              @resources = window.onSuccess.calls.mostRecent().args[0]
 
         it 'hasPrevPage returns true', ->
-          expect(@resources.hasPrevPage()).toBeTruthy();
+          @promise2.then =>
+            expect(@resources.hasPrevPage()).toBeTruthy();
 
         it 'prevPage requests next link', ->
-          @resources.prevPage()
-          expect(jasmine.Ajax.requests.mostRecent().url).toEqual('https://example.com/api/v1/products?page[number]=1&page[size]=2')
+          @promise2.then =>
+            @resources.prevPage()
+
+            moxios.wait =>
+              expect(moxios.requests.mostRecent().url).toEqual('https://example.com/api/v1/products?page[number]=1&page[size]=2')
 
     describe '#perPage()', ->
       it 'adds a page size to the query', ->
         MyLibrary::Product.perPage(2).all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('page[size]=2')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('page[size]=2')
 
     describe '#limit()', ->
       it 'adds a limit to the query', ->
         MyLibrary::Product.limit(2).all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('limit=2')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('limit=2')
 
     describe '#offset()', ->
       it 'adds an offset to the query', ->
         MyLibrary::Product.offset(2).all()
-        @paramStr = requestParams(jasmine.Ajax.requests.mostRecent())
-        expect(@paramStr).toContain('offset=2')
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('offset=2')
 
     describe '#build()', ->
       beforeEach ->
@@ -253,39 +316,49 @@ describe 'ActiveResource', ->
         beforeEach ->
           MyLibrary::Product.create(title: 'Another title', description: 'Another description', window.onCompletion)
 
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
-          @result = window.onCompletion.calls.mostRecent().args[0]
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
+            .then =>
+              @result = window.onCompletion.calls.mostRecent().args[0]
 
         it 'executes the completion callback', ->
-          expect(window.onCompletion).toHaveBeenCalled()
+          @promise.then =>
+            expect(window.onCompletion).toHaveBeenCalled()
 
         it 'builds a resource of class\'s type', ->
-          expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
+          @promise.then =>
+            expect(@result.isA?(MyLibrary::Product)).toBeTruthy()
 
         it 'assigns attributes to the created resource', ->
-          expect(@result.title).toEqual('Another title')
+          @promise.then =>
+            expect(@result.title).toEqual('Another title')
 
       describe 'on success', ->
         beforeEach ->
           MyLibrary::Product.create(title: 'Another title', description: 'Another description', window.onCompletion)
 
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
-          expect(window.onCompletion).toHaveBeenCalled()
-          @result = window.onCompletion.calls.mostRecent().args[0]
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
+            .then =>
+              @result = window.onCompletion.calls.mostRecent().args[0]
 
         it 'creates a persisted resource', ->
-          expect(@result.persisted( )).toBeTruthy()
+          @promise.then =>
+            expect(@result.persisted( )).toBeTruthy()
 
       describe 'on failure', ->
         beforeEach ->
           MyLibrary::Product.create(title: '', description: '', window.onCompletion)
 
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.save.failure)
-          expect(window.onCompletion).toHaveBeenCalled()
-          @result = window.onCompletion.calls.mostRecent().args[0]
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.save.failure)
+            .catch =>
+              Promise.reject(@result = window.onCompletion.calls.mostRecent().args[0])
 
         it 'does not create a persisted resource', ->
-          expect(@result.persisted?()).toBeFalsy()
+          @promise.catch =>
+            expect(@result.persisted?()).toBeFalsy()
 
         it 'adds errors', ->
-          expect(@result.errors().empty?()).toBeFalsy()
+          @promise.catch =>
+            expect(@result.errors().empty?()).toBeFalsy()

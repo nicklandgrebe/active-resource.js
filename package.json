@@ -7,10 +7,12 @@
   "homepage": "https://github.com/nicklandgrebe/activeresource.js",
   "license": "MIT",
   "dependencies": {
-    "jquery": "2.2.4",
+    "axios": "^0.16.2",
+    "es6-promise": "^4.1.1",
+    "qs": "^6.5.0",
     "underscore": "1.8.3",
-    "underscore.string": "latest",
-    "underscore.inflection": "latest"
+    "underscore.inflection": "latest",
+    "underscore.string": "latest"
   },
   "engine": "node >= 0.10",
   "devDependencies": {
@@ -24,6 +26,9 @@
     "grunt-template-jasmine-requirejs": "^0.2.3",
     "grunt-umd-wrapper": "^0.4.0",
     "jasmine-ajax": "^3.2.0",
-    "jasmine-jquery": "^2.1.1"
+    "jasmine-jquery": "^2.1.1",
+    "jasmine-promises": "^0.4.1",
+    "jquery": "^2.0.0",
+    "moxios": "git+https://github.com/nicklandgrebe/moxios.git"
   }
 }

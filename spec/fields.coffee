@@ -1,133 +1,153 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.install()
+    moxios.install()
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
 
-    MyLibrary::Order.last().then window.onSuccess
+    MyLibrary::Order.last()
+    .then window.onSuccess
 
-    jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
-    @resource = window.onSuccess.calls.mostRecent().args[0]
+    @promise = moxios.wait =>
+      moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+      .then =>
+        @resource = window.onSuccess.calls.mostRecent().args[0]
 
   afterEach ->
-    jasmine.Ajax.uninstall()
+    moxios.uninstall()
 
   describe '::Fields', ->
     describe '.fields()', ->
       it 'returns fields', ->
-        expect(@resource.klass().fields().toArray().sort()).toEqual([
-          'price', 'comments', 'giftCard', 'orderItems', 'product', 'transactions'
-        ].sort())
+        @promise.then =>
+          expect(@resource.klass().fields().toArray().sort()).toEqual([
+            'price', 'comments', 'giftCard', 'orderItems', 'product', 'transactions'
+          ].sort())
 
     describe 'updating changed fields', ->
       describe 'changing attribute', ->
         beforeEach ->
-          @resource.price = 1000.0
+          @promise2 = @promise.then =>
+            @resource.price = 1000.0
 
         it 'adds attribute to resource document', ->
-          @resource.save()
+          @promise2.then =>
+            @resource.save()
 
-          resourceDocument =
-            {
-              data: {
-                type: 'orders',
-                id: '2',
-                attributes: {
-                  price: 1000.0
-                },
-                relationships: {}
-              }
-            }
-          expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+            resourceDocument =
+              JSON.stringify({
+                data: {
+                  type: 'orders',
+                  id: '2',
+                  attributes: {
+                    price: 1000.0
+                  },
+                  relationships: {}
+                }
+              })
+
+            moxios.wait =>
+              expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
 
       describe 'changing relationship', ->
         describe 'singular', ->
           beforeEach ->
-            @resource.assignProduct(MyLibrary::Product.build(id: '10'))
+            @promise2 = @promise.then =>
+              @resource.assignProduct(MyLibrary::Product.build(id: '10'))
 
           it 'adds relationship to resource document', ->
-            @resource.save()
+            @promise2.then =>
+              @resource.save()
 
-            resourceDocument =
-              {
-                data: {
-                  type: 'orders',
-                  id: '2',
-                  attributes: {},
-                  relationships: {
-                    product: {
-                      data: {
-                        type: 'products',
-                        id: '10'
+              resourceDocument =
+                JSON.stringify({
+                  data: {
+                    type: 'orders',
+                    id: '2',
+                    attributes: {},
+                    relationships: {
+                      product: {
+                        data: {
+                          type: 'products',
+                          id: '10'
+                        }
                       }
                     }
                   }
-                }
-              }
-            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+                })
+
+              moxios.wait =>
+                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
 
         describe 'collection', ->
           beforeEach ->
-            @resource.orderItems().build(id: '5')
-            @resource.orderItems().build(id: '10')
+            @promise2 = @promise.then =>
+              @resource.orderItems().build(id: '5')
+              @resource.orderItems().build(id: '10')
 
           it 'adds relationship to resource document', ->
-            @resource.save()
+            @promise2.then =>
+              @resource.save()
 
-            resourceDocument =
-              {
-                data: {
-                  type: 'orders',
-                  id: '2',
-                  attributes: {},
-                  relationships: {
-                    order_items: {
-                      data: [{
-                        type: 'order_items',
-                        id: '5'
-                      },{
-                        type: 'order_items',
-                        id: '10'
-                      }]
+              resourceDocument =
+                JSON.stringify({
+                  data: {
+                    type: 'orders',
+                    id: '2',
+                    attributes: {},
+                    relationships: {
+                      order_items: {
+                        data: [{
+                          type: 'order_items',
+                          id: '5'
+                        },{
+                          type: 'order_items',
+                          id: '10'
+                        }]
+                      }
                     }
                   }
-                }
-              }
-            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+                })
+
+              moxios.wait =>
+                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
 
         describe 'autosave', ->
           beforeEach ->
-            @resource.transactions().build(amount: 5.0)
-            @resource.transactions().build(amount: 10.0)
+            @promise2 = @promise.then =>
+              @resource.transactions().build(amount: 5.0)
+              @resource.transactions().build(amount: 10.0)
 
           it 'adds relationship to resource document', ->
-            @resource.save()
+            @promise2.then =>
+              @resource.save()
 
-            resourceDocument =
-              {
-                data: {
-                  type: 'orders',
-                  id: '2',
-                  attributes: {},
-                  relationships: {
-                    transactions: {
-                      data: [{
-                        type: 'transactions',
-                        attributes: {
-                          amount: 5.0
-                        },
-                        relationships: {}
-                      },{
-                        type: 'transactions',
-                        attributes: {
-                          amount: 10.0
-                        },
-                        relationships: {}
-                      }]
+              resourceDocument =
+                JSON.stringify({
+                  data: {
+                    type: 'orders',
+                    id: '2',
+                    attributes: {},
+                    relationships: {
+                      transactions: {
+                        data: [{
+                          type: 'transactions',
+                          attributes: {
+                            amount: 5.0
+                          },
+                          relationships: {}
+                        },{
+                          type: 'transactions',
+                          attributes: {
+                            amount: 10.0
+                          },
+                          relationships: {}
+                        }]
+                      }
                     }
                   }
-                }
-              }
-            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+                })
+
+              moxios.wait =>
+                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)

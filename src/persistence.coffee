@@ -57,7 +57,7 @@ class ActiveResource::Persistence
   # @return [Promise] a promise to return the ActiveResource, valid or invalid
   @save: (callback) ->
     @__createOrUpdate()
-    .always callback
+    .then callback, callback
 
   # Update specific attributes of the resource, save it, and insert resource into callback after
   #
@@ -87,7 +87,7 @@ class ActiveResource::Persistence
     .then null, (resource) ->
       resource.assignAttributes(oldAttributes)
       resource
-    .always callback
+    .then callback, callback
 
   # Deletes the resource from the server, assuming callbacks pass
   # TODO: Remove the resource from all associations as well
@@ -97,7 +97,7 @@ class ActiveResource::Persistence
   #   order.destroy()
   #   .then (destroyedresource) ->
   #     ...
-  #   .fail ->
+  #   .catch ->
   #     ...
   @destroy: ->
     @klass().resourceLibrary.interface.delete(@links()['self'], (resource = this))

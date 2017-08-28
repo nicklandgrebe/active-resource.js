@@ -1,13 +1,13 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.install()
+    moxios.install()
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
 
   afterEach ->
-    jasmine.Ajax.uninstall()
+    moxios.uninstall()
 
   describe '.createResourceLibrary', ->
     beforeEach ->
@@ -78,8 +78,12 @@ describe 'ActiveResource', ->
       beforeEach ->
         @MyLibrary::Product.find(1)
 
+        @promise = moxios.wait => true
+
       it 'uses the baseUrl', ->
-        expect(jasmine.Ajax.requests.mostRecent().url).toContain('https://www.example.com/')
+        @promise.then =>
+          expect(moxios.requests.mostRecent().url).toContain('https://www.example.com/')
 
       it 'uses the headers', ->
-        expect(jasmine.Ajax.requests.mostRecent().requestHeaders['Authorization']).toEqual('xxx')
+        @promise.then =>
+          expect(moxios.requests.mostRecent().headers['Authorization']).toEqual('xxx')

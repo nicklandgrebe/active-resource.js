@@ -80,7 +80,7 @@ class ActiveResource::Associations::Association
         _this.target = loadedTarget
         _this.loaded(true)
         loadedTarget
-      .fail ->
+      .catch ->
         _this.reset()
     else
       @reset()

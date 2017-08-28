@@ -1,73 +1,87 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    jasmine.Ajax.install()
+    moxios.install()
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
 
   afterEach ->
-    jasmine.Ajax.uninstall()
+    moxios.uninstall()
 
   describe '::Associations', ->
     describe '::BelongsToAssociation', ->
       describe 'reading', ->
         beforeEach ->
           MyLibrary::Order.includes('giftCard').find(1)
-          .done window.onSuccess
+          .then window.onSuccess
 
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
-          expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.calls.mostRecent().args[0]
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
+
+          @promise2 = @promise.then =>
+            @resource = window.onSuccess.calls.mostRecent().args[0]
 
         it 'returns the target', ->
-          expect(@resource.giftCard().isA?(MyLibrary::GiftCard)).toBeTruthy()
+          @promise.then =>
+            expect(@resource.giftCard().isA?(MyLibrary::GiftCard)).toBeTruthy()
 
       describe 'loading', ->
         beforeEach ->
           MyLibrary::Order.find(1)
-          .done window.onSuccess
+          .then window.onSuccess
 
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.success)
-          expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.calls.mostRecent().args[0]
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.success)
 
-          @resource.loadGiftCard()
-          .done window.onSuccess
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.find.success)
+          @promise2 = @promise.then =>
+            resource = window.onSuccess.calls.mostRecent().args[0]
+            resource.loadGiftCard()
+            .then window.onSuccess
+
+            moxios.wait =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.find.success)
 
         it 'queries the relationship URL', ->
-          expect(jasmine.Ajax.requests.mostRecent().url).toEqual('https://example.com/api/v1/orders/1/gift_card/')
+          @promise2.then =>
+            expect(moxios.requests.mostRecent().url).toEqual('https://example.com/api/v1/orders/1/gift_card/')
 
         it 'returns the target', ->
-          @target = window.onSuccess.calls.mostRecent().args[0]
-          expect(@target.isA?(MyLibrary::GiftCard)).toBeTruthy()
+          @promise2.then =>
+            target = window.onSuccess.calls.mostRecent().args[0]
+            expect(target.isA?(MyLibrary::GiftCard)).toBeTruthy()
 
       describe 'assigning', ->
         beforeEach ->
           MyLibrary::Order.find(1)
-          .done window.onSuccess
+          .then window.onSuccess
 
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.success)
-          expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.calls.mostRecent().args[0]
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.success)
 
-          @target = MyLibrary::GiftCard.build(id: 2)
+          @promise2 = @promise.then =>
+            @resource = window.onSuccess.calls.mostRecent().args[0]
 
-          @resource.assignGiftCard(@target)
+            @target = MyLibrary::GiftCard.build(id: 2)
+
+            @resource.assignGiftCard(@target)
 
         it 'assigns the target', ->
-          expect(@resource.giftCard()).toEqual(@target)
+          @promise2.then =>
+            expect(@resource.giftCard()).toEqual(@target)
 
         it 'assigns the inverse target', ->
-          expect(@resource.giftCard().order()).toEqual(@resource)
+          @promise2.then =>
+            expect(@resource.giftCard().order()).toEqual(@resource)
 
         it 'assigns the owner\'s foreign key', ->
-          expect(@resource.giftCardId).toEqual(@target.id)
+          @promise2.then =>
+            expect(@resource.giftCardId).toEqual(@target.id)
 
         describe 'when assigning wrong type', ->
           it 'throws an error', ->
-            expect(=> @resource.assignGiftCard(MyLibrary::OrderItem.build())).toThrow()
+            @promise2.then =>
+              expect(=> @resource.assignGiftCard(MyLibrary::OrderItem.build())).toThrow()
 
         describe 'when foreignKey defined', ->
           beforeEach ->
@@ -118,82 +132,103 @@ describe 'ActiveResource', ->
       describe 'updating', ->
         beforeEach ->
           MyLibrary::Order.includes('giftCard').find(1)
-          .done window.onSuccess
+          .then window.onSuccess
 
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
-          expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.calls.mostRecent().args[0]
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
+
+          @promise2 = @promise.then =>
+            @resource = window.onSuccess.calls.mostRecent().args[0]
 
         describe 'in general', ->
           beforeEach ->
-            @target = MyLibrary::GiftCard.build(id: 2)
-
-            @resource.updateGiftCard(@target)
+            @promise3 = @promise2.then =>
+              @target = MyLibrary::GiftCard.build(id: 2)
+              @resource.updateGiftCard(@target)
+              @resource
 
           it 'persists the update to the relationship URL', ->
-            url = 'https://example.com/api/v1/orders/1/relationships/gift_card/'
-            expect(jasmine.Ajax.requests.mostRecent().url).toEqual(url)
+            @promise3.then =>
+              url = 'https://example.com/api/v1/orders/1/relationships/gift_card/'
+              expect(moxios.requests.mostRecent().url).toEqual(url)
 
           it 'makes a PATCH request', ->
-            expect(jasmine.Ajax.requests.mostRecent().method).toEqual('PATCH')
+            @promise3.then =>
+              expect(moxios.requests.mostRecent().method).toEqual('patch')
 
         describe 'when assigning a resource', ->
           beforeEach ->
-            @target = MyLibrary::GiftCard.build(id: 2)
-
-            @resource.updateGiftCard(@target)
+            @promise3 = @promise2.then =>
+              @target = MyLibrary::GiftCard.build(id: 2)
+              @resource.updateGiftCard(@target)
+              @resource
 
           it 'sends a resource identifier document', ->
-            resourceDocument =
+            resourceDocument = JSON.stringify(
               {
                 data: {
-                  id: '2',
-                  type: 'gift_cards'
+                  type: 'gift_cards',
+                  id: '2'
                 }
               }
+            )
 
-            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+            @promise3.then =>
+              expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
 
           describe 'when update succeeds', ->
             beforeEach ->
-              jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
+              @promise4 = @promise3.then =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
             it 'assigns the target', ->
-              expect(@resource.giftCard()).toEqual(@target)
+              @promise4.then =>
+                expect(@resource.giftCard()).toEqual(@target)
 
             it 'assigns the inverse target', ->
-              expect(@resource.giftCard().order()).toEqual(@resource)
+              @promise4.then =>
+                expect(@resource.giftCard().order()).toEqual(@resource)
 
             it 'assigns the owner\'s foreign key', ->
-              expect(@resource.giftCardId).toEqual(@target.id)
+              @promise4.then =>
+                expect(@resource.giftCardId).toEqual(@target.id)
 
           describe 'when update fails', ->
             beforeEach ->
-              jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.failure)
+              @promise4 = @promise3.then =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.failure)
 
             it 'does not assign the target', ->
-              expect(@resource.giftCard()).not.toBe(@target)
+              @promise4.catch =>
+                expect(@resource.giftCard()).not.toBe(@target)
 
             it 'does not assign the inverse target', ->
-              expect(@target.order()).toBeNull()
+              @promise4.catch =>
+                expect(@target.order()).toBeNull()
 
             it 'does not assign the owner\'s foreign key', ->
-              expect(@resource.giftCardId).toEqual('1')
+              @promise4.catch =>
+                expect(@resource.giftCardId).toEqual('1')
 
         describe 'when assigning null', ->
           beforeEach ->
-            @oldTarget = @resource.giftCard()
-            @resource.updateGiftCard(null)
+            @promise3 = @promise2.then =>
+              @oldTarget = @resource.giftCard()
+              @resource.updateGiftCard(null)
+              @resource
 
           it 'sends a blank document', ->
-            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual({})
+            @promise3.then =>
+              expect(moxios.requests.mostRecent().data).toEqual(JSON.stringify({}))
 
           describe 'when update succeeds', ->
             beforeEach ->
-              jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
+              @promise4 = @promise3.then =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
 
             it 'assigns null', ->
-              expect(@resource.giftCard()).toBeNull()
+              @promise4.then =>
+                expect(@resource.giftCard()).toBeNull()
 
             # TODO: Add inverse unassignment (Rails does this automagically since it reloads association
             # targets using nullified foreign keys, resulting in null inverse for old target)
@@ -201,26 +236,32 @@ describe 'ActiveResource', ->
               #expect(@oldTarget.order()).toBeNull()
 
             it 'assigns the owner\'s foreign key', ->
-              expect(@resource.giftCardId).toBeNull()
+              @promise4.then =>
+                expect(@resource.giftCardId).toBeNull()
 
       describe 'building', ->
         beforeEach ->
           MyLibrary::Order.includes('giftCard').find(1)
-          .done window.onSuccess
+          .then window.onSuccess
 
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
-          expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.calls.mostRecent().args[0]
-          @target = @resource.buildGiftCard(value: 5)
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
+
+          @promise2 = @promise.then =>
+            @resource = window.onSuccess.calls.mostRecent().args[0]
+            @target = @resource.buildGiftCard(value: 5)
 
         it 'builds a resource of reflection klass type', ->
-          expect(@target.klass()).toBe(MyLibrary::GiftCard)
+          @promise2.then =>
+            expect(@target.klass()).toBe(MyLibrary::GiftCard)
 
         it 'assigns the attributes to the target', ->
-          expect(@target.value).toEqual(5)
+          @promise2.then =>
+            expect(@target.value).toEqual(5)
 
         it 'assigns the inverse target', ->
-          expect(@target.order()).toBe(@resource)
+          @promise2.then =>
+            expect(@target.order()).toBe(@resource)
 
         describe 'when className is specified', ->
           beforeEach ->
@@ -241,28 +282,37 @@ describe 'ActiveResource', ->
       describe 'creating', ->
         beforeEach ->
           MyLibrary::Order.includes('giftCard').find(1)
-          .done window.onSuccess
+          .then window.onSuccess
 
-          jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
-          expect(window.onSuccess).toHaveBeenCalled()
-          @resource = window.onSuccess.calls.mostRecent().args[0]
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
+
+          @promise2 = @promise.then =>
+            @resource = window.onSuccess.calls.mostRecent().args[0]
 
         describe 'in general', ->
           beforeEach ->
-            @resource.createGiftCard(initialValue: 10, value: 5)
-            .done window.onSuccess
+            @promise3 = @promise2.then =>
+              @resource.createGiftCard(initialValue: 10, value: 5)
+              .then window.onSuccess
+              @resource
 
-            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.save.success)
-            @target = window.onSuccess.calls.mostRecent().args[0]
+            @promise4 = @promise3.then =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.save.success)
+
+              moxios.wait =>
+                @target = window.onSuccess.calls.mostRecent().args[0]
 
           it 'makes a request to the target\'s root URL', ->
-            expect(jasmine.Ajax.requests.mostRecent().url).toEqual('https://example.com/api/v1/gift_cards/')
+            @promise4.then =>
+              expect(moxios.requests.mostRecent().url).toEqual('https://example.com/api/v1/gift_cards/')
 
           it 'makes a POST request', ->
-            expect(jasmine.Ajax.requests.mostRecent().method).toEqual('POST')
+            @promise4.then =>
+              expect(moxios.requests.mostRecent().method).toEqual('post')
 
           it 'sends a resource document', ->
-            resourceDocument =
+            resourceDocument = JSON.stringify(
               {
                 data: {
                   type: 'gift_cards'
@@ -272,43 +322,59 @@ describe 'ActiveResource', ->
                   },
                   relationships: {
                     order: {
-                      data: { id: '1', type: 'orders' }
+                      data: { type: 'orders', id: '1' }
                     }
                   }
                 }
               }
-            expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+            )
+
+            @promise4.then =>
+              expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
 
           it 'builds a resource of reflection klass type', ->
-            expect(@target.klass()).toBe(MyLibrary::GiftCard)
+            @promise4.then =>
+              expect(@target.isA(MyLibrary::GiftCard)).toBeTruthy()
 
           it 'assigns the attributes to the target', ->
-            expect(@target.value).toEqual(5)
+            @promise4.then =>
+              expect(@target.value).toEqual(5)
 
           it 'assigns the inverse target', ->
-            expect(@target.order()).toBe(@resource)
+            @promise4.then =>
+              expect(@target.order()).toBe(@resource)
 
         describe 'when creation succeeds', ->
           beforeEach ->
-            @resource.createGiftCard(initialValue: 10, value: 5)
-            .done window.onSuccess
+            @promise3 = @promise2.then =>
+              @resource.createGiftCard(initialValue: 10, value: 5)
+              .then window.onSuccess
+              @resource
 
-            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.save.success)
-            @target = window.onSuccess.calls.mostRecent().args[0]
+            @promise4 = @promise3.then =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.save.success)
+              @target = window.onSuccess.calls.mostRecent().args[0]
 
           it 'persists the target', ->
-            expect(@target.persisted?()).toBeTruthy()
+            @promise4.then =>
+              expect(@target.persisted?()).toBeTruthy()
 
         describe 'when creation fails', ->
           beforeEach ->
-            @resource.createGiftCard(value: 5)
-            .fail window.onFailure
+            @promise3 = @promise2.then =>
+              @resource.createGiftCard(value: 5)
+              .catch window.onFailure
+              @resource
 
-            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.save.failure)
-            @target = window.onFailure.calls.mostRecent().args[0]
+            @promise4 = @promise3.then =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.save.failure)
+              .catch =>
+                @target = window.onFailure.calls.mostRecent().args[0]
 
           it 'does not persist the target', ->
-            expect(@target.persisted?()).toBeFalsy()
+            @promise4.then =>
+              expect(@target.persisted?()).toBeFalsy()
 
           it 'adds errors to the target', ->
-            expect(@target.errors().empty?()).toBeFalsy()
+            @promise4.then =>
+              expect(@target.errors().empty?()).toBeFalsy()
