@@ -97,7 +97,7 @@ class ActiveResource::Persistence
   #   order.destroy()
   #   .then (destroyedresource) ->
   #     ...
-  #   .fail ->
+  #   .catch ->
   #     ...
   @destroy: ->
     @klass().resourceLibrary.interface.delete(@links()['self'], (resource = this))
