@@ -24,3 +24,7 @@ changes to each resource
 * Add `CollectionResponse` object that is returned from `GET` requests to collection endpoints
   * Provides pagination helpers when response includes pagination links
 * Allow `Interfaces.JsonApi` to be overridden easier by making all helper methods prototype properties
+
+### Master
+
+* Allow response documents to omit `id`

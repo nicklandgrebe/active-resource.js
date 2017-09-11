@@ -348,7 +348,9 @@ var ActiveResource = function(){};
       var attributes, resource;
       resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
       attributes = data['attributes'];
-      attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString();
+      if (data[resource.klass().primaryKey]) {
+        attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString();
+      }
       attributes = this.addRelationshipsToAttributes(attributes, data['relationships'], includes, resource);
       resource.__assignFields(this.toCamelCase(attributes));
       resource.__links = _.pick(data['links'], 'self');
