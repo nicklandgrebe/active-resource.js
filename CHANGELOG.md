@@ -28,3 +28,4 @@ changes to each resource
 ### Master
 
 * **Breaking:** Switched from `jQuery.ajax` to `axios`, which have different promise interfaces
+* Allow response documents to omit `id`
