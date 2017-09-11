@@ -294,7 +294,10 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     resource = existingResource || @resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build()
 
     attributes = data['attributes']
-    attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString()
+
+    if data[resource.klass().primaryKey]
+      attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString()
+
     attributes = @addRelationshipsToAttributes(attributes, data['relationships'], includes, resource)
 
     resource.__assignFields(this.toCamelCase(attributes))
