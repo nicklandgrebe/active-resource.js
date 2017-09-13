@@ -30,7 +30,7 @@ class ActiveResource::Associations::Association
   #
   # @return [Object] the links for the association
   links: ->
-    @__links ||= @klass().links()
+    @__links ||= _.clone(@klass().links())
 
   # The interface that the owner of this association uses
   interface: ->

@@ -29,3 +29,4 @@ changes to each resource
 
 * Allow response documents to omit `id`
 * Append '/' to relationship links
+* Refactor links to add storage capability and fix bugs
