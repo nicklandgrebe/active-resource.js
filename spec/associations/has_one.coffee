@@ -17,13 +17,17 @@ describe 'ActiveResource', ->
           .then window.onSuccess
 
           @promise = moxios.wait =>
-            moxios.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.find.includes)
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.GiftCard.find.raw)
             .then =>
               @resource = window.onSuccess.calls.mostRecent().args[0]
 
         it 'returns the target', ->
           @promise.then =>
             expect(@resource.order().isA?(MyLibrary::Order)).toBeTruthy()
+
+        it 'appends / to relationship links', ->
+          @promise.then =>
+            expect(@resource.association('order').links()['related']).toEqual('https://example.com/api/v1/gift_cards/1/order/')
 
       describe 'loading', ->
         beforeEach ->

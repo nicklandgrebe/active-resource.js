@@ -18,6 +18,9 @@ window.JsonApiResponses =
       includes:
         status: 200
         response: getJSONFixture('gift_cards/includes.json')
+      raw:
+        status: 200
+        response: getJSONFixture('gift_cards/raw.json')
     save:
       success:
         status: 200
