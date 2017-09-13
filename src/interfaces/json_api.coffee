@@ -305,7 +305,10 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     resource.__links = _.pick(data['links'], 'self')
     resource.klass().reflectOnAllAssociations().each (reflection) ->
       association = resource.association(reflection.name)
-      association.__links = data['relationships']?[s.underscored(reflection.name)]?['links']
+      association.__links =
+        _.mapObject(data['relationships']?[s.underscored(reflection.name)]?['links'], (l) =>
+          if s.endsWith(l, '/') then l else l + '/'
+        )
 
       relationshipEmpty =
         if _.isObject(relationship = data['relationships']?[s.underscored(reflection.name)]?['data'])

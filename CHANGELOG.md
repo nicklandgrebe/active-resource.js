@@ -28,3 +28,4 @@ changes to each resource
 ### Master
 
 * Allow response documents to omit `id`
+* Append '/' to relationship links

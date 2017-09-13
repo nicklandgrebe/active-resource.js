@@ -23,6 +23,9 @@ describe 'ActiveResource', ->
         it 'returns the target', ->
           expect(@resource.order().isA?(MyLibrary::Order)).toBeTruthy()
 
+        it 'appends / to relationship links', ->
+          expect(@resource.association('order').links()['related']).toEqual('https://example.com/api/v1/gift_cards/1/order/')
+
       describe 'loading', ->
         beforeEach ->
           MyLibrary::GiftCard.find(1)

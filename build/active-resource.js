@@ -355,9 +355,16 @@ var ActiveResource = function(){};
       resource.__assignFields(this.toCamelCase(attributes));
       resource.__links = _.pick(data['links'], 'self');
       resource.klass().reflectOnAllAssociations().each(function(reflection) {
-        var association, relationship, relationshipEmpty, _ref1, _ref2, _ref3, _ref4;
+        var association, relationship, relationshipEmpty, _ref1, _ref2, _ref3, _ref4,
+          _this = this;
         association = resource.association(reflection.name);
-        association.__links = (_ref1 = data['relationships']) != null ? (_ref2 = _ref1[s.underscored(reflection.name)]) != null ? _ref2['links'] : void 0 : void 0;
+        association.__links = _.mapObject((_ref1 = data['relationships']) != null ? (_ref2 = _ref1[s.underscored(reflection.name)]) != null ? _ref2['links'] : void 0 : void 0, function(l) {
+          if (s.endsWith(l, '/')) {
+            return l;
+          } else {
+            return l + '/';
+          }
+        });
         relationshipEmpty = _.isObject(relationship = (_ref3 = data['relationships']) != null ? (_ref4 = _ref3[s.underscored(reflection.name)]) != null ? _ref4['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : relationship != null ? relationship.length === 0 : true;
         if (_.has(attributes, reflection.name) || relationshipEmpty) {
           return association.loaded(true);
@@ -436,10 +443,13 @@ var ActiveResource = function(){};
       });
     };
 
-    JsonApi.prototype.get = function(url, queryParams) {
+    JsonApi.prototype.get = function(url, queryParams, options) {
       var data, _this;
       if (queryParams == null) {
         queryParams = {};
+      }
+      if (options == null) {
+        options = {};
       }
       data = {};
       if (queryParams['filter'] != null) {
@@ -472,7 +482,7 @@ var ActiveResource = function(){};
           return object;
         });
         built.links(response.links);
-        if (_.isArray(response.data)) {
+        if (_.isArray(response.data) || options['wrapCollection']) {
           return built;
         } else {
           return built.first();
