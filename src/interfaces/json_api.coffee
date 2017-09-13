@@ -302,13 +302,14 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
 
     resource.__assignFields(this.toCamelCase(attributes))
 
-    resource.__links = _.pick(data['links'], 'self')
+    resource.__links = _.extend(resource.links(), data['links'])
     resource.klass().reflectOnAllAssociations().each (reflection) ->
       association = resource.association(reflection.name)
-      association.__links =
+      association.__links = _.extend(association.links(),
         _.mapObject(data['relationships']?[s.underscored(reflection.name)]?['links'], (l) =>
           if s.endsWith(l, '/') then l else l + '/'
         )
+      )
 
       relationshipEmpty =
         if _.isObject(relationship = data['relationships']?[s.underscored(reflection.name)]?['data'])

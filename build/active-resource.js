@@ -104,11 +104,13 @@ window.Promise = es6Promise.Promise;
       ResourceLibrary.constantize = function(className) {
         var klass, scope, v, _i, _len;
         klass = null;
-        scope = this.constantizeScope && _.values(this.constantizeScope) || _.flatten([_.values(this), _.values(this.prototype)]);
-        for (_i = 0, _len = scope.length; _i < _len; _i++) {
-          v = scope[_i];
-          if (_.isObject(v) && v.className === className) {
-            klass = v;
+        if (!_.isUndefined(className) && !_.isNull(className)) {
+          scope = this.constantizeScope && _.values(this.constantizeScope) || _.flatten([_.values(this), _.values(this.prototype)]);
+          for (_i = 0, _len = scope.length; _i < _len; _i++) {
+            v = scope[_i];
+            if (_.isObject(v) && v.className === className) {
+              klass = v;
+            }
           }
         }
         if (klass == null) {
@@ -366,18 +368,18 @@ window.Promise = es6Promise.Promise;
       }
       attributes = this.addRelationshipsToAttributes(attributes, data['relationships'], includes, resource);
       resource.__assignFields(this.toCamelCase(attributes));
-      resource.__links = _.pick(data['links'], 'self');
+      resource.__links = _.extend(resource.links(), data['links']);
       resource.klass().reflectOnAllAssociations().each(function(reflection) {
         var association, relationship, relationshipEmpty, _ref1, _ref2, _ref3, _ref4,
           _this = this;
         association = resource.association(reflection.name);
-        association.__links = _.mapObject((_ref1 = data['relationships']) != null ? (_ref2 = _ref1[s.underscored(reflection.name)]) != null ? _ref2['links'] : void 0 : void 0, function(l) {
+        association.__links = _.extend(association.links(), _.mapObject((_ref1 = data['relationships']) != null ? (_ref2 = _ref1[s.underscored(reflection.name)]) != null ? _ref2['links'] : void 0 : void 0, function(l) {
           if (s.endsWith(l, '/')) {
             return l;
           } else {
             return l + '/';
           }
-        });
+        }));
         relationshipEmpty = _.isObject(relationship = (_ref3 = data['relationships']) != null ? (_ref4 = _ref3[s.underscored(reflection.name)]) != null ? _ref4['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : relationship != null ? relationship.length === 0 : true;
         if (_.has(attributes, reflection.name) || relationshipEmpty) {
           return association.loaded(true);
@@ -456,13 +458,10 @@ window.Promise = es6Promise.Promise;
       });
     };
 
-    JsonApi.prototype.get = function(url, queryParams, options) {
+    JsonApi.prototype.get = function(url, queryParams) {
       var data, _this;
       if (queryParams == null) {
         queryParams = {};
-      }
-      if (options == null) {
-        options = {};
       }
       data = {};
       if (queryParams['filter'] != null) {
@@ -495,7 +494,7 @@ window.Promise = es6Promise.Promise;
           return object;
         });
         built.links(response.links);
-        if (_.isArray(response.data) || options['wrapCollection']) {
+        if (_.isArray(response.data)) {
           return built;
         } else {
           return built.first();
@@ -1859,7 +1858,7 @@ window.Promise = es6Promise.Promise;
     };
 
     Base.prototype.links = function() {
-      return this.__links || (this.__links = this.klass().links());
+      return this.__links || (this.__links = _.clone(this.klass().links()));
     };
 
     Base["interface"] = function() {
@@ -1934,7 +1933,7 @@ window.Promise = es6Promise.Promise;
     };
 
     Association.prototype.links = function() {
-      return this.__links || (this.__links = this.klass().links());
+      return this.__links || (this.__links = _.clone(this.klass().links()));
     };
 
     Association.prototype["interface"] = function() {
@@ -2646,7 +2645,19 @@ window.Promise = es6Promise.Promise;
     BelongsToPolymorphicAssociation.prototype.klass = function() {
       var type;
       type = this.owner[this.reflection.foreignType()];
-      return this.owner.klass().resourceLibrary.constantize(type);
+      try {
+        return this.owner.klass().resourceLibrary.constantize(type);
+      } catch (_error) {
+        return void 0;
+      }
+    };
+
+    BelongsToPolymorphicAssociation.prototype.links = function() {
+      if (this.klass()) {
+        return BelongsToPolymorphicAssociation.__super__.links.apply(this, arguments);
+      } else {
+        return {};
+      }
     };
 
     BelongsToPolymorphicAssociation.prototype.__replaceKeys = function(resource) {

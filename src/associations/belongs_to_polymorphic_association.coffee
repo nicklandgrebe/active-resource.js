@@ -1,7 +1,14 @@
 class ActiveResource::Associations::BelongsToPolymorphicAssociation extends ActiveResource::Associations::BelongsToAssociation
   klass: ->
     type = @owner[@reflection.foreignType()]
-    @owner.klass().resourceLibrary.constantize(type)
+
+    try
+      @owner.klass().resourceLibrary.constantize(type)
+    catch
+      undefined
+
+  links: ->
+    if @klass() then super else {}
 
   # private
 

@@ -55,7 +55,7 @@ class ActiveResource::Base
 
   # Links to query the server for this persisted resource with
   links: ->
-    @__links ||= @klass().links()
+    @__links ||= _.clone(@klass().links())
 
   # The interface to use when querying the server for this class
   @interface: ->

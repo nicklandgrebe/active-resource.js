@@ -33,9 +33,10 @@ ActiveResource.createResourceLibrary = (baseUrl, options = {}) ->
     @constantize: (className) ->
       klass = null
 
-      scope = @constantizeScope && _.values(@constantizeScope) || _.flatten([_.values(@), _.values(@::)])
-      for v in scope
-        klass = v if _.isObject(v) && v.className == className
+      if !_.isUndefined(className) && !_.isNull(className)
+        scope = @constantizeScope && _.values(@constantizeScope) || _.flatten([_.values(@), _.values(@::)])
+        for v in scope
+          klass = v if _.isObject(v) && v.className == className
 
       throw "NameError: klass #{className} does not exist" unless klass?
       klass

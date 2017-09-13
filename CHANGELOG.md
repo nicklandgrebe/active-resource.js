@@ -30,3 +30,4 @@ changes to each resource
 * **Breaking:** Switched from `jQuery.ajax` to `axios`, which have different promise interfaces
 * Allow response documents to omit `id`
 * Append '/' to relationship links
+* Refactor links to add storage capability and fix bugs
