@@ -217,11 +217,11 @@ describe 'ActiveResource', ->
 
           it 'converts a pointer to a base error field', ->
             @promise2.catch =>
-              expect(@resource.errors().forBase()).toEqual({ invalid: "A problem occurred with the base of the product." })
+              expect(@resource.errors().forBase().map((e) => e.detail).first()).toEqual("A problem occurred with the base of the product.")
 
           it 'converts a pointer to a attribute error field', ->
             @promise2.catch =>
-              expect(@resource.errors().forAttribute('title')).toEqual({ blank: 'Title cannot be blank.' })
+              expect(@resource.errors().detailsForField('title')).toEqual({ blank: 'Title cannot be blank.' })
 
           it 'camelizes an underscored attribute name', ->
             @promise2.catch =>
@@ -229,7 +229,7 @@ describe 'ActiveResource', ->
 
           it 'converts a pointer to a relationship error field', ->
             @promise2.catch =>
-              expect(@resource.errors().forAttribute('orders.price')).toEqual({ blank: 'Price cannot be blank.' })
+              expect(@resource.errors().detailsForField('orders.price')).toEqual({ blank: 'Price cannot be blank.' })
 
       describe 'persisting changes involving resource identifiers', ->
         beforeEach ->

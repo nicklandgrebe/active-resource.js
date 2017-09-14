@@ -31,3 +31,7 @@ changes to each resource
 * Allow response documents to omit `id`
 * Append '/' to relationship links
 * Refactor links to add storage capability and fix bugs
+* **Breaking:** Switched all references of `attribute` in `errors()` object to `field`:
+  * `error.attribute` is now `error.field`
+  * `resource.errors().forField(field)` returns a collection of errors where `field.startsWith(field)`
+  * `resource.errors().forAttribute(attribute)` is now `resource.errors().detailsForField(field)`

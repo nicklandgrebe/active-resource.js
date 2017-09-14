@@ -11,7 +11,7 @@ describe 'ActiveResource', ->
 
     describe '#add()', ->
       it 'adds an error with code and message', ->
-        expect(@resource.errors().forAttribute('title')).toEqual({ blank: 'Title cannot be blank' })
+        expect(@resource.errors().forField('title').size()).toEqual(1)
 
     describe '#added()', ->
       describe 'when added', ->
@@ -48,35 +48,43 @@ describe 'ActiveResource', ->
         expect(@resource.errors().size()).toEqual(1)
 
     describe '#delete()', ->
-      it 'deletes the errors from the attribute', ->
+      it 'deletes the errors from the field', ->
         @resource.errors().delete('title')
-        expect(@resource.errors().forAttribute('title')).toEqual({})
+        expect(@resource.errors().forField('title').empty()).toBeTruthy()
 
     describe '#each()', ->
       it 'iterates over each error', ->
-        @resource.errors().each (attribute, error) ->
-          expect(attribute).toEqual('title')
+        @resource.errors().each (field, error) ->
+          expect(field).toEqual('title')
           expect(error.code).toEqual('blank')
           expect(error.message).toEqual('Title cannot be blank')
 
-    describe '#forAttribute()', ->
-      it 'returns an object mapped to error code and message pairs for the attribute', ->
-        expect(@resource.errors().forAttribute('title')).toEqual({ blank: 'Title cannot be blank' })
+    describe '#forField()', ->
+      beforeEach ->
+        @resource.errors().add('customer', 'invalid', 'is invalid')
+        @resource.errors().add('customer.firstName', 'blank', 'is blank')
+
+      it 'returns all fields that start with arg', ->
+        expect(@resource.errors().forField('customer').map((e) => e.code).toArray()).toEqual(['invalid', 'blank'])
+
+    describe '#detailsForField()', ->
+      it 'returns an object mapped to error code and message pairs for the field', ->
+        expect(@resource.errors().detailsForField('title')).toEqual({ blank: 'Title cannot be blank' })
 
     describe '#forBase()', ->
       beforeEach ->
         @resource.errors().add('base', 'invalid', 'Product is invalid')
 
       it 'returns an object mapped to error code and message pairs for the base', ->
-        expect(@resource.errors().forBase()).toEqual({ invalid: 'Product is invalid' })
+        expect(@resource.errors().forBase().map((e) => e.detail).first()).toEqual('Product is invalid')
 
     describe '#toArray()', ->
       it 'returns an array of errors for the resource', ->
-        expect(@resource.errors().toArray()).toEqual([{ attribute: 'title', code: 'blank', message: 'Title cannot be blank', detail: 'Title cannot be blank' }])
+        expect(@resource.errors().toArray()).toEqual([{ field: 'title', code: 'blank', message: 'Title cannot be blank', detail: 'Title cannot be blank' }])
 
     describe '#toCollection()', ->
       it 'returns a collection', ->
         expect(@resource.errors().toCollection().klass()).toBe(ActiveResource::Collection)
 
       it 'returns a collection of errors for the resource', ->
-        expect(@resource.errors().toCollection().toArray()).toEqual([{ attribute: 'title', code: 'blank', message: 'Title cannot be blank', detail: 'Title cannot be blank' }])
+        expect(@resource.errors().toCollection().toArray()).toEqual([{ field: 'title', code: 'blank', message: 'Title cannot be blank', detail: 'Title cannot be blank' }])
