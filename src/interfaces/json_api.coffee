@@ -280,16 +280,6 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Array] includes the array of includes to search for resource relationships in
   # @param [ActiveResource::Base] existingResource an existingResource to use instead of building a new one
   # @return [ActiveResource] the built ActiveResource
-  #
-  # 1. If an existingResource was provided, build everything into that resource
-  # 2. If an existingResource was not provided, build a resource of type `type` and build everything into that
-  # 3. Construct an object `attributes` that is made up of the resource primary key, plus its attributes
-  # 4. Add all the relationships "included" in the response to the `attributes` object (product, order, etc.)
-  # 5. Convert the attributes object toCamelCase (Javascript format)
-  # 6. Assign the attributes to the resource
-  # 7. Assign the links provided in the response to the resource
-  # 8. Assign the relationship links provided in the response to the resource
-  # 9. Return the built resource
   buildResource: (data, includes, existingResource) ->
     resource = existingResource || @resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build()
 
@@ -305,11 +295,19 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     resource.__links = _.extend(resource.links(), data['links'])
     resource.klass().reflectOnAllAssociations().each (reflection) ->
       association = resource.association(reflection.name)
-      association.__links = _.extend(association.links(),
-        _.mapObject(data['relationships']?[s.underscored(reflection.name)]?['links'], (l) =>
-          if s.endsWith(l, '/') then l else l + '/'
+
+      if(relationshipLinks = data['relationships']?[s.underscored(reflection.name)]?['links'])?
+        association.__links = _.extend(association.links(),
+          _.mapObject(relationshipLinks, (l) =>
+            if s.endsWith(l, '/') then l else l + '/'
+          )
         )
-      )
+      else if (selfLink = resource.links()['self'])?
+        selfLink = if s.endsWith(selfLink, '/') then selfLink else selfLink + '/'
+        association.__links = {
+          self: selfLink + "relationships/#{reflection.name}",
+          related: selfLink + reflection.name
+        }
 
       relationshipEmpty =
         if _.isObject(relationship = data['relationships']?[s.underscored(reflection.name)]?['data'])

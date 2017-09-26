@@ -30,3 +30,4 @@ changes to each resource
 * Allow response documents to omit `id`
 * Append '/' to relationship links
 * Refactor links to add storage capability and fix bugs
+* Allow `Interfaces.JsonApi` to create default relationship links using resource self link and reflection name if links not otherwise present

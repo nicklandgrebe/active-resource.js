@@ -357,16 +357,24 @@ var ActiveResource = function(){};
       resource.__assignFields(this.toCamelCase(attributes));
       resource.__links = _.extend(resource.links(), data['links']);
       resource.klass().reflectOnAllAssociations().each(function(reflection) {
-        var association, relationship, relationshipEmpty, _ref1, _ref2, _ref3, _ref4,
+        var association, relationship, relationshipEmpty, relationshipLinks, selfLink, _ref1, _ref2, _ref3, _ref4,
           _this = this;
         association = resource.association(reflection.name);
-        association.__links = _.extend(association.links(), _.mapObject((_ref1 = data['relationships']) != null ? (_ref2 = _ref1[s.underscored(reflection.name)]) != null ? _ref2['links'] : void 0 : void 0, function(l) {
-          if (s.endsWith(l, '/')) {
-            return l;
-          } else {
-            return l + '/';
-          }
-        }));
+        if ((relationshipLinks = (_ref1 = data['relationships']) != null ? (_ref2 = _ref1[s.underscored(reflection.name)]) != null ? _ref2['links'] : void 0 : void 0) != null) {
+          association.__links = _.extend(association.links(), _.mapObject(relationshipLinks, function(l) {
+            if (s.endsWith(l, '/')) {
+              return l;
+            } else {
+              return l + '/';
+            }
+          }));
+        } else if ((selfLink = resource.links()['self']) != null) {
+          selfLink = s.endsWith(selfLink, '/') ? selfLink : selfLink + '/';
+          association.__links = {
+            self: selfLink + ("relationships/" + reflection.name),
+            related: selfLink + reflection.name
+          };
+        }
         relationshipEmpty = _.isObject(relationship = (_ref3 = data['relationships']) != null ? (_ref4 = _ref3[s.underscored(reflection.name)]) != null ? _ref4['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : relationship != null ? relationship.length === 0 : true;
         if (_.has(attributes, reflection.name) || relationshipEmpty) {
           return association.loaded(true);

@@ -58,6 +58,17 @@ describe 'ActiveResource', ->
           it 'returns a resource with a link', ->
             expect(@resource.links()['self']).toBeDefined()
 
+        describe 'when no relationship links', ->
+          beforeEach ->
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.noRelLinks)
+            @resource = window.onSuccess.calls.mostRecent().args[0]
+
+          it 'builds links from owner self link', ->
+            expect(@resource.association('orders').links()).toEqual({
+              self: "https://example.com/api/v1/products/1/relationships/orders",
+              related: "https://example.com/api/v1/products/1/orders"
+            })
+
         describe 'on failure', ->
           beforeEach ->
             jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Product.find.failure)
