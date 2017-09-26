@@ -1,5 +1,5 @@
 /*
-	active-resource 0.9.4
+	active-resource 0.9.5
 	(c) 2017 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	active-resource may be freely distributed under the MIT license
 	Portions of active-resource were inspired by or borrowed from Rail's ActiveRecord library
@@ -109,11 +109,13 @@ var ActiveResource = function(){};
       ResourceLibrary.constantize = function(className) {
         var klass, scope, v, _i, _len;
         klass = null;
-        scope = this.constantizeScope && _.values(this.constantizeScope) || _.flatten([_.values(this), _.values(this.prototype)]);
-        for (_i = 0, _len = scope.length; _i < _len; _i++) {
-          v = scope[_i];
-          if (_.isObject(v) && v.className === className) {
-            klass = v;
+        if (!_.isUndefined(className) && !_.isNull(className)) {
+          scope = this.constantizeScope && _.values(this.constantizeScope) || _.flatten([_.values(this), _.values(this.prototype)]);
+          for (_i = 0, _len = scope.length; _i < _len; _i++) {
+            v = scope[_i];
+            if (_.isObject(v) && v.className === className) {
+              klass = v;
+            }
           }
         }
         if (klass == null) {
@@ -355,14 +357,31 @@ var ActiveResource = function(){};
       var attributes, resource;
       resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
       attributes = data['attributes'];
-      attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString();
+      if (data[resource.klass().primaryKey]) {
+        attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString();
+      }
       attributes = this.addRelationshipsToAttributes(attributes, data['relationships'], includes, resource);
       resource.__assignFields(this.toCamelCase(attributes));
-      resource.__links = _.pick(data['links'], 'self');
+      resource.__links = _.extend(resource.links(), data['links']);
       resource.klass().reflectOnAllAssociations().each(function(reflection) {
-        var association, relationship, relationshipEmpty, _ref1, _ref2, _ref3, _ref4;
+        var association, relationship, relationshipEmpty, relationshipLinks, selfLink, _ref1, _ref2, _ref3, _ref4,
+          _this = this;
         association = resource.association(reflection.name);
-        association.__links = (_ref1 = data['relationships']) != null ? (_ref2 = _ref1[s.underscored(reflection.name)]) != null ? _ref2['links'] : void 0 : void 0;
+        if ((relationshipLinks = (_ref1 = data['relationships']) != null ? (_ref2 = _ref1[s.underscored(reflection.name)]) != null ? _ref2['links'] : void 0 : void 0) != null) {
+          association.__links = _.extend(association.links(), _.mapObject(relationshipLinks, function(l) {
+            if (s.endsWith(l, '/')) {
+              return l;
+            } else {
+              return l + '/';
+            }
+          }));
+        } else if ((selfLink = resource.links()['self']) != null) {
+          selfLink = s.endsWith(selfLink, '/') ? selfLink : selfLink + '/';
+          association.__links = {
+            self: selfLink + ("relationships/" + reflection.name),
+            related: selfLink + reflection.name
+          };
+        }
         relationshipEmpty = _.isObject(relationship = (_ref3 = data['relationships']) != null ? (_ref4 = _ref3[s.underscored(reflection.name)]) != null ? _ref4['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : relationship != null ? relationship.length === 0 : true;
         if (_.has(attributes, reflection.name) || relationshipEmpty) {
           return association.loaded(true);
@@ -1839,7 +1858,7 @@ var ActiveResource = function(){};
     };
 
     Base.prototype.links = function() {
-      return this.__links || (this.__links = this.klass().links());
+      return this.__links || (this.__links = _.clone(this.klass().links()));
     };
 
     Base["interface"] = function() {
@@ -1914,7 +1933,7 @@ var ActiveResource = function(){};
     };
 
     Association.prototype.links = function() {
-      return this.__links || (this.__links = this.klass().links());
+      return this.__links || (this.__links = _.clone(this.klass().links()));
     };
 
     Association.prototype["interface"] = function() {
@@ -2626,7 +2645,19 @@ var ActiveResource = function(){};
     BelongsToPolymorphicAssociation.prototype.klass = function() {
       var type;
       type = this.owner[this.reflection.foreignType()];
-      return this.owner.klass().resourceLibrary.constantize(type);
+      try {
+        return this.owner.klass().resourceLibrary.constantize(type);
+      } catch (_error) {
+        return void 0;
+      }
+    };
+
+    BelongsToPolymorphicAssociation.prototype.links = function() {
+      if (this.klass()) {
+        return BelongsToPolymorphicAssociation.__super__.links.apply(this, arguments);
+      } else {
+        return {};
+      }
     };
 
     BelongsToPolymorphicAssociation.prototype.__replaceKeys = function(resource) {

@@ -25,7 +25,7 @@ changes to each resource
   * Provides pagination helpers when response includes pagination links
 * Allow `Interfaces.JsonApi` to be overridden easier by making all helper methods prototype properties
 
-### Master
+### 0.9.5
 
 * Allow response documents to omit `id`
 * Append '/' to relationship links
