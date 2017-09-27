@@ -9,11 +9,11 @@
       "order_items": {
         "data": [
           {
-            "id": 1,
+            "id": "5",
             "type": "order_items"
           },
           {
-            "id": 2,
+            "id": "10",
             "type": "order_items"
           }
         ],
@@ -25,11 +25,11 @@
       "comments": {
         "data": [
           {
-            "id": 1,
+            "id": "1",
             "type": "comments"
           },
           {
-            "id": 2,
+            "id": "2",
             "type": "comments"
           }
         ],
@@ -40,7 +40,7 @@
       },
       "gift_card": {
         "data": {
-          "id": 1,
+          "id": "1",
           "type": "gift_cards"
         },
         "links": {
@@ -55,7 +55,7 @@
   },
   "included": [
     {
-      "id": 1,
+      "id": "5",
       "type": "order_items",
       "attributes": {
         "amount": 1.0
@@ -65,7 +65,7 @@
       }
     },
     {
-      "id": 2,
+      "id": "10",
       "type": "order_items",
       "attributes": {
         "amount": 2.0
@@ -75,27 +75,7 @@
       }
     },
     {
-      "id": 1,
-      "type": "comments",
-      "attributes": {
-        "body": "Comment 1"
-      },
-      "links": {
-        "self": "https://example.com/api/v1/comments/1/"
-      }
-    },
-    {
-      "id": 2,
-      "type": "comments",
-      "attributes": {
-        "body": "Comment 2"
-      },
-      "links": {
-        "self": "https://example.com/api/v1/comments/2/"
-      }
-    },
-    {
-      "id": 1,
+      "id": "1",
       "type": "gift_cards",
       "attributes": {
         "value": 5

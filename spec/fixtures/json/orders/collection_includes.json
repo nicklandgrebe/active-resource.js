@@ -22,7 +22,7 @@
         "order_items": {
           "data": [
             {
-              "id": 1,
+              "id": "10",
               "type": "order_items"
             }
           ],
@@ -58,7 +58,7 @@
         "order_items": {
           "data": [
             {
-              "id": 2,
+              "id": "5",
               "type": "order_items"
             }
           ],
@@ -75,14 +75,14 @@
   ],
   "included": [
     {
-      "id": 1,
+      "id": "5",
       "type": "order_items",
       "attributes": {
         "price": 1.0
       }
     },
     {
-      "id": 2,
+      "id": "10",
       "type": "order_items",
       "attributes": {
         "price": 2.0

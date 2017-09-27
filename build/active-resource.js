@@ -1182,7 +1182,7 @@ var ActiveResource = function(){};
               return true;
             }
             newTargets = newField.target().select(function(t) {
-              return !_this.__fields[k].include(t) || (association.reflection.autosave() && t.changed());
+              return !oldField.include(t) || (association.reflection.autosave() && t.changed());
             });
             return !newTargets.empty();
           } else {

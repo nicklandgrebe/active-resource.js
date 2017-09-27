@@ -60,7 +60,7 @@ class ActiveResource::Fields
           return true if oldField.size() != newField.size()
 
           newTargets = (newField.target().select (t) =>
-            !@__fields[k].include(t) || (association.reflection.autosave() && t.changed())
+            !oldField.include(t) || (association.reflection.autosave() && t.changed())
           )
 
           return !newTargets.empty()

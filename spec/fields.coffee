@@ -72,10 +72,10 @@ describe 'ActiveResource', ->
           beforeEach ->
             @resource.orderItems().build(id: '5')
             @resource.orderItems().build(id: '10')
+            @resource.save()
+            jasmine.Ajax.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
 
           it 'adds relationship to resource document', ->
-            @resource.save()
-
             resourceDocument =
               {
                 data: {
@@ -96,6 +96,35 @@ describe 'ActiveResource', ->
                 }
               }
             expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
+
+          describe 'when replacing an item (same length)', ->
+            beforeEach ->
+              @resource.orderItems().target().delete(@resource.orderItems().target().last())
+              @resource.orderItems().build(id: '6')
+
+            it 'replaces relationship to resource document', ->
+              @resource.save()
+
+              resourceDocument =
+                {
+                  data: {
+                    type: 'orders',
+                    id: '1',
+                    attributes: {},
+                    relationships: {
+                      order_items: {
+                        data: [{
+                          type: 'order_items',
+                          id: '5'
+                        },{
+                          type: 'order_items',
+                          id: '6'
+                        }]
+                      }
+                    }
+                  }
+                }
+              expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
         describe 'autosave', ->
           beforeEach ->
