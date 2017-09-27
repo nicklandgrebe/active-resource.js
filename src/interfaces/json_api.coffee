@@ -279,14 +279,17 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Object] data the data of the resource to instantiate
   # @param [Array] includes the array of includes to search for resource relationships in
   # @param [ActiveResource::Base] existingResource an existingResource to use instead of building a new one
+  # @param [ActiveResource::Base] parentRelationship the owner relationship name/resource that is building this resource
   # @return [ActiveResource] the built ActiveResource
-  buildResource: (data, includes, existingResource) ->
+  buildResource: (data, includes, { existingResource, parentRelationship }) ->
     resource = existingResource || @resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build()
 
     attributes = data['attributes']
 
     if data[resource.klass().primaryKey]
       attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString()
+
+    attributes = _.extend(attributes, parentRelationship) if parentRelationship?
 
     attributes = @addRelationshipsToAttributes(attributes, data['relationships'], includes, resource)
 
@@ -362,26 +365,22 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Array] includes the array of includes to search for relationship resources in
   # @param [ActiveResource::Base] resource the resource to get the primary key of
   # @return [Object] the attributes with all relationships built into it
-  #
-  # 1. Iterate over each relationship defined in the resource's `relationships` member
-  # 2. If the relationship is a collection, go through each item of the collection and find it
-  #    in the `includes`, compacting it to remove null values
-  # 3. If the relationship is singular, find it in `includes`
-  # 4. Only assign the relationship to the attributes if it is not null/empty
-  # 5. Return the attributes with all existing relationships built into it
   addRelationshipsToAttributes: (attributes, relationships, includes, resource) ->
     _.each relationships, (relationship, relationshipName) =>
-      if _.isArray(relationship['data']) # plural association
-        relationshipItems =
-          ActiveResource::Collection.build(relationship['data'])
-          .map((relationshipMember) =>
-            @findIncludeFromRelationship(relationshipMember, includes, resource)
-          ).compact()
+      if(reflection = resource.klass().reflectOnAssociation(s.camelize(relationshipName)))
+        parentReflection = reflection.inverseOf()
 
-        attributes[relationshipName] = relationshipItems unless relationshipItems.empty?()
-      else if relationship['data']? # singular association
-        include = @findIncludeFromRelationship(relationship['data'], includes, resource)
-        attributes[relationshipName] = include if include?
+        if reflection.collection()
+          relationshipItems =
+            ActiveResource::Collection.build(relationship['data'])
+            .map((relationshipMember) =>
+              @findIncludeFromRelationship(relationshipMember, includes, resource, parentReflection)
+            ).compact()
+
+          attributes[relationshipName] = relationshipItems unless relationshipItems.empty?()
+        else if relationship['data']?
+          include = @findIncludeFromRelationship(relationship['data'], includes, resource, parentReflection)
+          attributes[relationshipName] = include if include?
 
     attributes
 
@@ -402,12 +401,14 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # 2. Find the include in `includes` using the resource identifier
   # 3. Build the include into an ActiveResource if it exists
   # 4. Return the built include or null
-  findIncludeFromRelationship: (relationshipData, includes, resource) ->
+  findIncludeFromRelationship: (relationshipData, includes, resource, parentReflection) ->
     findConditions = { type: relationshipData.type }
     findConditions[resource.klass().primaryKey] = relationshipData[resource.klass().primaryKey]
 
+    parentRelationship = {}
+    parentRelationship[parentReflection.name] = resource if parentReflection?
     if(include = _.findWhere(includes, findConditions))?
-      include = @buildResource(include, includes)
+      include = @buildResource(include, includes, parentRelationship: parentRelationship)
     include
 
   # Merges the changes made from a POST/PUT/PATCH call into the resource that called it
@@ -419,7 +420,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # 1. Use buildResource to build the changed attributes, relationships, and links into the existing resource
   # 2. Return the built resource
   mergePersistedChanges: (response, resource) ->
-    @buildResource(response['data'], response['included'], resource)
+    @buildResource(response['data'], response['included'], existingResource: resource)
 
   # Adds errors in making a POST/PUT/PATCH call into the resource that called it
   #
@@ -513,7 +514,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
       built =
         ActiveResource::CollectionResponse.build(_.flatten([response.data]))
         .map (object) ->
-          object = _this.buildResource(object, response.included)
+          object = _this.buildResource(object, response.included, {})
           object.assignResourceRelatedQueryParams(queryParams)
           object
 

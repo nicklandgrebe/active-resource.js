@@ -97,6 +97,9 @@ describe 'ActiveResource', ->
               }
             expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
+          it 'assigns inverseOf field on related resources (removing it from changedFields)', ->
+            expect(@resource.orderItems().target().first().changedFields().empty()).toBeTruthy()
+
           describe 'when replacing an item (same length)', ->
             beforeEach ->
               @resource.orderItems().target().delete(@resource.orderItems().target().last())
