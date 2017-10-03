@@ -1,5 +1,5 @@
 /*
-	active-resource 0.9.5
+	active-resource 0.9.6
 	(c) 2017 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	active-resource may be freely distributed under the MIT license
 	Portions of active-resource were inspired by or borrowed from Rail's ActiveRecord library
@@ -353,12 +353,16 @@ var ActiveResource = function(){};
       }
     };
 
-    JsonApi.prototype.buildResource = function(data, includes, existingResource) {
-      var attributes, resource;
+    JsonApi.prototype.buildResource = function(data, includes, _arg) {
+      var attributes, existingResource, parentRelationship, resource;
+      existingResource = _arg.existingResource, parentRelationship = _arg.parentRelationship;
       resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
       attributes = data['attributes'];
       if (data[resource.klass().primaryKey]) {
         attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString();
+      }
+      if (parentRelationship != null) {
+        attributes = _.extend(attributes, parentRelationship);
       }
       attributes = this.addRelationshipsToAttributes(attributes, data['relationships'], includes, resource);
       resource.__assignFields(this.toCamelCase(attributes));
@@ -393,38 +397,49 @@ var ActiveResource = function(){};
     JsonApi.prototype.addRelationshipsToAttributes = function(attributes, relationships, includes, resource) {
       var _this = this;
       _.each(relationships, function(relationship, relationshipName) {
-        var include, relationshipItems;
-        if (_.isArray(relationship['data'])) {
-          relationshipItems = ActiveResource.prototype.Collection.build(relationship['data']).map(function(relationshipMember) {
-            return _this.findIncludeFromRelationship(relationshipMember, includes, resource);
-          }).compact();
-          if (!(typeof relationshipItems.empty === "function" ? relationshipItems.empty() : void 0)) {
-            return attributes[relationshipName] = relationshipItems;
-          }
-        } else if (relationship['data'] != null) {
-          include = _this.findIncludeFromRelationship(relationship['data'], includes, resource);
-          if (include != null) {
-            return attributes[relationshipName] = include;
+        var include, parentReflection, reflection, relationshipItems;
+        if ((reflection = resource.klass().reflectOnAssociation(s.camelize(relationshipName)))) {
+          parentReflection = reflection.inverseOf();
+          if (reflection.collection()) {
+            relationshipItems = ActiveResource.prototype.Collection.build(relationship['data']).map(function(relationshipMember) {
+              return _this.findIncludeFromRelationship(relationshipMember, includes, resource, parentReflection);
+            }).compact();
+            if (!(typeof relationshipItems.empty === "function" ? relationshipItems.empty() : void 0)) {
+              return attributes[relationshipName] = relationshipItems;
+            }
+          } else if (relationship['data'] != null) {
+            include = _this.findIncludeFromRelationship(relationship['data'], includes, resource, parentReflection);
+            if (include != null) {
+              return attributes[relationshipName] = include;
+            }
           }
         }
       });
       return attributes;
     };
 
-    JsonApi.prototype.findIncludeFromRelationship = function(relationshipData, includes, resource) {
-      var findConditions, include;
+    JsonApi.prototype.findIncludeFromRelationship = function(relationshipData, includes, resource, parentReflection) {
+      var findConditions, include, parentRelationship;
       findConditions = {
         type: relationshipData.type
       };
       findConditions[resource.klass().primaryKey] = relationshipData[resource.klass().primaryKey];
+      parentRelationship = {};
+      if (parentReflection != null) {
+        parentRelationship[parentReflection.name] = resource;
+      }
       if ((include = _.findWhere(includes, findConditions)) != null) {
-        include = this.buildResource(include, includes);
+        include = this.buildResource(include, includes, {
+          parentRelationship: parentRelationship
+        });
       }
       return include;
     };
 
     JsonApi.prototype.mergePersistedChanges = function(response, resource) {
-      return this.buildResource(response['data'], response['included'], resource);
+      return this.buildResource(response['data'], response['included'], {
+        existingResource: resource
+      });
     };
 
     JsonApi.prototype.resourceErrors = function(resource, errors) {
@@ -491,7 +506,7 @@ var ActiveResource = function(){};
       return this.request(url, 'GET', data).then(function(response) {
         var built;
         built = ActiveResource.prototype.CollectionResponse.build(_.flatten([response.data])).map(function(object) {
-          object = _this.buildResource(object, response.included);
+          object = _this.buildResource(object, response.included, {});
           object.assignResourceRelatedQueryParams(queryParams);
           return object;
         });
@@ -1189,7 +1204,7 @@ var ActiveResource = function(){};
               return true;
             }
             newTargets = newField.target().select(function(t) {
-              return !_this.__fields[k].include(t) || (association.reflection.autosave() && t.changed());
+              return !oldField.include(t) || (association.reflection.autosave() && t.changed());
             });
             return !newTargets.empty();
           } else {

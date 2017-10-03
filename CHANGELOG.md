@@ -31,3 +31,8 @@ changes to each resource
 * Append '/' to relationship links
 * Refactor links to add storage capability and fix bugs
 * Allow `Interfaces.JsonApi` to create default relationship links using resource self link and reflection name if links not otherwise present
+
+### 0.9.6
+
+* Fix bug in Fields#changedFields collection association new target item finding
+* Fix bug in Fields#changedFields resulting from owner relationship resources not being assigned as a field to their children
