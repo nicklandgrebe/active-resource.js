@@ -85,11 +85,13 @@ describe 'ActiveResource', ->
             @promise2 = @promise.then =>
               @resource.orderItems().build(id: '5')
               @resource.orderItems().build(id: '10')
+              @resource.save()
+
+              moxios.wait =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
 
           it 'adds relationship to resource document', ->
             @promise2.then =>
-              @resource.save()
-
               resourceDocument =
                 JSON.stringify({
                   data: {
@@ -104,6 +106,41 @@ describe 'ActiveResource', ->
                         },{
                           type: 'order_items',
                           id: '10'
+                        }]
+                      }
+                    }
+                  }
+                })
+
+              expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+
+          it 'assigns inverseOf field on related resources (removing it from changedFields)', ->
+            @promise2.then =>
+              expect(@resource.orderItems().target().first().changedFields().empty()).toBeTruthy()
+
+          describe 'when replacing an item (same length)', ->
+            beforeEach ->
+              @promise2.then =>
+                @resource.orderItems().target().delete(@resource.orderItems().target().last())
+                @resource.orderItems().build(id: '6')
+
+            it 'replaces relationship to resource document', ->
+              @resource.save()
+
+              resourceDocument =
+                JSON.stringify({
+                  data: {
+                    type: 'orders',
+                    id: '1',
+                    attributes: {},
+                    relationships: {
+                      order_items: {
+                        data: [{
+                          type: 'order_items',
+                          id: '5'
+                        },{
+                          type: 'order_items',
+                          id: '6'
                         }]
                       }
                     }

@@ -68,6 +68,20 @@ describe 'ActiveResource', ->
             @promise2.then =>
               expect(@resource.links()['self']).toBeDefined()
 
+        describe 'when no relationship links', ->
+          beforeEach ->
+            @promise2 = @promise.then =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.find.noRelLinks)
+              .then =>
+                @resource = window.onSuccess.calls.mostRecent().args[0]
+
+          it 'builds links from owner self link', ->
+            @promise2.then =>
+              expect(@resource.association('orders').links()).toEqual({
+                self: "https://example.com/api/v1/products/1/relationships/orders",
+                related: "https://example.com/api/v1/products/1/orders"
+              })
+
         describe 'on failure', ->
           beforeEach ->
             @promise2 = @promise.then =>

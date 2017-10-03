@@ -65,6 +65,9 @@ window.JsonApiResponses =
       includes:
         status: 200
         response: getJSONFixture('products/includes.json')
+      noRelLinks:
+        status: 200
+        response: getJSONFixture('products/no_rel_links.json')
       failure:
         status: 404
         response: getJSONFixture('products/404_resource_not_found.json')

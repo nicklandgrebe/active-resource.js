@@ -29,6 +29,9 @@ describe 'ActiveResource', ->
           @promise.then =>
             expect(@resource.association('order').links()['related']).toEqual('https://example.com/api/v1/gift_cards/1/order/')
 
+        it 'appends / to relationship links', ->
+          expect(@resource.association('order').links()['related']).toEqual('https://example.com/api/v1/gift_cards/1/order/')
+
       describe 'loading', ->
         beforeEach ->
           MyLibrary::GiftCard.find(1)

@@ -25,12 +25,21 @@ changes to each resource
   * Provides pagination helpers when response includes pagination links
 * Allow `Interfaces.JsonApi` to be overridden easier by making all helper methods prototype properties
 
-### Master
+### 0.9.5
 
-* **Breaking:** Switched from `jQuery.ajax` to `axios`, which have different promise interfaces
 * Allow response documents to omit `id`
 * Append '/' to relationship links
 * Refactor links to add storage capability and fix bugs
+* Allow `Interfaces.JsonApi` to create default relationship links using resource self link and reflection name if links not otherwise present
+
+### 0.9.6
+
+* Fix bug in Fields#changedFields collection association new target item finding
+* Fix bug in Fields#changedFields resulting from owner relationship resources not being assigned as a field to their children
+
+### Master
+
+* **Breaking:** Switched from `jQuery.ajax` to `axios`, which have different promise interfaces
 * **Breaking:** Switched all references of `attribute` in `errors()` object to `field`:
   * `error.attribute` is now `error.field`
   * `resource.errors().forField(field)` returns a collection of errors where `field.startsWith(field)`
