@@ -83,6 +83,8 @@ var ActiveResource = function(){};
 
       ResourceLibrary.constantizeScope = options['constantizeScope'];
 
+      ResourceLibrary.includePolymorphicRepeats = options.includePolymorphicRepeats;
+
       resourceLibrary = ResourceLibrary;
 
       ResourceLibrary.Base = Base = (function(_super) {
@@ -297,7 +299,7 @@ var ActiveResource = function(){};
         var reflection, target;
         reflection = resource.klass().reflectOnAssociation(relationship);
         target = resource.association(reflection.name).target;
-        if ((reflection.collection() && target.empty()) || target === null) {
+        if ((reflection.collection() && target.empty()) || (target == null)) {
           return;
         }
         return output[s.underscored(reflection.name)] = {
@@ -305,9 +307,7 @@ var ActiveResource = function(){};
             resourceData: target,
             onlyResourceIdentifiers: !reflection.autosave(),
             onlyChanged: onlyChanged,
-            parentReflection: reflection.inverseOf() || {
-              name: reflection.options['as']
-            }
+            parentReflection: reflection.polymorphic() ? reflection.polymorphicInverseOf(target.klass()) : reflection.inverseOf()
           })
         };
       });
@@ -327,7 +327,9 @@ var ActiveResource = function(){};
           attributes = _.omit(resource.attributes(), resource.klass().primaryKey);
           relationships = _.keys(resource.klass().reflections());
           if (parentReflection) {
-            relationships = _.without(relationships, parentReflection.name);
+            if (!(parentReflection.polymorphic() && _this.resourceLibrary.includePolymorphicRepeats)) {
+              relationships = _.without(relationships, parentReflection.name);
+            }
           }
           if (onlyChanged) {
             changedFields = resource.changedFields().toArray();

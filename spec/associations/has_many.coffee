@@ -96,7 +96,7 @@ describe 'ActiveResource', ->
             expect(@resource.orders().all(cached: true).size()).not.toEqual(0)
 
           it 'queries the first relationship resource with filters', ->
-            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('filter[some]=value&include=transactions')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('filter[some]=value')
 
         describe '#first()', ->
           beforeEach ->
@@ -159,7 +159,7 @@ describe 'ActiveResource', ->
             @result = window.onSuccess.calls.mostRecent().args[0]
 
           it 'queries the first relationship resource with filters', ->
-            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('filter[token]=abc123&include=transactions&limit=1')
+            expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('filter[token]=abc123', 'limit=1')
 
           it 'gets a resource of the relationship', ->
             expect(@result.klass()).toBe(MyLibrary::Order)
@@ -180,7 +180,7 @@ describe 'ActiveResource', ->
               @resource.orders().select('price','verificationCode').all()
 
             it 'uses the correct model name for shallow fields', ->
-              expect(requestParams(jasmine.Ajax.requests.mostRecent())).toEqual('fields[orders]=price,verification_code&include=transactions')
+              expect(requestParams(jasmine.Ajax.requests.mostRecent())).toContain('fields[orders]=price,verification_code')
 
           describe '#includes()', ->
             beforeEach ->
@@ -472,7 +472,7 @@ describe 'ActiveResource', ->
                   }
                 }
               },
-              include: 'transactions'
+              include: 'comments,transactions'
             }
             expect(jasmine.Ajax.requests.mostRecent().data()).toEqual(resourceDocument)
 
