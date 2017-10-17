@@ -266,10 +266,37 @@ Order.reflectOnAssociation('product')
 * Attribute management
 
 ```coffee
+class MyLibrary.Order extends MyLibrary.Base
+  @attributes('price', 'quantity')
+
 order = Order.build()
 
 order.assignAttributes(price: 5.0)
 order.attributes() # == { price: 5.0 }
+```
+
+* * *
+
+* Change tracking
+
+
+Defining `attributes` on resource classes allows changes to those attributes to be tracked, as will
+relationships defined using `hasMany`, `belongsTo`, etc.
+
+The result is that when saving an existing resource (updating / `PATCH` request), only those
+attributes and relationships that have changed will be submitted to server.
+
+```coffee
+Order.find(1)
+.then (order) =>
+  order.price # == 5.0
+  order.quantity # == 2
+  
+  order.price = 10.0
+  
+  order.changedFields().toArray() # => ['price']
+  
+  order.save # only sends change to price to server
 ```
 
 * * *

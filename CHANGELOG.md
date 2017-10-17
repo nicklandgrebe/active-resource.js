@@ -13,7 +13,7 @@
 ### 0.9.3
 
 * Added `#errors` to list of objects/properties cloned in `Base#clone`
-* Added `afterRequest` callback to Resource classes
+* Added `afterBuild` callback to Resource classes
 
 ### 0.9.4
 
