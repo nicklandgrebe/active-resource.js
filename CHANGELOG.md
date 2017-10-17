@@ -37,6 +37,11 @@ changes to each resource
 * Fix bug in Fields#changedFields collection association new target item finding
 * Fix bug in Fields#changedFields resulting from owner relationship resources not being assigned as a field to their children
 
+## 0.9.7
+
+* Add `resourceLibrary.includePolymorphicRepeats` option that if `true` allows primary data’s relationships to send polymorphic
+  owner data to the server, despite that data also being the primary data
+
 ### Master
 
 * **Breaking:** Switched from `jQuery.ajax` to `axios`, which have different promise interfaces

@@ -80,6 +80,72 @@ describe 'ActiveResource', ->
               moxios.wait =>
                 expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
 
+        describe 'polymorphic', ->
+          beforeEach ->
+            @resource.comments().build()
+
+          it 'does not add relationship to resource document', ->
+            @resource.save()
+
+            resourceDocument =
+              JSON.stringify({
+                data: {
+                  type: 'orders',
+                  id: '2',
+                  attributes: {},
+                  relationships: {
+                    comments: {
+                      data: [{
+                        type: 'comments',
+                        attributes: {},
+                        relationships: {}
+                      }]
+                    }
+                  }
+                }
+              })
+
+            moxios.wait =>
+              expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+
+          describe 'when includePolymorphicRepeats true', ->
+            beforeEach ->
+              @resource.klass().resourceLibrary.includePolymorphicRepeats = true
+
+            afterEach ->
+              @resource.klass().resourceLibrary.includePolymorphicRepeats = false
+
+            it 'adds relationship to resource document', ->
+              @resource.save()
+
+              resourceDocument =
+                JSON.stringify({
+                  data: {
+                    type: 'orders',
+                    id: '2',
+                    attributes: {},
+                    relationships: {
+                      comments: {
+                        data: [{
+                          type: 'comments',
+                          attributes: {},
+                          relationships: {
+                            resource: {
+                              data: {
+                                type: 'orders',
+                                id: '2'
+                              }
+                            }
+                          }
+                        }]
+                      }
+                    }
+                  }
+                })
+
+              moxios.wait =>
+                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+
         describe 'collection', ->
           beforeEach ->
             @promise2 = @promise.then =>

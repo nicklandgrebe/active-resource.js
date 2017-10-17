@@ -9,6 +9,7 @@ class ActiveResource::QueryParams
   # If `this` is an instance of a class, instantiate its queryParams with that of its classes,
   # which will have built-in queryParams from autosave associations and `fields` declarations
   #
+  # TODO: Add autosave associations to default klass().queryParams (returns {} right now)
   # @return [Object] the queryParams for `this`
   @queryParams: ->
     @__queryParams ||=

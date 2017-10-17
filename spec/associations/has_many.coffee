@@ -129,7 +129,7 @@ describe 'ActiveResource', ->
 
           it 'queries the first relationship resource with filters', ->
             @promise4.then =>
-              expect(requestParams(moxios.requests.mostRecent())).toContain('filter[some]=value&include=transactions')
+              expect(requestParams(moxios.requests.mostRecent())).toContain('filter[some]=value')
 
         describe '#first()', ->
           beforeEach ->
@@ -218,7 +218,7 @@ describe 'ActiveResource', ->
 
           it 'queries the first relationship resource with filters', ->
             @promise4.then =>
-              expect(requestParams(moxios.requests.mostRecent())).toContain('filter[token]=abc123&include=transactions&limit=1')
+              expect(requestParams(moxios.requests.mostRecent())).toContain('filter[token]=abc123', 'limit=1')
 
           it 'gets a resource of the relationship', ->
             @promise4.then =>
@@ -249,7 +249,7 @@ describe 'ActiveResource', ->
 
             it 'uses the correct model name for shallow fields', ->
               @promise3.then =>
-                expect(requestParams(moxios.requests.mostRecent())).toEqual('fields[orders]=price,verification_code&include=transactions')
+                expect(requestParams(moxios.requests.mostRecent())).toContain('fields[orders]=price,verification_code')
 
           describe '#includes()', ->
             beforeEach ->
@@ -608,7 +608,7 @@ describe 'ActiveResource', ->
                   }
                 }
               },
-              include: 'transactions'
+              include: 'comments,transactions'
             })
             @promise3.then =>
               expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)

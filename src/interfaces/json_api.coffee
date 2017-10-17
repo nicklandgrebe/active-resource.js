@@ -214,14 +214,18 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
 
       target = resource.association(reflection.name).target
 
-      return if (reflection.collection() && target.empty()) || target == null
+      return if (reflection.collection() && target.empty()) || !target?
 
       output[s.underscored(reflection.name)] = {
         data: this.buildResourceDocument({
           resourceData: target,
           onlyResourceIdentifiers: !reflection.autosave(),
           onlyChanged: onlyChanged,
-          parentReflection: reflection.inverseOf() || { name: reflection.options['as'] }
+          parentReflection:
+            if reflection.polymorphic()
+              reflection.polymorphicInverseOf(target.klass())
+            else
+              reflection.inverseOf()
         })
       }
 
@@ -246,7 +250,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
           relationships = _.keys(resource.klass().reflections())
 
           if parentReflection
-            relationships = _.without(relationships, parentReflection.name)
+            unless parentReflection.polymorphic() && @resourceLibrary.includePolymorphicRepeats
+              relationships = _.without(relationships, parentReflection.name)
 
           if onlyChanged
             changedFields = resource.changedFields().toArray()

@@ -85,6 +85,8 @@ window.Promise = es6Promise.Promise;
 
       ResourceLibrary.constantizeScope = options['constantizeScope'];
 
+      ResourceLibrary.includePolymorphicRepeats = options.includePolymorphicRepeats;
+
       resourceLibrary = ResourceLibrary;
 
       ResourceLibrary.Base = Base = (function(_super) {
@@ -310,7 +312,7 @@ window.Promise = es6Promise.Promise;
         var reflection, target;
         reflection = resource.klass().reflectOnAssociation(relationship);
         target = resource.association(reflection.name).target;
-        if ((reflection.collection() && target.empty()) || target === null) {
+        if ((reflection.collection() && target.empty()) || (target == null)) {
           return;
         }
         return output[s.underscored(reflection.name)] = {
@@ -318,9 +320,7 @@ window.Promise = es6Promise.Promise;
             resourceData: target,
             onlyResourceIdentifiers: !reflection.autosave(),
             onlyChanged: onlyChanged,
-            parentReflection: reflection.inverseOf() || {
-              name: reflection.options['as']
-            }
+            parentReflection: reflection.polymorphic() ? reflection.polymorphicInverseOf(target.klass()) : reflection.inverseOf()
           })
         };
       });
@@ -340,7 +340,9 @@ window.Promise = es6Promise.Promise;
           attributes = _.omit(resource.attributes(), resource.klass().primaryKey);
           relationships = _.keys(resource.klass().reflections());
           if (parentReflection) {
-            relationships = _.without(relationships, parentReflection.name);
+            if (!(parentReflection.polymorphic() && _this.resourceLibrary.includePolymorphicRepeats)) {
+              relationships = _.without(relationships, parentReflection.name);
+            }
           }
           if (onlyChanged) {
             changedFields = resource.changedFields().toArray();

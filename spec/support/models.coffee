@@ -7,7 +7,7 @@ class MyLibrary::Comment extends MyLibrary.Base
   this.className = 'Comment'
   this.queryName = 'comments'
 
-  this.belongsTo 'resource', polymorphic: true
+  this.belongsTo 'resource', polymorphic: true, inverseOf: 'comments'
 
 class MyLibrary::GiftCard extends MyLibrary.Base
   this.className = 'GiftCard'
@@ -24,7 +24,7 @@ class MyLibrary::Order extends MyLibrary.Base
   this.belongsTo 'giftCard'
   this.belongsTo 'product'
 
-  this.hasMany 'comments', as: 'resource'
+  this.hasMany 'comments', as: 'resource', autosave: true, inverseOf: 'resource'
   this.hasMany 'orderItems'
   this.hasMany 'transactions', autosave: true
 
