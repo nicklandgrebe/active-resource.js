@@ -133,6 +133,8 @@ window.Promise = es6Promise.Promise;
     function Interfaces() {}
 
     Interfaces.prototype.Base = (function() {
+      Base.contentType = 'application/json';
+
       function Base(resourceLibrary) {
         this.resourceLibrary = resourceLibrary;
       }
@@ -141,8 +143,8 @@ window.Promise = es6Promise.Promise;
         var options;
         options = {
           responseType: 'json',
-          headers: _.extend(this.resourceLibrary.headers, {
-            'Content-Type': 'application/json'
+          headers: _.extend(this.resourceLibrary.headers || {}, {
+            'Content-Type': this.constructor.contentType
           }),
           method: method,
           url: url
@@ -186,7 +188,7 @@ window.Promise = es6Promise.Promise;
 
     return Interfaces;
 
-  })();
+  }).call(this);
 
 }).call(this);
 
@@ -203,6 +205,8 @@ window.Promise = es6Promise.Promise;
       _ref = JsonApi.__super__.constructor.apply(this, arguments);
       return _ref;
     }
+
+    JsonApi.contentType = 'application/vnd.api+json';
 
     JsonApi.prototype.request = function(url, method, data) {
       return JsonApi.__super__.request.apply(this, arguments).then(function(response) {

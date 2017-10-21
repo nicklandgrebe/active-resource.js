@@ -26,6 +26,8 @@
 #   }
 #
 ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi extends ActiveResource::Interfaces::Base
+  @contentType = 'application/vnd.api+json'
+
   # Makes an HTTP request to a url with data
   #
   # @note Uses base request, but checks to make sure response is in JSON API format

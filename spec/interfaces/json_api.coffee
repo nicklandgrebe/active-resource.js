@@ -25,6 +25,10 @@ describe 'ActiveResource', ->
           @promise = moxios.wait =>
             true
 
+        it 'uses JSONAPI content type', ->
+          @promise.then =>
+            expect(moxios.requests.mostRecent().headers['Content-Type']).toEqual('application/vnd.api+json')
+
         describe 'on success', ->
           beforeEach ->
             @promise2 = @promise.then =>
