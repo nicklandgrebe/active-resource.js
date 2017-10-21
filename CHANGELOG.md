@@ -49,3 +49,6 @@ changes to each resource
   * `error.attribute` is now `error.field`
   * `resource.errors().forField(field)` returns a collection of errors where `field.startsWith(field)`
   * `resource.errors().forAttribute(attribute)` is now `resource.errors().detailsForField(field)`
+* **Potentially breaking:** Fixed the incorrect `Content-Type` in default request interface (`JsonApi`)
+  * Original: `application/json`
+  * Correct: `application/vnd.api+json`
