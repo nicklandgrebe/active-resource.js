@@ -41,3 +41,7 @@ changes to each resource
 
 * Add `resourceLibrary.includePolymorphicRepeats` option that if `true` allows primary data’s relationships to send polymorphic
   owner data to the server, despite that data also being the primary data
+  
+## 0.9.8
+
+* Fix bug in JSONAPI interface key format conversion
