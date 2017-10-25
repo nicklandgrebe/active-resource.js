@@ -14,6 +14,15 @@ describe 'ActiveResource', ->
       @lib = window.MyLibrary
       @interface = @lib.interface
 
+    describe '#toCamelCase()', ->
+      describe 'value', ->
+        it 'camelCases', ->
+          expect(@interface.toCamelCase({ this_one: true, that_one: true })).toEqual({ thisOne: true, thatOne: true })
+
+      describe 'array', ->
+        it 'camelCases array', ->
+          expect(@interface.toCamelCase({ this_one: [{ that_one: true }] })).toEqual({ thisOne: [{ thatOne: true }] })
+
     describe '#get()', ->
       describe 'getting resources', ->
         beforeEach ->

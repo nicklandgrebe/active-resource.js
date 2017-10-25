@@ -202,24 +202,26 @@ var ActiveResource = function(){};
     };
 
     JsonApi.prototype.toUnderscored = function(object) {
-      var k, underscored, v;
+      var k, underscored, v,
+        _this = this;
       underscored = {};
       for (k in object) {
         v = object[k];
         underscored[s.underscored(k)] = _.isArray(v) ? _.map(v, function(i) {
-          return this.toUnderscored(i);
+          return _this.toUnderscored(i);
         }) : _.isObject(v) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Collection) : void 0) && !_.isDate(v) ? this.toUnderscored(v) : v;
       }
       return underscored;
     };
 
     JsonApi.prototype.toCamelCase = function(object) {
-      var camelized, k, v;
+      var camelized, k, v,
+        _this = this;
       camelized = {};
       for (k in object) {
         v = object[k];
         camelized[s.camelize(k)] = _.isArray(v) ? _.map(v, function(i) {
-          return this.toCamelCase(i);
+          return _this.toCamelCase(i);
         }) : _.isObject(v) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Collection) : void 0) ? this.toCamelCase(v) : v;
       }
       return camelized;
