@@ -52,3 +52,4 @@ changes to each resource
 * **Potentially breaking:** Fixed the incorrect `Content-Type` in default request interface (`JsonApi`)
   * Original: `application/json`
   * Correct: `application/vnd.api+json`
+* Switch to new build system using `grunt-umd` package instead of `grunt-umd_wrapper`

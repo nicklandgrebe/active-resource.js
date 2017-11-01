@@ -9,7 +9,7 @@ module.exports = function(grunt) {
       },
       build: {
         src: [
-          'build/**/*.js', '!build/module.js',
+          'build/**/*.js', '!build/init.js',
           '!build/active-resource.js', '!build/active-resource.min.js'
         ]
       },
@@ -31,17 +31,37 @@ module.exports = function(grunt) {
         }
       }
     },
-    umd_wrapper: {
+    umd: {
       build: {
-        options: {},
-        files: {
-          'build/active-resource.js': 'build/module.js'
+        options: {
+          src: 'build/active-resource.js',
+          objectToExport: 'ActiveResource',
+          deps: {
+            'default': [
+              'axios',
+              { 'es6-promise': 'es6Promise' },
+              { 'underscore': '_' },
+              { 'underscore.string': 's' },
+              { 'qs': 'Qs' },
+              { 'underscore.inflection': null }
+            ]
+          }
         }
       },
       specs: {
-        options: {},
-        files: {
-          'spec/spec.js': 'spec/module.js'
+        options: {
+          src: 'spec/spec.js',
+          deps: {
+            'default': [
+              { 'active-resource': 'ActiveResource' },
+              'axios',
+              'moxios',
+              { 'jquery': '$' },
+              { 'jasmine-jquery': null },
+              { 'jasmine-ajax': null },
+              { 'jasmine-promises': null }
+            ]
+          }
         }
       }
     },
@@ -56,22 +76,68 @@ module.exports = function(grunt) {
       }
     },
     concat: {
-      options: {
-        banner:
+      raw: {
+        options: {
+          banner:
           '/*\n' +
           '\tactive-resource <%= pkg.version %>\n' +
           '\t(c) <%= grunt.template.today("yyyy") %> Nick Landgrebe && Peak Labs, LLC DBA Occasion App\n' +
           '\tactive-resource may be freely distributed under the MIT license\n' +
           '\tPortions of active-resource were inspired by or borrowed from Rail\'s ActiveRecord library\n' +
           '*/\n\n'
-      },
-      raw: {
+        },
         src: 'build/active-resource.js',
         dest: 'dist/active-resource.js'
       },
       min: {
+        options: {
+          banner:
+          '/*\n' +
+          '\tactive-resource <%= pkg.version %>\n' +
+          '\t(c) <%= grunt.template.today("yyyy") %> Nick Landgrebe && Peak Labs, LLC DBA Occasion App\n' +
+          '\tactive-resource may be freely distributed under the MIT license\n' +
+          '\tPortions of active-resource were inspired by or borrowed from Rail\'s ActiveRecord library\n' +
+          '*/\n\n'
+        },
         src: 'build/active-resource.min.js',
         dest: 'dist/active-resource.min.js'
+      },
+      build: {
+        src: [
+          'build/init.js',
+          'build/modulizing.js',
+          'build/typing.js',
+          'build/resource_library.js',
+          'build/interfaces/base.js',
+          'build/interfaces/json_api.js',
+          'build/associations.js',
+          'build/attributes.js',
+          'build/callbacks.js',
+          'build/collection.js',
+          'build/collection_response.js',
+          'build/errors.js',
+          'build/fields.js',
+          'build/persistence.js',
+          'build/query_params.js',
+          'build/reflection.js',
+          'build/relation.js',
+          'build/base.js',
+          'build/associations/association.js',
+          'build/associations/collection_association.js',
+          'build/associations/collection_proxy.js',
+          'build/associations/has_many_association.js',
+          'build/associations/singular_association.js',
+          'build/associations/has_one_association.js',
+          'build/associations/belongs_to_association.js',
+          'build/associations/belongs_to_polymorphic_association.js',
+          'build/associations/builder/association.js',
+          'build/associations/builder/collection_association.js',
+          'build/associations/builder/has_many.js',
+          'build/associations/builder/singular_association.js',
+          'build/associations/builder/belongs_to.js',
+          'build/associations/builder/has_one.js'
+        ],
+        dest: 'build/active-resource.js'
       }
     },
     watch: {
@@ -108,7 +174,7 @@ module.exports = function(grunt) {
                 "underscore": '/node_modules/underscore/underscore-min',
                 "underscore.string": '/node_modules/underscore.string/dist/underscore.string',
                 "underscore.inflection": '/node_modules/underscore.inflection/lib/underscore.inflection',
-                "activeresource": '/build/active-resource',
+                "active-resource": '/build/active-resource',
                 "jquery": '/node_modules/jquery/dist/jquery.min',
                 "jasmine-jquery": '/node_modules/jasmine-jquery/lib/jasmine-jquery',
                 "jasmine-ajax": '/node_modules/jasmine-ajax/lib/mock-ajax',
@@ -127,7 +193,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-umd-wrapper');
+  grunt.loadNpmTasks('grunt-umd');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
@@ -136,13 +202,13 @@ module.exports = function(grunt) {
   grunt.registerTask(
     'compile',
     'Compiles the source files into 1) a raw UMD module file and 2) a minified UMD module file.',
-    [ 'coffee:build', 'umd_wrapper:build', 'uglify', 'clean:build' ]
+    [ 'coffee:build', 'concat:build', 'umd:build', 'uglify', 'clean:build' ]
   );
 
   grunt.registerTask(
     'spec',
     'Compiles and runs the Javascript spec files for ActiveResource.js source code.',
-    [ 'clean:specs', 'coffee:specs', 'umd_wrapper:specs', 'connect:test', 'jasmine:activeresource' ]
+    [ 'clean:specs', 'coffee:specs', 'umd:specs', 'connect:test', 'jasmine:activeresource' ]
   )
 
   grunt.registerTask(

@@ -19,15 +19,16 @@
     "grunt": "0.x.x",
     "grunt-contrib-clean": "0.5.x",
     "grunt-contrib-coffee": "0.7.x",
+    "grunt-contrib-concat": "^1.0.1",
     "grunt-contrib-connect": "0.4.x",
     "grunt-contrib-jasmine": "latest",
     "grunt-contrib-uglify": "0.2.x",
     "grunt-contrib-watch": "0.5.x",
     "grunt-template-jasmine-requirejs": "^0.2.3",
-    "grunt-umd-wrapper": "^0.4.0",
+    "grunt-umd": "^2.4.0",
     "jasmine-ajax": "^3.2.0",
     "jasmine-jquery": "^2.1.1",
-    "jasmine-promises": "^0.4.1",
+    "jasmine-promises": "git+https://github.com/nicklandgrebe/jasmine-promises.git",
     "jquery": "^2.0.0",
     "moxios": "git+https://github.com/nicklandgrebe/moxios.git"
   }

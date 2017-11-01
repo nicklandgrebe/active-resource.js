@@ -1,18 +1,18 @@
 (function (root, factory) {
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define(['axios', 'es6-promise', 'underscore', 'underscore.string', 'qs', 'underscore.inflection'], factory);
-    } else if (typeof exports === 'object') {
-        // Node. Does not work with strict CommonJS, but
-        // only CommonJS-like enviroments that support module.exports,
-        // like Node.
-        require('underscore.inflection');
-        module.exports = factory(require('axios'), require('es6-promise'), require('underscore'), require('underscore.string'), require('qs'));
-    } else {
-        // Browser globals (root is window)
-        root.ActiveResource = factory(root.axios, root.es6Promise, root._, root.s, root.Qs);
-    }
-}(this, function(axios, es6Promise, _, s, Qs) {
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module unless amdModuleId is set
+    define(["axios","es6-promise","underscore","underscore.string","qs","underscore.inflection"], function (a0,b1,c2,d3,e4,f5) {
+      return (root['ActiveResource'] = factory(a0,b1,c2,d3,e4,f5));
+    });
+  } else if (typeof module === 'object' && module.exports) {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like environments that support module.exports,
+    // like Node.
+    module.exports = factory(require("axios"),require("es6-promise"),require("underscore"),require("underscore.string"),require("qs"),require("underscore.inflection"));
+  } else {
+    root['ActiveResource'] = factory(root["axios"],root["es6-promise"],root["underscore"],root["underscore.string"],root["qs"],root["underscore.inflection"]);
+  }
+}(this, function (axios, es6Promise, _, s, Qs) {
 
 var ActiveResource = function(){};
 
@@ -394,8 +394,8 @@ window.Promise = es6Promise.Promise;
         } else if ((selfLink = resource.links()['self']) != null) {
           selfLink = s.endsWith(selfLink, '/') ? selfLink : selfLink + '/';
           association.__links = {
-            self: selfLink + ("relationships/" + reflection.name),
-            related: selfLink + reflection.name
+            self: selfLink + ("relationships/" + reflection.name + "/"),
+            related: selfLink + ("" + reflection.name + "/")
           };
         }
         relationshipEmpty = _.isObject(relationship = (_ref3 = data['relationships']) != null ? (_ref4 = _ref3[s.underscored(reflection.name)]) != null ? _ref4['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : relationship != null ? relationship.length === 0 : true;
@@ -2891,7 +2891,6 @@ window.Promise = es6Promise.Promise;
   })(ActiveResource.prototype.Associations.prototype.Builder.prototype.SingularAssociation);
 
 }).call(this);
-
 
 return ActiveResource;
 
