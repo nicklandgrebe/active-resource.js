@@ -313,9 +313,10 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
           )
         )
       else if (selfLink = resource.links()['self'])?
+        url_safe_reflection_name = s.underscored(reflection.name)
         association.__links = {
-          self: ActiveResource::Links.__constructLink(selfLink, 'relationships', reflection.name),
-          related: ActiveResource::Links.__constructLink(selfLink, reflection.name)
+          self: ActiveResource::Links.__constructLink(selfLink, 'relationships', url_safe_reflection_name),
+          related: ActiveResource::Links.__constructLink(selfLink, url_safe_reflection_name)
         }
 
       relationshipEmpty =

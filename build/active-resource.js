@@ -380,7 +380,7 @@ window.Promise = es6Promise.Promise;
       resource.__assignFields(this.toCamelCase(attributes));
       resource.__links = _.extend(resource.links(), data['links']);
       resource.klass().reflectOnAllAssociations().each(function(reflection) {
-        var association, relationship, relationshipEmpty, relationshipLinks, selfLink, _ref1, _ref2, _ref3, _ref4,
+        var association, relationship, relationshipEmpty, relationshipLinks, selfLink, url_safe_reflection_name, _ref1, _ref2, _ref3, _ref4,
           _this = this;
         association = resource.association(reflection.name);
         if ((relationshipLinks = (_ref1 = data['relationships']) != null ? (_ref2 = _ref1[s.underscored(reflection.name)]) != null ? _ref2['links'] : void 0 : void 0) != null) {
@@ -388,9 +388,10 @@ window.Promise = es6Promise.Promise;
             return ActiveResource.prototype.Links.__constructLink(l);
           }));
         } else if ((selfLink = resource.links()['self']) != null) {
+          url_safe_reflection_name = s.underscored(reflection.name);
           association.__links = {
-            self: ActiveResource.prototype.Links.__constructLink(selfLink, 'relationships', reflection.name),
-            related: ActiveResource.prototype.Links.__constructLink(selfLink, reflection.name)
+            self: ActiveResource.prototype.Links.__constructLink(selfLink, 'relationships', url_safe_reflection_name),
+            related: ActiveResource.prototype.Links.__constructLink(selfLink, url_safe_reflection_name)
           };
         }
         relationshipEmpty = _.isObject(relationship = (_ref3 = data['relationships']) != null ? (_ref4 = _ref3[s.underscored(reflection.name)]) != null ? _ref4['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : relationship != null ? relationship.length === 0 : true;

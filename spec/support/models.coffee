@@ -45,6 +45,13 @@ class MyLibrary::Product extends MyLibrary.Base
   this.queryName = 'products'
 
   this.hasMany 'orders'
+  this.hasMany 'timeSlots'
+
+class MyLibrary::TimeSlot extends MyLibrary.Base
+  this.className = 'TimeSlot'
+  this.queryName = 'time_slots'
+
+  this.belongsTo 'product'
 
 class MyLibrary::Transaction extends MyLibrary.Base
   this.className = 'Transaction'

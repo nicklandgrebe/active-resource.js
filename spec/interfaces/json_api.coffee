@@ -81,9 +81,9 @@ describe 'ActiveResource', ->
 
           it 'builds links from owner self link', ->
             @promise2.then =>
-              expect(@resource.association('orders').links()).toEqual({
-                self: "https://example.com/api/v1/products/1/relationships/orders/",
-                related: "https://example.com/api/v1/products/1/orders/"
+              expect(@resource.association('timeSlots').links()).toEqual({
+                self: "https://example.com/api/v1/products/1/relationships/time_slots/",
+                related: "https://example.com/api/v1/products/1/time_slots/"
               })
 
         describe 'on failure', ->
