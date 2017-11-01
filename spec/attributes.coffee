@@ -107,7 +107,7 @@ describe 'ActiveResource', ->
         it 'makes a call to GET the resource', ->
           @resource2.reload()
           moxios.wait =>
-            expect(moxios.requests.mostRecent().url).toEqual(@resource2.links()['related'] + '1')
+            expect(moxios.requests.mostRecent().url).toEqual(@resource2.links()['related'] + '1/')
 
       describe 'when resource is not persisted nor has ID', ->
         beforeEach ->

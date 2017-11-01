@@ -16,11 +16,15 @@ class ActiveResource::Base
   ActiveResource.extend(@, ActiveResource::Fields.prototype)
   ActiveResource.extend(@, ActiveResource::Reflection.prototype)
   ActiveResource.extend(@, ActiveResource::Relation.prototype)
+  # Add Links after Relation since Relation also contains a `links` prototype method extended to Base, but it should
+  # only be used for instances of Relation, not static Base itself
+  ActiveResource.extend(@, ActiveResource::Links)
   ActiveResource.include(@, ActiveResource::Associations.prototype)
   ActiveResource.include(@, ActiveResource::Attributes)
   ActiveResource.include(@, ActiveResource::Callbacks)
   ActiveResource.include(@, ActiveResource::Errors)
   ActiveResource.include(@, ActiveResource::Fields)
+  ActiveResource.include(@, ActiveResource::Links.prototype)
   ActiveResource.include(@, ActiveResource::Persistence)
   ActiveResource.include(@, ActiveResource::QueryParams)
   ActiveResource.include(@, ActiveResource::Typing)
@@ -44,18 +48,7 @@ class ActiveResource::Base
   constructor: ->
     @__initializeFields()
 
-  # Links to query the server for this model with
-  #
-  # @return [Object] the URL links used to query this resource type
-  @links: ->
-    throw 'baseUrl is not set' unless @resourceLibrary.baseUrl?
-    throw 'queryName is not set' unless @queryName?
 
-    @__links ||= { related: @resourceLibrary.baseUrl + @queryName + '/' }
-
-  # Links to query the server for this persisted resource with
-  links: ->
-    @__links ||= _.clone(@klass().links())
 
   # The interface to use when querying the server for this class
   @interface: ->

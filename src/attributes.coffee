@@ -87,9 +87,9 @@ class ActiveResource::Attributes
     throw 'Cannot reload a resource that is not persisted or has an ID' unless @persisted() || @id?.toString().length > 0
 
     resource = this
-    link = @links()['self'] || (@links()['related'] + @id.toString())
+    url = @links()['self'] || (ActiveResource::Links.__constructLink(@links()['related'], @id.toString()))
 
-    @interface().get(link, @queryParams())
+    @interface().get(url, @queryParams())
     .then (reloaded) ->
       resource.__assignFields(reloaded.attributes())
       resource.klass().reflectOnAllAssociations().each (reflection) ->

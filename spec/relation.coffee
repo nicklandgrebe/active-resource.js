@@ -66,7 +66,7 @@ describe 'ActiveResource', ->
 
       it 'makes a call to retrieve a resource', ->
         @promise.then =>
-          expect(moxios.requests.mostRecent().url).toEqual(MyLibrary::Product.links()['related'] + '1')
+          expect(moxios.requests.mostRecent().url).toEqual(MyLibrary::Product.links()['related'] + '1/')
 
       it 'returns a resource of the type requested', ->
         @promise.then =>

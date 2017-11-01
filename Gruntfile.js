@@ -117,6 +117,7 @@ module.exports = function(grunt) {
           'build/collection_response.js',
           'build/errors.js',
           'build/fields.js',
+          'build/links.js',
           'build/persistence.js',
           'build/query_params.js',
           'build/reflection.js',

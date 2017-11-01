@@ -53,3 +53,4 @@ changes to each resource
   * Original: `application/json`
   * Correct: `application/vnd.api+json`
 * Switch to new build system using `grunt-umd` package instead of `grunt-umd_wrapper`
+* Pad `/` on bad URL references to remove ill formatting of query URLs

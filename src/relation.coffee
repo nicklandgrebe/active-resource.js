@@ -259,7 +259,9 @@ class ActiveResource::Relation
   # @return [Promise] a promise to return the ActiveResource **or** errors
   find: (primaryKey) ->
     return unless primaryKey?
-    @interface().get @links()['related'] + primaryKey.toString(), @queryParams()
+
+    url = ActiveResource::Links.__constructLink(@links()['related'], primaryKey.toString())
+    @interface().get url, @queryParams()
 
   # Retrieves the first ActiveResource in the relation corresponding to conditions
   #

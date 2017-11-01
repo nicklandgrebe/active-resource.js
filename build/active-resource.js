@@ -385,17 +385,12 @@ window.Promise = es6Promise.Promise;
         association = resource.association(reflection.name);
         if ((relationshipLinks = (_ref1 = data['relationships']) != null ? (_ref2 = _ref1[s.underscored(reflection.name)]) != null ? _ref2['links'] : void 0 : void 0) != null) {
           association.__links = _.extend(association.links(), _.mapObject(relationshipLinks, function(l) {
-            if (s.endsWith(l, '/')) {
-              return l;
-            } else {
-              return l + '/';
-            }
+            return ActiveResource.prototype.Links.__constructLink(l);
           }));
         } else if ((selfLink = resource.links()['self']) != null) {
-          selfLink = s.endsWith(selfLink, '/') ? selfLink : selfLink + '/';
           association.__links = {
-            self: selfLink + ("relationships/" + reflection.name + "/"),
-            related: selfLink + ("" + reflection.name + "/")
+            self: ActiveResource.prototype.Links.__constructLink(selfLink, 'relationships', reflection.name),
+            related: ActiveResource.prototype.Links.__constructLink(selfLink, reflection.name)
           };
         }
         relationshipEmpty = _.isObject(relationship = (_ref3 = data['relationships']) != null ? (_ref4 = _ref3[s.underscored(reflection.name)]) != null ? _ref4['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : relationship != null ? relationship.length === 0 : true;
@@ -782,13 +777,13 @@ window.Promise = es6Promise.Promise;
     };
 
     Attributes.reload = function() {
-      var link, resource, _ref;
+      var resource, url, _ref;
       if (!(this.persisted() || ((_ref = this.id) != null ? _ref.toString().length : void 0) > 0)) {
         throw 'Cannot reload a resource that is not persisted or has an ID';
       }
       resource = this;
-      link = this.links()['self'] || (this.links()['related'] + this.id.toString());
-      return this["interface"]().get(link, this.queryParams()).then(function(reloaded) {
+      url = this.links()['self'] || (ActiveResource.prototype.Links.__constructLink(this.links()['related'], this.id.toString()));
+      return this["interface"]().get(url, this.queryParams()).then(function(reloaded) {
         resource.__assignFields(reloaded.attributes());
         resource.klass().reflectOnAllAssociations().each(function(reflection) {
           var target;
@@ -1240,6 +1235,46 @@ window.Promise = es6Promise.Promise;
     };
 
     return Fields;
+
+  })();
+
+}).call(this);
+
+(function() {
+  var __slice = [].slice;
+
+  ActiveResource.prototype.Links = (function() {
+    function Links() {}
+
+    Links.prototype.links = function() {
+      return this.__links || (this.__links = _.clone(this.klass().links()));
+    };
+
+    Links.links = function() {
+      if (this.resourceLibrary.baseUrl == null) {
+        throw 'baseUrl is not set';
+      }
+      if (this.queryName == null) {
+        throw 'queryName is not set';
+      }
+      return this.__links || (this.__links = {
+        related: this.resourceLibrary.baseUrl + this.queryName + '/'
+      });
+    };
+
+    Links.__constructLink = function() {
+      var args;
+      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      return _.map(args, function(str) {
+        if (s.endsWith(str, '/')) {
+          return str;
+        } else {
+          return str + '/';
+        }
+      }).join('');
+    };
+
+    return Links;
 
   })();
 
@@ -1796,10 +1831,12 @@ window.Promise = es6Promise.Promise;
     };
 
     Relation.prototype.find = function(primaryKey) {
+      var url;
       if (primaryKey == null) {
         return;
       }
-      return this["interface"]().get(this.links()['related'] + primaryKey.toString(), this.queryParams());
+      url = ActiveResource.prototype.Links.__constructLink(this.links()['related'], primaryKey.toString());
+      return this["interface"]().get(url, this.queryParams());
     };
 
     Relation.prototype.findBy = function(conditions) {
@@ -1857,6 +1894,8 @@ window.Promise = es6Promise.Promise;
 
     ActiveResource.extend(Base, ActiveResource.prototype.Relation.prototype);
 
+    ActiveResource.extend(Base, ActiveResource.prototype.Links);
+
     ActiveResource.include(Base, ActiveResource.prototype.Associations.prototype);
 
     ActiveResource.include(Base, ActiveResource.prototype.Attributes);
@@ -1866,6 +1905,8 @@ window.Promise = es6Promise.Promise;
     ActiveResource.include(Base, ActiveResource.prototype.Errors);
 
     ActiveResource.include(Base, ActiveResource.prototype.Fields);
+
+    ActiveResource.include(Base, ActiveResource.prototype.Links.prototype);
 
     ActiveResource.include(Base, ActiveResource.prototype.Persistence);
 
@@ -1882,22 +1923,6 @@ window.Promise = es6Promise.Promise;
     function Base() {
       this.__initializeFields();
     }
-
-    Base.links = function() {
-      if (this.resourceLibrary.baseUrl == null) {
-        throw 'baseUrl is not set';
-      }
-      if (this.queryName == null) {
-        throw 'queryName is not set';
-      }
-      return this.__links || (this.__links = {
-        related: this.resourceLibrary.baseUrl + this.queryName + '/'
-      });
-    };
-
-    Base.prototype.links = function() {
-      return this.__links || (this.__links = _.clone(this.klass().links()));
-    };
 
     Base["interface"] = function() {
       return this.resourceLibrary["interface"];
