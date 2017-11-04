@@ -55,3 +55,5 @@ changes to each resource
 * Switch to new build system using `grunt-umd` package instead of `grunt-umd_wrapper`
 * Pad `/` on bad URL references to remove ill formatting of query URLs
 * Fix bug in relationship link name being camelCased in `JsonApi` interface
+* Add `resourceLibrary.strictAttributes` boolean config option. If true, only attributes defined in `klass().attributes()` will
+  be in the result of `resource.attributes()`. If false, any non-function properties of the resource will be returned.
