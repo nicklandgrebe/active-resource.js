@@ -57,9 +57,12 @@ class ActiveResource::Attributes
   @attributes: ->
     reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams']
 
-    validOutput = (k, v) ->
-      !_.isFunction(v) && !_.contains(reserved, k) &&
-      try !@association(k)? catch e then true
+    validOutput = (k, v) =>
+      if @klass().resourceLibrary.strictAttributes
+        @klass().attributes().include(k)
+      else
+        !_.isFunction(v) && !_.contains(reserved, k) &&
+        try !@association(k)? catch e then true
 
     output = {}
 

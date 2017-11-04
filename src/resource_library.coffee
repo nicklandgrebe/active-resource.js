@@ -6,6 +6,8 @@
 # @option [Object] constantizeScope the scope to use when calling #constantize
 # @option [Boolean] includePolymorphicRepeats if true, primary data’s relationships will send polymorphic owner data to
 #   the server despite that data also being the primary data (a repetition, some servers don't make the assumption)
+# @option [Boolean] strictAttributes if true, only attributes defined in a class via the static attributes method will
+#   be returned from resource.attributes()
 # @return [ResourceLibrary] the created resource library
 ActiveResource.createResourceLibrary = (baseUrl, options = {}) ->
   class ResourceLibrary
@@ -20,6 +22,7 @@ ActiveResource.createResourceLibrary = (baseUrl, options = {}) ->
 
     @constantizeScope: options['constantizeScope']
     @includePolymorphicRepeats: options.includePolymorphicRepeats
+    @strictAttributes: options.strictAttributes
 
     resourceLibrary = this
     @Base: class Base extends ActiveResource::Base

@@ -44,6 +44,8 @@ class MyLibrary::Product extends MyLibrary.Base
   this.className = 'Product'
   this.queryName = 'products'
 
+  this.attributes('title')
+
   this.hasMany 'orders'
   this.hasMany 'timeSlots'
 

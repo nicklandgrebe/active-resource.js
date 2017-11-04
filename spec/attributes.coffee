@@ -81,6 +81,23 @@ describe 'ActiveResource', ->
           @promise2.then =>
             expect(@resource.attributes()['myMethod']).toBeUndefined()
 
+      describe 'strictAttributes mode', ->
+        beforeEach ->
+          MyLibrary.strictAttributes = true
+
+          @promise2 = @promise.then =>
+            @resource.assignAttributes(
+              title: 'New title',
+              anotherAttribute: 'string'
+            )
+
+        afterEach ->
+          MyLibrary.strictAttributes = false
+
+        it 'returns only attributes defined in klass.attributes', ->
+          @promise2.then =>
+            expect(@resource.attributes()).toEqual({ title: 'New title' })
+
     describe '#reload()', ->
       describe 'when resource is persisted', ->
         it 'makes a call to GET the resource', ->

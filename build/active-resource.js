@@ -87,6 +87,8 @@ window.Promise = es6Promise.Promise;
 
       ResourceLibrary.includePolymorphicRepeats = options.includePolymorphicRepeats;
 
+      ResourceLibrary.strictAttributes = options.strictAttributes;
+
       resourceLibrary = ResourceLibrary;
 
       ResourceLibrary.Base = Base = (function(_super) {
@@ -754,18 +756,23 @@ window.Promise = es6Promise.Promise;
     };
 
     Attributes.attributes = function() {
-      var k, output, reserved, v, validOutput;
+      var k, output, reserved, v, validOutput,
+        _this = this;
       reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams'];
       validOutput = function(k, v) {
         var e;
-        return !_.isFunction(v) && !_.contains(reserved, k) && (function() {
-          try {
-            return this.association(k) == null;
-          } catch (_error) {
-            e = _error;
-            return true;
-          }
-        }).call(this);
+        if (_this.klass().resourceLibrary.strictAttributes) {
+          return _this.klass().attributes().include(k);
+        } else {
+          return !_.isFunction(v) && !_.contains(reserved, k) && (function() {
+            try {
+              return this.association(k) == null;
+            } catch (_error) {
+              e = _error;
+              return true;
+            }
+          }).call(_this);
+        }
       };
       output = {};
       for (k in this) {
