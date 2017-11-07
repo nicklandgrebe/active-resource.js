@@ -229,7 +229,7 @@ class ActiveResource::Relation
       else
         new this()
 
-    resource.assignAttributes(_.extend(attributes, @queryParams()['filter']))
+    resource.__assignAttributes(_.extend(attributes, @queryParams()['filter']))
     resource.assignResourceRelatedQueryParams(@queryParams())
 
     resource.__executeCallbacks('afterBuild')

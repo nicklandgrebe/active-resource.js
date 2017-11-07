@@ -31,20 +31,12 @@ class ActiveResource::Attributes
   @hasAttribute: (attribute) ->
     @__readAttribute(attribute)?
 
-  # Assigns `attributes` to the resource
+  # Assigns `attributes` to the resource, using @__assignAttributes to allow this method
+  #   to be overridden easier
   #
   # @param [Object] attributes the attributes to assign
   @assignAttributes: (attributes) ->
-    for k, v of attributes
-      try
-        if @association(k).reflection.collection?()
-          @[k]().assign(v, false)
-        else
-          @["assign#{s.capitalize(k)}"](v)
-      catch
-        @[k] = v
-
-    null
+    @__assignAttributes(attributes)
 
   # Retrieves all the attributes of the resource
   #
@@ -102,6 +94,21 @@ class ActiveResource::Attributes
       resource
 
   # private
+
+  # Assigns `attributes` to the resource
+  #
+  # @param [Object] attributes the attributes to assign
+  @__assignAttributes: (attributes) ->
+    for k, v of attributes
+      try
+        if @association(k).reflection.collection?()
+          @[k]().assign(v, false)
+        else
+          @["assign#{s.capitalize(k)}"](v)
+      catch
+        @[k] = v
+
+    null
 
   # Reads an attribute on the resource
   #
