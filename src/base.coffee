@@ -48,8 +48,6 @@ class ActiveResource::Base
   constructor: ->
     @__initializeFields()
 
-
-
   # The interface to use when querying the server for this class
   @interface: ->
     @resourceLibrary.interface
@@ -70,24 +68,34 @@ class ActiveResource::Base
   # @param [ActiveResource::Base] cloner the resource cloning this resource (always a related resource)
   # @return [ActiveResource::Base] the cloned resource
   __createClone: (cloner) ->
-    clone = @klass().build(@attributes())
-    clone.__links = @links()
-    @errors().each (attribute, e) => clone.errors().push(_.clone(e))
+    clone = @klass().build()
 
+    @errors().each (attribute, e) => clone.errors().push(_.clone(e))
+    @klass().fields().each (f) =>
+      try
+        reflection = @association(f).reflection
+        # handle cloning of association field
+      catch
+        clone.__fields[f] = @__fields[f]
+
+    clone.__links = _.clone(@links())
+
+    fields = @attributes()
     @klass().reflectOnAllAssociations().each (reflection) =>
       old_association = @association(reflection.name)
       new_association = clone.association(reflection.name)
-      new_association.__links = old_association.links()
+      new_association.__links = _.clone(old_association.links())
 
-      if reflection.collection()
-        old_association.target.each (resource) =>
-          new_target = resource.__createClone(this)
-          new_association.setInverseInstance(new_target)
-          new_association.target.push(new_target)
-      else if old_association.target? && old_association.target != cloner
-        new_target = old_association.target.__createClone(this)
-        new_association.setInverseInstance(new_target)
-        new_association.target = new_target
+      new_target =
+        if reflection.collection()
+          old_association.target.map (resource) => resource.__createClone(this)
+        else if old_association.target? && old_association.target != cloner
+          old_association.target.__createClone(this)
+
+      if new_target
+        fields[reflection.name] = new_target
+
+    clone.__assignAttributes(fields)
 
     clone
 
