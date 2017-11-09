@@ -81,7 +81,6 @@ class ActiveResource::Persistence
   # @param [Function] callback the callback to pass the ActiveResource into
   # @return [Promise] a promise to return the ActiveResource, valid or invalid
   @update: (attributes, callback) ->
-    @assignAttributes(attributes)
     attributesKeys = ActiveResource::Collection.build(_.keys(attributes))
     oldAttributes = _.pick(@attributes(), attributesKeys.toArray())
     oldAttributes = _.defaults(oldAttributes, attributesKeys.inject({}, (obj, k) =>
@@ -89,9 +88,10 @@ class ActiveResource::Persistence
       obj
     ))
 
+    @__assignAttributes(attributes)
     @__createOrUpdate()
     .then null, (resource) ->
-      resource.assignAttributes(oldAttributes)
+      resource.__assignAttributes(oldAttributes)
       resource
     .then callback, callback
 

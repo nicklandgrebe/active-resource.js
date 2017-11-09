@@ -4,6 +4,7 @@
     "type": "orders",
     "attributes": {
       "price": 3.0,
+      "tax": 0.0,
       "verificationCode": "abc123"
     },
     "relationships": {

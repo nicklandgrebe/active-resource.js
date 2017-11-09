@@ -4,6 +4,7 @@
 # @option [Object] headers the headers to send with each request made in this library
 # @option [Interface] interface the interface to use when making requests and building responses
 # @option [Object] constantizeScope the scope to use when calling #constantize
+# @option [Boolean] immutable if true, resources will act as immutable structures
 # @option [Boolean] includePolymorphicRepeats if true, primary data’s relationships will send polymorphic owner data to
 #   the server despite that data also being the primary data (a repetition, some servers don't make the assumption)
 # @option [Boolean] strictAttributes if true, only attributes defined in a class via the static attributes method will
@@ -21,11 +22,18 @@ ActiveResource.createResourceLibrary = (baseUrl, options = {}) ->
     @interface: new (options.interface || ActiveResource.Interfaces.JsonApi)(this)
 
     @constantizeScope: options['constantizeScope']
+    @immutable: options.immutable
     @includePolymorphicRepeats: options.includePolymorphicRepeats
     @strictAttributes: options.strictAttributes
 
+    base =
+      if @immutable
+        ActiveResource::Immutable::Base
+      else
+        ActiveResource::Base
+
     resourceLibrary = this
-    @Base: class Base extends ActiveResource::Base
+    @Base: class Base extends base
       this.resourceLibrary = resourceLibrary
 
     # Constantizes a className string into an actual ActiveResource::Base class

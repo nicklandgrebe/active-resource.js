@@ -3,7 +3,9 @@
     "id": "1",
     "type": "orders",
     "attributes": {
-      "price": 3.0
+      "price": 3.0,
+      "tax": 5.0,
+      "total": 8.0
     },
     "relationships": {
       "order_items": {

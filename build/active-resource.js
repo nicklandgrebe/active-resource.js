@@ -73,7 +73,7 @@ window.Promise = es6Promise.Promise;
       options = {};
     }
     return ResourceLibrary = (function() {
-      var Base, resourceLibrary, _ref;
+      var Base, base, resourceLibrary, _ref;
 
       function ResourceLibrary() {}
 
@@ -85,9 +85,13 @@ window.Promise = es6Promise.Promise;
 
       ResourceLibrary.constantizeScope = options['constantizeScope'];
 
+      ResourceLibrary.immutable = options.immutable;
+
       ResourceLibrary.includePolymorphicRepeats = options.includePolymorphicRepeats;
 
       ResourceLibrary.strictAttributes = options.strictAttributes;
+
+      base = ResourceLibrary.immutable ? ActiveResource.prototype.Immutable.prototype.Base : ActiveResource.prototype.Base;
 
       resourceLibrary = ResourceLibrary;
 
@@ -103,7 +107,7 @@ window.Promise = es6Promise.Promise;
 
         return Base;
 
-      })(ActiveResource.prototype.Base);
+      })(base);
 
       ResourceLibrary.constantize = function(className) {
         var klass, scope, v, _i, _len;
@@ -739,20 +743,7 @@ window.Promise = es6Promise.Promise;
     };
 
     Attributes.assignAttributes = function(attributes) {
-      var k, v, _base;
-      for (k in attributes) {
-        v = attributes[k];
-        try {
-          if (typeof (_base = this.association(k).reflection).collection === "function" ? _base.collection() : void 0) {
-            this[k]().assign(v, false);
-          } else {
-            this["assign" + (s.capitalize(k))](v);
-          }
-        } catch (_error) {
-          this[k] = v;
-        }
-      }
-      return null;
+      return this.__assignAttributes(attributes);
     };
 
     Attributes.attributes = function() {
@@ -803,6 +794,23 @@ window.Promise = es6Promise.Promise;
         });
         return resource;
       });
+    };
+
+    Attributes.__assignAttributes = function(attributes) {
+      var k, v, _base;
+      for (k in attributes) {
+        v = attributes[k];
+        try {
+          if (typeof (_base = this.association(k).reflection).collection === "function" ? _base.collection() : void 0) {
+            this[k]().assign(v, false);
+          } else {
+            this["assign" + (s.capitalize(k))](v);
+          }
+        } catch (_error) {
+          this[k] = v;
+        }
+      }
+      return null;
     };
 
     Attributes.__readAttribute = function(attribute) {
@@ -1209,7 +1217,7 @@ window.Promise = es6Promise.Promise;
           return _this.__fields[k] = v;
         }
       });
-      return this.assignAttributes(fields);
+      return this.__assignAttributes(fields);
     };
 
     Fields.changed = function() {
@@ -1237,7 +1245,7 @@ window.Promise = es6Promise.Promise;
             return oldField !== newField || association.reflection.autosave() && newField.changed();
           }
         } catch (_error) {
-          return oldField !== newField;
+          return oldField !== newField && !_.isUndefined(newField);
         }
       });
     };
@@ -1305,11 +1313,17 @@ window.Promise = es6Promise.Promise;
     };
 
     Persistence.update = function(attributes, callback) {
-      var oldAttributes;
-      oldAttributes = _.pick(this.attributes(), _.keys(attributes));
-      this.assignAttributes(attributes);
+      var attributesKeys, oldAttributes,
+        _this = this;
+      attributesKeys = ActiveResource.prototype.Collection.build(_.keys(attributes));
+      oldAttributes = _.pick(this.attributes(), attributesKeys.toArray());
+      oldAttributes = _.defaults(oldAttributes, attributesKeys.inject({}, function(obj, k) {
+        obj[k] = null;
+        return obj;
+      }));
+      this.__assignAttributes(attributes);
       return this.__createOrUpdate().then(null, function(resource) {
-        resource.assignAttributes(oldAttributes);
+        resource.__assignAttributes(oldAttributes);
         return resource;
       }).then(callback, callback);
     };
@@ -1825,7 +1839,7 @@ window.Promise = es6Promise.Promise;
         attributes = {};
       }
       resource = this.base != null ? new this.base() : new this();
-      resource.assignAttributes(_.extend(attributes, this.queryParams()['filter']));
+      resource.__assignAttributes(_.extend(attributes, this.queryParams()['filter']));
       resource.assignResourceRelatedQueryParams(this.queryParams());
       resource.__executeCallbacks('afterBuild');
       return resource;
@@ -1945,31 +1959,35 @@ window.Promise = es6Promise.Promise;
     };
 
     Base.prototype.__createClone = function(cloner) {
-      var clone,
+      var clone, fields,
         _this = this;
-      clone = this.klass().build(this.attributes());
-      clone.__links = this.links();
+      clone = this.klass().build();
       this.errors().each(function(attribute, e) {
         return clone.errors().push(_.clone(e));
       });
+      this.klass().fields().each(function(f) {
+        var reflection;
+        try {
+          return reflection = _this.association(f).reflection;
+        } catch (_error) {
+          return clone.__fields[f] = _this.__fields[f];
+        }
+      });
+      clone.__links = _.clone(this.links());
+      fields = this.attributes();
       this.klass().reflectOnAllAssociations().each(function(reflection) {
         var new_association, new_target, old_association;
         old_association = _this.association(reflection.name);
         new_association = clone.association(reflection.name);
-        new_association.__links = old_association.links();
-        if (reflection.collection()) {
-          return old_association.target.each(function(resource) {
-            var new_target;
-            new_target = resource.__createClone(_this);
-            new_association.setInverseInstance(new_target);
-            return new_association.target.push(new_target);
-          });
-        } else if ((old_association.target != null) && old_association.target !== cloner) {
-          new_target = old_association.target.__createClone(_this);
-          new_association.setInverseInstance(new_target);
-          return new_association.target = new_target;
+        new_association.__links = _.clone(old_association.links());
+        new_target = reflection.collection() ? old_association.target.map(function(resource) {
+          return resource.__createClone(_this);
+        }) : (old_association.target != null) && old_association.target !== cloner ? old_association.target.__createClone(_this) : void 0;
+        if (new_target) {
+          return fields[reflection.name] = new_target;
         }
       });
+      clone.__assignAttributes(fields);
       return clone;
     };
 
@@ -2922,6 +2940,91 @@ window.Promise = es6Promise.Promise;
     return HasOne;
 
   })(ActiveResource.prototype.Associations.prototype.Builder.prototype.SingularAssociation);
+
+}).call(this);
+
+(function() {
+  ActiveResource.prototype.Immutable = (function() {
+    function Immutable() {}
+
+    return Immutable;
+
+  })();
+
+}).call(this);
+
+(function() {
+  ActiveResource.prototype.Immutable.prototype.Attributes = (function() {
+    function Attributes() {}
+
+    Attributes.assignAttributes = function(attributes) {
+      var clone;
+      clone = this.clone();
+      clone.__assignAttributes(attributes);
+      return clone;
+    };
+
+    return Attributes;
+
+  })();
+
+}).call(this);
+
+(function() {
+  ActiveResource.prototype.Immutable.prototype.Persistence = (function() {
+    function Persistence() {}
+
+    Persistence.update = function(attributes, callback) {
+      var attributesKeys, oldAttributes,
+        _this = this;
+      attributesKeys = ActiveResource.prototype.Collection.build(_.keys(attributes));
+      oldAttributes = _.pick(this.attributes(), attributesKeys.toArray());
+      oldAttributes = _.defaults(oldAttributes, attributesKeys.inject({}, function(obj, k) {
+        obj[k] = null;
+        return obj;
+      }));
+      return this.__createOrUpdate(this.assignAttributes(attributes)).then(null, function(resource) {
+        resource.__assignAttributes(oldAttributes);
+        return resource;
+      }).then(callback, callback);
+    };
+
+    Persistence.__createOrUpdate = function(clone) {
+      if (clone == null) {
+        clone = this.clone();
+      }
+      clone.errors().reset();
+      if (clone.persisted()) {
+        return this.klass().resourceLibrary["interface"].patch(this.links()['self'], clone);
+      } else {
+        return this.klass().resourceLibrary["interface"].post(this.links()['related'], clone);
+      }
+    };
+
+    return Persistence;
+
+  })();
+
+}).call(this);
+
+(function() {
+  var __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+  ActiveResource.prototype.Immutable.prototype.Base = (function(_super) {
+    __extends(Base, _super);
+
+    ActiveResource.include(Base, ActiveResource.prototype.Immutable.prototype.Attributes);
+
+    ActiveResource.include(Base, ActiveResource.prototype.Immutable.prototype.Persistence);
+
+    function Base() {
+      Base.__super__.constructor.apply(this, arguments);
+    }
+
+    return Base;
+
+  })(ActiveResource.prototype.Base);
 
 }).call(this);
 

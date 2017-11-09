@@ -1,0 +1,1 @@
+class ActiveResource::Immutable
