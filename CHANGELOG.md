@@ -42,7 +42,7 @@ changes to each resource
 * Add `resourceLibrary.includePolymorphicRepeats` option that if `true` allows primary data’s relationships to send polymorphic
   owner data to the server, despite that data also being the primary data
 
-### Master
+## 1.0.0
 
 * **Breaking:** Switched from `jQuery.ajax` to `axios`, which have different promise interfaces
 * **Breaking:** Switched all references of `attribute` in `errors()` object to `field`:
