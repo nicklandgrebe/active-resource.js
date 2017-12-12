@@ -16,6 +16,20 @@ describe 'ActiveResource', ->
           @orderItems().build([{}, {}, {}])
         )
 
+        @resource = MyLibrary::Order.build()
+
+      afterEach ->
+        MyLibrary::Order.__callbacks['afterBuild'].clear()
+
+      it 'calls after making a request', ->
+        expect(@resource.orderItems().size()).toEqual(3)
+
+    describe '#afterRequest()', ->
+      beforeEach ->
+        MyLibrary::Order.afterRequest(->
+          @price = @price + 1.0
+        )
+
         MyLibrary::Order.last()
         .then window.onSuccess
 
@@ -25,8 +39,7 @@ describe 'ActiveResource', ->
             @resource = window.onSuccess.calls.mostRecent().args[0]
 
       afterEach ->
-        MyLibrary::Order.__callbacks['afterBuild'].clear()
+        MyLibrary::Order.__callbacks['afterRequest'].clear()
 
       it 'calls after making a request', ->
-        @promise.then =>
-          expect(@resource.orderItems().size()).toEqual(3)
+        expect(@resource.price).toEqual(3.0)
