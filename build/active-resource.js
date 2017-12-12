@@ -401,6 +401,7 @@ window.Promise = es6Promise.Promise;
           return association.loaded(true);
         }
       });
+      resource.__executeCallbacks('afterRequest');
       return resource;
     };
 
@@ -821,12 +822,17 @@ window.Promise = es6Promise.Promise;
 
     Callbacks.prototype.callbacks = function() {
       return this.__callbacks || (this.__callbacks = {
-        afterBuild: ActiveResource.prototype.Collection.build()
+        afterBuild: ActiveResource.prototype.Collection.build(),
+        afterRequest: ActiveResource.prototype.Collection.build()
       });
     };
 
     Callbacks.prototype.afterBuild = function(func) {
       return this.callbacks()['afterBuild'].push(func);
+    };
+
+    Callbacks.prototype.afterRequest = function(func) {
+      return this.callbacks()['afterRequest'].push(func);
     };
 
     Callbacks.__executeCallbacks = function(type) {

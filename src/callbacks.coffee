@@ -1,12 +1,16 @@
-# ActiveResource callbacks to execute around things like requests
+# ActiveResource callbacks to execute around things like requests and initialization
 class ActiveResource::Callbacks
   callbacks: ->
     @__callbacks ||= {
-      afterBuild: ActiveResource::Collection.build()
+      afterBuild: ActiveResource::Collection.build(),
+      afterRequest: ActiveResource::Collection.build()
     }
 
   afterBuild: (func) ->
     @callbacks()['afterBuild'].push func
+
+  afterRequest: (func) ->
+    @callbacks()['afterRequest'].push func
 
   # private
 

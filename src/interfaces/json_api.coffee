@@ -329,6 +329,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
 
       association.loaded(true) if _.has(attributes, reflection.name) || relationshipEmpty
 
+    resource.__executeCallbacks('afterRequest')
     resource
 
   # Interprets all the relationships identified in a resource, searching the `included` part of the response
