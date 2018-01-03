@@ -40,26 +40,12 @@ class ActiveResource::Attributes
 
   # Retrieves all the attributes of the resource
   #
-  # @note A property is valid to be in `attributes` if it meets these conditions:
-  #   1. It must not be a function
-  #   2. It must not be a reserved keyword
-  #   3. It must not be an association
-  #
   # @return [Object] the attributes of the resource
   @attributes: ->
-    reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams']
-
-    validOutput = (k, v) =>
-      if @klass().resourceLibrary.strictAttributes
-        @klass().attributes().include(k)
-      else
-        !_.isFunction(v) && !_.contains(reserved, k) &&
-        try !@association(k)? catch e then true
-
     output = {}
 
     for k, v of @
-      if validOutput(k, v)
+      if @__validAttribute(k, v)
         output[k] = v
 
     output
@@ -116,3 +102,21 @@ class ActiveResource::Attributes
   # @return [Object] the attribute
   @__readAttribute: (attribute) ->
     @attributes()[attribute]
+
+  # Determines whether or not an attribute is a valid attribute on the resource class
+  #
+  # @note A property is valid to be in `attributes` if it meets these conditions:
+  #   1. It must not be a function
+  #   2. It must not be a reserved keyword
+  #   3. It must not be an association
+  #
+  # @param [String] attribute the attribute to determine validity for
+  # @param [Number,String,Object] value the value for the attribute, relevant for !strictAttributes mode
+  @__validAttribute: (attribute, value) ->
+    reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams']
+
+    if @klass().resourceLibrary.strictAttributes
+      @klass().attributes().include(attribute)
+    else
+      !_.isFunction(value) && !_.contains(reserved, attribute) &&
+        try !@association(attribute)? catch e then true
