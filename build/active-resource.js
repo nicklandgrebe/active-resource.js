@@ -747,28 +747,11 @@ window.Promise = es6Promise.Promise;
     };
 
     Attributes.attributes = function() {
-      var k, output, reserved, v, validOutput,
-        _this = this;
-      reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams'];
-      validOutput = function(k, v) {
-        var e;
-        if (_this.klass().resourceLibrary.strictAttributes) {
-          return _this.klass().attributes().include(k);
-        } else {
-          return !_.isFunction(v) && !_.contains(reserved, k) && (function() {
-            try {
-              return this.association(k) == null;
-            } catch (_error) {
-              e = _error;
-              return true;
-            }
-          }).call(_this);
-        }
-      };
+      var k, output, v;
       output = {};
       for (k in this) {
         v = this[k];
-        if (validOutput(k, v)) {
+        if (this.__validAttribute(k, v)) {
           output[k] = v;
         }
       }
@@ -815,6 +798,23 @@ window.Promise = es6Promise.Promise;
 
     Attributes.__readAttribute = function(attribute) {
       return this.attributes()[attribute];
+    };
+
+    Attributes.__validAttribute = function(attribute, value) {
+      var e, reserved;
+      reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams'];
+      if (this.klass().resourceLibrary.strictAttributes) {
+        return this.klass().attributes().include(attribute);
+      } else {
+        return !_.isFunction(value) && !_.contains(reserved, attribute) && (function() {
+          try {
+            return this.association(attribute) == null;
+          } catch (_error) {
+            e = _error;
+            return true;
+          }
+        }).call(this);
+      }
     };
 
     return Attributes;
@@ -1955,39 +1955,46 @@ window.Promise = es6Promise.Promise;
     };
 
     Base.prototype.clone = function() {
-      return this.__createClone();
+      return this.__createClone({});
     };
 
-    Base.prototype.__createClone = function(cloner) {
-      var clone, fields,
+    Base.prototype.__createClone = function(_arg) {
+      var changedFields, clone, newCloner, newFields, oldCloner,
         _this = this;
+      oldCloner = _arg.oldCloner, newCloner = _arg.newCloner;
       clone = this.klass().build();
       this.errors().each(function(attribute, e) {
         return clone.errors().push(_.clone(e));
       });
+      clone.__links = _.clone(this.links());
+      changedFields = this.changedFields();
+      newFields = this.attributes();
       this.klass().fields().each(function(f) {
-        var reflection;
+        var newAssociation, newTarget, oldAssociation, reflection, _base;
         try {
-          return reflection = _this.association(f).reflection;
+          oldAssociation = _this.association(f);
+          newAssociation = clone.association(f);
+          newAssociation.__links = _.clone(oldAssociation.links());
+          reflection = oldAssociation.reflection;
+          newTarget = reflection.collection() ? oldAssociation.target.map(function(resource) {
+            return resource.__createClone({
+              oldCloner: _this
+            });
+          }) : (_this.__fields[f] != null ? clone.__fields[f] = _this.__fields[f] === oldCloner ? newCloner : _this.__fields[f].__createClone({
+            oldCloner: _this,
+            newCloner: clone
+          }) : void 0, changedFields.include(f) ? typeof (_base = oldAssociation.target).__createClone === "function" ? _base.__createClone({
+            oldCloner: _this,
+            newCloner: clone
+          }) : void 0 : clone.__fields[f]);
+          if (newTarget) {
+            return newFields[reflection.name] = newTarget;
+          }
         } catch (_error) {
           return clone.__fields[f] = _this.__fields[f];
         }
       });
-      clone.__links = _.clone(this.links());
-      fields = this.attributes();
-      this.klass().reflectOnAllAssociations().each(function(reflection) {
-        var new_association, new_target, old_association;
-        old_association = _this.association(reflection.name);
-        new_association = clone.association(reflection.name);
-        new_association.__links = _.clone(old_association.links());
-        new_target = reflection.collection() ? old_association.target.map(function(resource) {
-          return resource.__createClone(_this);
-        }) : (old_association.target != null) && old_association.target !== cloner ? old_association.target.__createClone(_this) : void 0;
-        if (new_target) {
-          return fields[reflection.name] = new_target;
-        }
-      });
-      clone.__assignAttributes(fields);
+      clone.__assignAttributes(newFields);
       return clone;
     };
 

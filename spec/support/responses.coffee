@@ -47,6 +47,9 @@ window.JsonApiResponses =
       success:
         status: 200
         response: getJSONFixture('orders/singular.json')
+      includes:
+        status: 200
+        response: getJSONFixture('orders/includes.json')
       failure:
         status: 422
         response: getJSONFixture('orders/422_resource_invalid.json')

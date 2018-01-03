@@ -58,44 +58,62 @@ class ActiveResource::Base
 
   # Clones the resource and its relationship resources recursively
   clone: ->
-    @__createClone()
+    @__createClone({})
 
   # private
 
   # Clones a resource recursively, taking in a cloner argument to protect against circular cloning
   #   of relationships
   #
-  # @param [ActiveResource::Base] cloner the resource cloning this resource (always a related resource)
+  # @param [ActiveResource::Base] oldCloner the resource cloning this resource (always a related resource)
+  # @param [ActiveResource::Base] newCloner the clone of oldCloner to reassign fields to
   # @return [ActiveResource::Base] the cloned resource
-  __createClone: (cloner) ->
+  __createClone: ({ oldCloner, newCloner }) ->
     clone = @klass().build()
 
     @errors().each (attribute, e) => clone.errors().push(_.clone(e))
+    clone.__links = _.clone(@links())
+
+    changedFields = @changedFields()
+    newFields = @attributes()
     @klass().fields().each (f) =>
       try
-        reflection = @association(f).reflection
-        # handle cloning of association field
+        oldAssociation = @association(f)
+        newAssociation = clone.association(f)
+
+        newAssociation.__links = _.clone(oldAssociation.links())
+
+        reflection = oldAssociation.reflection
+
+        newTarget =
+          if reflection.collection()
+            oldAssociation.target.map (resource) => resource.__createClone(oldCloner: this)
+          else
+            if @__fields[f]?
+              clone.__fields[f] =
+                if @__fields[f] == oldCloner
+                  newCloner
+                else
+                  @__fields[f].__createClone(
+                    oldCloner: this,
+                    newCloner: clone
+                  )
+
+            if changedFields.include(f)
+              oldAssociation.target.__createClone?(
+                oldCloner: this,
+                newCloner: clone
+              )
+            else
+              clone.__fields[f]
+
+        if newTarget
+          newFields[reflection.name] = newTarget
+
       catch
         clone.__fields[f] = @__fields[f]
 
-    clone.__links = _.clone(@links())
-
-    fields = @attributes()
-    @klass().reflectOnAllAssociations().each (reflection) =>
-      old_association = @association(reflection.name)
-      new_association = clone.association(reflection.name)
-      new_association.__links = _.clone(old_association.links())
-
-      new_target =
-        if reflection.collection()
-          old_association.target.map (resource) => resource.__createClone(this)
-        else if old_association.target? && old_association.target != cloner
-          old_association.target.__createClone(this)
-
-      if new_target
-        fields[reflection.name] = new_target
-
-    clone.__assignAttributes(fields)
+    clone.__assignAttributes(newFields)
 
     clone
 

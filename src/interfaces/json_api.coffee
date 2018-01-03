@@ -404,7 +404,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [ActiveResource::Base] resource the resource to get the primary key of
   # @return [ActiveResource::Base] the include built into an ActiveResource::Base
   #
-  # 1. Build a resource identnfier from the relationship data type and primary key
+  # 1. Build a resource identifier from the relationship data type and primary key
   # 2. Find the include in `includes` using the resource identifier
   # 3. Build the include into an ActiveResource if it exists
   # 4. Return the built include or null
