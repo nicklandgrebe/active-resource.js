@@ -87,7 +87,19 @@ class ActiveResource::Base
 
         newTarget =
           if reflection.collection()
-            oldAssociation.target.map (resource) => resource.__createClone(oldCloner: this)
+            associationClones = oldAssociation.target.map (resource) =>
+              resource.__createClone(oldCloner: this, newCloner: clone)
+
+            if @__fields[f]?
+              clone.__fields[f] = @__fields[f].map (resource) =>
+                associationIndex = oldAssociation.target.indexOf(resource)
+
+                if associationIndex >= 0
+                  associationClones.get(associationIndex)
+                else
+                  resource.__createClone(oldCloner: this, newCloner: clone)
+
+            associationClones
           else
             if @__fields[f]?
               clone.__fields[f] =
@@ -99,7 +111,7 @@ class ActiveResource::Base
                     newCloner: clone
                   )
 
-            if changedFields.include(f)
+            if changedFields.include(f) && oldAssociation.target != oldCloner
               oldAssociation.target.__createClone?(
                 oldCloner: this,
                 newCloner: clone

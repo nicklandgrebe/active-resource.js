@@ -882,7 +882,11 @@ window.Promise = es6Promise.Promise;
     };
 
     Collection.prototype.include = function(item) {
-      return _.indexOf(this.__collection, item) >= 0;
+      return this.indexOf(item) >= 0;
+    };
+
+    Collection.prototype.indexOf = function(item) {
+      return _.indexOf(this.__collection, item);
     };
 
     Collection.prototype.get = function(index) {
@@ -1970,20 +1974,32 @@ window.Promise = es6Promise.Promise;
       changedFields = this.changedFields();
       newFields = this.attributes();
       this.klass().fields().each(function(f) {
-        var newAssociation, newTarget, oldAssociation, reflection, _base;
+        var associationClones, newAssociation, newTarget, oldAssociation, reflection, _base;
         try {
           oldAssociation = _this.association(f);
           newAssociation = clone.association(f);
           newAssociation.__links = _.clone(oldAssociation.links());
           reflection = oldAssociation.reflection;
-          newTarget = reflection.collection() ? oldAssociation.target.map(function(resource) {
+          newTarget = reflection.collection() ? (associationClones = oldAssociation.target.map(function(resource) {
             return resource.__createClone({
-              oldCloner: _this
+              oldCloner: _this,
+              newCloner: clone
             });
-          }) : (_this.__fields[f] != null ? clone.__fields[f] = _this.__fields[f] === oldCloner ? newCloner : _this.__fields[f].__createClone({
+          }), _this.__fields[f] != null ? clone.__fields[f] = _this.__fields[f].map(function(resource) {
+            var associationIndex;
+            associationIndex = oldAssociation.target.indexOf(resource);
+            if (associationIndex >= 0) {
+              return associationClones.get(associationIndex);
+            } else {
+              return resource.__createClone({
+                oldCloner: _this,
+                newCloner: clone
+              });
+            }
+          }) : void 0, associationClones) : (_this.__fields[f] != null ? clone.__fields[f] = _this.__fields[f] === oldCloner ? newCloner : _this.__fields[f].__createClone({
             oldCloner: _this,
             newCloner: clone
-          }) : void 0, changedFields.include(f) ? typeof (_base = oldAssociation.target).__createClone === "function" ? _base.__createClone({
+          }) : void 0, changedFields.include(f) && oldAssociation.target !== oldCloner ? typeof (_base = oldAssociation.target).__createClone === "function" ? _base.__createClone({
             oldCloner: _this,
             newCloner: clone
           }) : void 0 : clone.__fields[f]);
@@ -2128,7 +2144,7 @@ window.Promise = es6Promise.Promise;
     };
 
     Association.prototype.__invertibleFor = function(resource) {
-      return this.__foreignKeyFor(resource) && this.__inverseReflectionFor(resource);
+      return this.__inverseReflectionFor(resource) != null;
     };
 
     Association.prototype.__foreignKeyFor = function(resource) {
