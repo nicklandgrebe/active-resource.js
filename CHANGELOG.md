@@ -42,7 +42,7 @@ changes to each resource
 * Add `resourceLibrary.includePolymorphicRepeats` option that if `true` allows primary data’s relationships to send polymorphic
   owner data to the server, despite that data also being the primary data
 
-### Master
+## 1.0.0
 
 * **Breaking:** Switched from `jQuery.ajax` to `axios`, which have different promise interfaces
 * **Breaking:** Switched all references of `attribute` in `errors()` object to `field`:
@@ -57,3 +57,8 @@ changes to each resource
 * Fix bug in relationship link name being camelCased in `JsonApi` interface
 * Add `resourceLibrary.strictAttributes` boolean config option. If true, only attributes defined in `klass().attributes()` will
   be in the result of `resource.attributes()`. If false, any non-function properties of the resource will be returned.
+  
+# Master
+
+* Add `afterRequest` callback that is called after GET, POST, PATCH, PUT requests of a resource
+  * `afterBuild` will be called on GET, but it is called before any fields are assigned to the resource
