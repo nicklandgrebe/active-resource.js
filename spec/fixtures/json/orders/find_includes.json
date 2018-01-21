@@ -5,18 +5,17 @@
     "attributes": {
       "price": 3.0,
       "tax": 5.0,
-      "total": 8.0,
-      "balance": 0.0
+      "total": 8.0
     },
     "relationships": {
       "order_items": {
         "data": [
           {
-            "id": "5",
+            "id": "1",
             "type": "order_items"
           },
           {
-            "id": "10",
+            "id": "2",
             "type": "order_items"
           }
         ],
@@ -43,7 +42,7 @@
       },
       "gift_card": {
         "data": {
-          "id": "1",
+          "id": "5",
           "type": "gift_cards"
         },
         "links": {
@@ -58,7 +57,7 @@
   },
   "included": [
     {
-      "id": "5",
+      "id": "1",
       "type": "order_items",
       "attributes": {
         "amount": 1.0
@@ -68,7 +67,7 @@
       }
     },
     {
-      "id": "10",
+      "id": "2",
       "type": "order_items",
       "attributes": {
         "amount": 2.0
@@ -78,13 +77,13 @@
       }
     },
     {
-      "id": "1",
+      "id": "5",
       "type": "gift_cards",
       "attributes": {
-        "value": 5
+        "value": 25
       },
       "links": {
-        "self": "https://example.com/api/v1/gift_cards/1/"
+        "self": "https://example.com/api/v1/gift_cards/5/"
       }
     }
   ]

@@ -208,7 +208,7 @@ describe 'ActiveResource', ->
 
             it 'does not assign the owner\'s foreign key', ->
               @promise4.catch =>
-                expect(@resource.giftCardId).toEqual('1')
+                expect(@resource.giftCardId).toEqual('5')
 
         describe 'when assigning null', ->
           beforeEach ->

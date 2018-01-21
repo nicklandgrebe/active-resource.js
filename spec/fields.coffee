@@ -154,7 +154,7 @@ describe 'ActiveResource', ->
               @resource.save()
 
               moxios.wait =>
-                moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.save.includes)
 
           it 'adds relationship to resource document', ->
             @promise2.then =>

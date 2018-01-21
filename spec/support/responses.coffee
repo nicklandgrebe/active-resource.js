@@ -42,7 +42,7 @@ window.JsonApiResponses =
         response: getJSONFixture('orders/singular.json')
       includes:
         status: 200
-        response: getJSONFixture('orders/includes.json')
+        response: getJSONFixture('orders/find_includes.json')
     save:
       success:
         status: 200
