@@ -169,7 +169,7 @@ class ActiveResource::Associations::Association
   # @param [ActiveResource::Base] the resource to determine if we need to set the inverse association for
   # @return [Boolean] whether or not the inverse association needs to be set
   __invertibleFor: (resource) ->
-    @__foreignKeyFor(resource) && @__inverseReflectionFor(resource)
+    @__inverseReflectionFor(resource)?
 
   # @return [Boolean] returns true if the resource contains the foreignKey
   __foreignKeyFor: (resource) ->
