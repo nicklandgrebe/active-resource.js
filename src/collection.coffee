@@ -34,7 +34,14 @@ class ActiveResource::Collection
   # @param [Object] item the item to check for in the collection
   # @return [Boolean] whether or not the item is in the collection
   include: (item) ->
-    _.indexOf(@__collection, item) >= 0
+    @indexOf(item) >= 0
+
+  # Get the index of the specified item in the collection
+  #
+  # @param [Object] item the item to get the index for in the collection
+  # @return [Integer] the index of the item in the collection, or -1 if it is not in the collection
+  indexOf: (item) ->
+    _.indexOf(@__collection, item)
 
   # Gets the item at the index of the collection
   #
