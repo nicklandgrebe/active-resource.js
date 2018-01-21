@@ -1977,6 +1977,7 @@ window.Promise = es6Promise.Promise;
         return clone.errors().push(_.clone(e));
       });
       clone.__links = _.clone(this.links());
+      clone.__queryParams = _.clone(this.queryParams());
       changedFields = this.changedFields();
       newFields = this.attributes();
       this.klass().fields().each(function(f) {

@@ -74,6 +74,8 @@ class ActiveResource::Base
     @errors().each (attribute, e) => clone.errors().push(_.clone(e))
     clone.__links = _.clone(@links())
 
+    clone.__queryParams = _.clone(@queryParams())
+
     changedFields = @changedFields()
     newFields = @attributes()
     @klass().fields().each (f) =>
