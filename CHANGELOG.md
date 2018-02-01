@@ -57,8 +57,5 @@ changes to each resource
 * Fix bug in relationship link name being camelCased in `JsonApi` interface
 * Add `resourceLibrary.strictAttributes` boolean config option. If true, only attributes defined in `klass().attributes()` will
   be in the result of `resource.attributes()`. If false, any non-function properties of the resource will be returned.
-  
-# Master
-
 * Add `afterRequest` callback that is called after GET, POST, PATCH, PUT requests of a resource
   * `afterBuild` will be called on GET, but it is called before any fields are assigned to the resource
