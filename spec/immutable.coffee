@@ -49,7 +49,7 @@ describe 'ActiveResource', ->
 
     describe 'when resource unpersisted', ->
       beforeEach ->
-        @resource = ImmutableLibrary::Order.includes('giftCard').build()
+        @resource = ImmutableLibrary::Order.build()
 
       describe 'assigning attributes', ->
         beforeEach ->

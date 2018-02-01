@@ -375,14 +375,14 @@ window.Promise = es6Promise.Promise;
       var attributes, existingResource, parentRelationship, resource;
       existingResource = _arg.existingResource, parentRelationship = _arg.parentRelationship;
       resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
-      attributes = data['attributes'];
+      attributes = data['attributes'] || {};
       if (data[resource.klass().primaryKey]) {
         attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString();
       }
       if (parentRelationship != null) {
         attributes = _.extend(attributes, parentRelationship);
       }
-      attributes = this.addRelationshipsToAttributes(attributes, data['relationships'], includes, resource);
+      attributes = this.addRelationshipsToFields(attributes, data['relationships'], includes, resource);
       resource.__assignFields(this.toCamelCase(attributes));
       resource.__links = _.extend(resource.links(), data['links']);
       resource.klass().reflectOnAllAssociations().each(function(reflection) {
@@ -409,21 +409,20 @@ window.Promise = es6Promise.Promise;
       return resource;
     };
 
-    JsonApi.prototype.addRelationshipsToAttributes = function(attributes, relationships, includes, resource) {
+    JsonApi.prototype.addRelationshipsToFields = function(attributes, relationships, includes, resource) {
       var _this = this;
       _.each(relationships, function(relationship, relationshipName) {
-        var include, parentReflection, reflection, relationshipItems;
+        var include, reflection, relationshipItems;
         if ((reflection = resource.klass().reflectOnAssociation(s.camelize(relationshipName)))) {
-          parentReflection = reflection.inverseOf();
           if (reflection.collection()) {
             relationshipItems = ActiveResource.prototype.Collection.build(relationship['data']).map(function(relationshipMember) {
-              return _this.findIncludeFromRelationship(relationshipMember, includes, resource, parentReflection);
+              return _this.findResourceForRelationship(relationshipMember, includes, resource, reflection);
             }).compact();
             if (!(typeof relationshipItems.empty === "function" ? relationshipItems.empty() : void 0)) {
               return attributes[relationshipName] = relationshipItems;
             }
           } else if (relationship['data'] != null) {
-            include = _this.findIncludeFromRelationship(relationship['data'], includes, resource, parentReflection);
+            include = _this.findResourceForRelationship(relationship['data'], includes, resource, reflection);
             if (include != null) {
               return attributes[relationshipName] = include;
             }
@@ -433,22 +432,39 @@ window.Promise = es6Promise.Promise;
       return attributes;
     };
 
-    JsonApi.prototype.findIncludeFromRelationship = function(relationshipData, includes, resource, parentReflection) {
-      var findConditions, include, parentRelationship;
+    JsonApi.prototype.findResourceForRelationship = function(relationshipData, includes, resource, reflection) {
+      var findConditions, include, parentReflection, parentRelationship, potentialTarget, primaryKey, target,
+        _this = this;
+      primaryKey = resource.klass().primaryKey;
       findConditions = {
         type: relationshipData.type
       };
-      findConditions[resource.klass().primaryKey] = relationshipData[resource.klass().primaryKey];
+      findConditions[primaryKey] = relationshipData[primaryKey];
       parentRelationship = {};
-      if (parentReflection != null) {
+      if ((parentReflection = reflection.inverseOf()) != null) {
         parentRelationship[parentReflection.name] = resource;
       }
       if ((include = _.findWhere(includes, findConditions)) != null) {
-        include = this.buildResource(include, includes, {
+        return this.buildResource(include, includes, {
           parentRelationship: parentRelationship
         });
+      } else {
+        if (reflection.collection()) {
+          target = resource.association(reflection.name).target.detect(function(t) {
+            return t[primaryKey] === findConditions[primaryKey];
+          });
+        } else if ((potentialTarget = resource.association(reflection.name).target) != null) {
+          if (!(reflection.polymorphic() && potentialTarget.klass().queryName !== findConditions['type']) && potentialTarget[primaryKey] === findConditions[primaryKey]) {
+            target = potentialTarget;
+          }
+        }
+        if (target != null) {
+          return this.buildResource({}, [], {
+            existingResource: target,
+            parentRelationship: parentRelationship
+          });
+        }
       }
-      return include;
     };
 
     JsonApi.prototype.mergePersistedChanges = function(response, resource) {

@@ -76,16 +76,6 @@
       "links": {
         "self": "https://example.com/api/v1/order_items/2/"
       }
-    },
-    {
-      "id": "1",
-      "type": "gift_cards",
-      "attributes": {
-        "value": 5
-      },
-      "links": {
-        "self": "https://example.com/api/v1/gift_cards/1/"
-      }
     }
   ]
 }
