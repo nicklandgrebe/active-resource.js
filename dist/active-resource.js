@@ -1,29 +1,27 @@
 /*
-	active-resource 1.0.0
+	active-resource 0.9.7
 	(c) 2017 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	active-resource may be freely distributed under the MIT license
 	Portions of active-resource were inspired by or borrowed from Rail's ActiveRecord library
 */
 
 (function (root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    // AMD. Register as an anonymous module unless amdModuleId is set
-    define(["axios","es6-promise","underscore","underscore.string","qs","underscore.inflection"], function (a0,b1,c2,d3,e4,f5) {
-      return (root['ActiveResource'] = factory(a0,b1,c2,d3,e4,f5));
-    });
-  } else if (typeof module === 'object' && module.exports) {
-    // Node. Does not work with strict CommonJS, but
-    // only CommonJS-like environments that support module.exports,
-    // like Node.
-    module.exports = factory(require("axios"),require("es6-promise"),require("underscore"),require("underscore.string"),require("qs"),require("underscore.inflection"));
-  } else {
-    root['ActiveResource'] = factory(root["axios"],root["es6-promise"],root["underscore"],root["underscore.string"],root["qs"],root["underscore.inflection"]);
-  }
-}(this, function (axios, es6Promise, _, s, Qs) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['jquery', 'underscore', 'underscore.string', 'underscore.inflection'], factory);
+    } else if (typeof exports === 'object') {
+        // Node. Does not work with strict CommonJS, but
+        // only CommonJS-like enviroments that support module.exports,
+        // like Node.
+        require('underscore.inflection');
+        module.exports = factory(require('jquery'), require('underscore'), require('underscore.string'));
+    } else {
+        // Browser globals (root is window)
+        root.ActiveResource = factory(root.jQuery, root._, root.s);
+    }
+}(this, function(jQuery, _, s) {
 
 var ActiveResource = function(){};
-
-window.Promise = es6Promise.Promise;
 
 (function() {
   ActiveResource.extend = function(klass, mixin) {
@@ -94,8 +92,6 @@ window.Promise = es6Promise.Promise;
 
       ResourceLibrary.includePolymorphicRepeats = options.includePolymorphicRepeats;
 
-      ResourceLibrary.strictAttributes = options.strictAttributes;
-
       resourceLibrary = ResourceLibrary;
 
       ResourceLibrary.Base = Base = (function(_super) {
@@ -142,8 +138,6 @@ window.Promise = es6Promise.Promise;
     function Interfaces() {}
 
     Interfaces.prototype.Base = (function() {
-      Base.contentType = 'application/json';
-
       function Base(resourceLibrary) {
         this.resourceLibrary = resourceLibrary;
       }
@@ -151,24 +145,14 @@ window.Promise = es6Promise.Promise;
       Base.prototype.request = function(url, method, data) {
         var options;
         options = {
-          responseType: 'json',
-          headers: _.extend(this.resourceLibrary.headers || {}, {
-            'Content-Type': this.constructor.contentType
-          }),
+          contentType: 'application/json',
+          dataType: 'json',
+          headers: this.resourceLibrary.headers,
           method: method,
           url: url
         };
-        if (method === 'GET') {
-          options.params = data;
-          options.paramsSerializer = function(params) {
-            return Qs.stringify(params, {
-              arrayFormat: 'brackets'
-            });
-          };
-        } else {
-          options.data = data;
-        }
-        return axios(options);
+        options['data'] = method === 'GET' ? data : JSON.stringify(data);
+        return jQuery.ajax(options);
       };
 
       Base.prototype.get = function(url, queryParams) {
@@ -197,7 +181,7 @@ window.Promise = es6Promise.Promise;
 
     return Interfaces;
 
-  }).call(this);
+  })();
 
 }).call(this);
 
@@ -215,15 +199,12 @@ window.Promise = es6Promise.Promise;
       return _ref;
     }
 
-    JsonApi.contentType = 'application/vnd.api+json';
-
     JsonApi.prototype.request = function(url, method, data) {
-      return JsonApi.__super__.request.apply(this, arguments).then(function(response) {
-        var _ref1;
-        if (!((((_ref1 = response.data) != null ? _ref1.data : void 0) != null) || response.status === 204)) {
+      return JsonApi.__super__.request.apply(this, arguments).then(function(response, textStatus, xhr) {
+        if (!(((response != null ? response.data : void 0) != null) || xhr.status === 204)) {
           throw "Response from " + url + " was not in JSON API format";
         }
-        return response.data;
+        return response;
       });
     };
 
@@ -389,18 +370,22 @@ window.Promise = es6Promise.Promise;
       resource.__assignFields(this.toCamelCase(attributes));
       resource.__links = _.extend(resource.links(), data['links']);
       resource.klass().reflectOnAllAssociations().each(function(reflection) {
-        var association, relationship, relationshipEmpty, relationshipLinks, selfLink, url_safe_reflection_name, _ref1, _ref2, _ref3, _ref4,
+        var association, relationship, relationshipEmpty, relationshipLinks, selfLink, _ref1, _ref2, _ref3, _ref4,
           _this = this;
         association = resource.association(reflection.name);
         if ((relationshipLinks = (_ref1 = data['relationships']) != null ? (_ref2 = _ref1[s.underscored(reflection.name)]) != null ? _ref2['links'] : void 0 : void 0) != null) {
           association.__links = _.extend(association.links(), _.mapObject(relationshipLinks, function(l) {
-            return ActiveResource.prototype.Links.__constructLink(l);
+            if (s.endsWith(l, '/')) {
+              return l;
+            } else {
+              return l + '/';
+            }
           }));
         } else if ((selfLink = resource.links()['self']) != null) {
-          url_safe_reflection_name = s.underscored(reflection.name);
+          selfLink = s.endsWith(selfLink, '/') ? selfLink : selfLink + '/';
           association.__links = {
-            self: ActiveResource.prototype.Links.__constructLink(selfLink, 'relationships', url_safe_reflection_name),
-            related: ActiveResource.prototype.Links.__constructLink(selfLink, url_safe_reflection_name)
+            self: selfLink + ("relationships/" + reflection.name),
+            related: selfLink + reflection.name
           };
         }
         relationshipEmpty = _.isObject(relationship = (_ref3 = data['relationships']) != null ? (_ref4 = _ref3[s.underscored(reflection.name)]) != null ? _ref4['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : relationship != null ? relationship.length === 0 : true;
@@ -534,7 +519,7 @@ window.Promise = es6Promise.Promise;
           return built.first();
         }
       }, function(errors) {
-        return Promise.reject(_this.parameterErrors(errors.response.data['errors']));
+        return _this.parameterErrors(errors.responseJSON['errors']);
       });
     };
 
@@ -567,9 +552,9 @@ window.Promise = es6Promise.Promise;
         }
       }, function(errors) {
         if (options['onlyResourceIdentifiers']) {
-          return Promise.reject(errors);
+          return errors;
         } else {
-          return Promise.reject(_this.resourceErrors(resourceData, errors.response.data['errors']));
+          return _this.resourceErrors(resourceData, errors.responseJSON['errors']);
         }
       });
     };
@@ -604,9 +589,9 @@ window.Promise = es6Promise.Promise;
         }
       }, function(errors) {
         if (options['onlyResourceIdentifiers']) {
-          return Promise.reject(errors);
+          return errors;
         } else {
-          return Promise.reject(_this.resourceErrors(resourceData, errors.response.data['errors']));
+          return _this.resourceErrors(resourceData, errors.responseJSON['errors']);
         }
       });
     };
@@ -640,9 +625,9 @@ window.Promise = es6Promise.Promise;
         }
       }, function(errors) {
         if (options['onlyResourceIdentifiers']) {
-          return Promise.reject(errors);
+          return errors;
         } else {
-          return Promise.reject(_this.resourceErrors(resourceData, errors.response.data['errors']));
+          return _this.resourceErrors(resourceData, errors.responseJSON['errors']);
         }
       });
     };
@@ -660,10 +645,8 @@ window.Promise = es6Promise.Promise;
       } : {};
       _this = this;
       return this.request(url, 'DELETE', data).then(null, function(errors) {
-        if (errors.response.data) {
-          return Promise.reject(_this.parameterErrors(errors.response.data['errors']));
-        } else {
-          return Promise.reject(null);
+        if (errors.responseJSON) {
+          return _this.parameterErrors(errors.responseJSON['errors']);
         }
       });
     };
@@ -763,23 +746,18 @@ window.Promise = es6Promise.Promise;
     };
 
     Attributes.attributes = function() {
-      var k, output, reserved, v, validOutput,
-        _this = this;
+      var k, output, reserved, v, validOutput;
       reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams'];
       validOutput = function(k, v) {
         var e;
-        if (_this.klass().resourceLibrary.strictAttributes) {
-          return _this.klass().attributes().include(k);
-        } else {
-          return !_.isFunction(v) && !_.contains(reserved, k) && (function() {
-            try {
-              return this.association(k) == null;
-            } catch (_error) {
-              e = _error;
-              return true;
-            }
-          }).call(_this);
-        }
+        return !_.isFunction(v) && !_.contains(reserved, k) && (function() {
+          try {
+            return this.association(k) == null;
+          } catch (_error) {
+            e = _error;
+            return true;
+          }
+        }).call(this);
       };
       output = {};
       for (k in this) {
@@ -792,13 +770,13 @@ window.Promise = es6Promise.Promise;
     };
 
     Attributes.reload = function() {
-      var resource, url, _ref;
+      var link, resource, _ref;
       if (!(this.persisted() || ((_ref = this.id) != null ? _ref.toString().length : void 0) > 0)) {
         throw 'Cannot reload a resource that is not persisted or has an ID';
       }
       resource = this;
-      url = this.links()['self'] || (ActiveResource.prototype.Links.__constructLink(this.links()['related'], this.id.toString()));
-      return this["interface"]().get(url, this.queryParams()).then(function(reloaded) {
+      link = this.links()['self'] || (this.links()['related'] + this.id.toString());
+      return this["interface"]().get(link, this.queryParams()).then(function(reloaded) {
         resource.__assignFields(reloaded.attributes());
         resource.klass().reflectOnAllAssociations().each(function(reflection) {
           var target;
@@ -1079,14 +1057,14 @@ window.Promise = es6Promise.Promise;
       return this.reset();
     };
 
-    Errors.prototype.add = function(field, code, detail) {
+    Errors.prototype.add = function(attribute, code, detail) {
       var error, _base;
       if (detail == null) {
         detail = '';
       }
-      (_base = this.__errors)[field] || (_base[field] = []);
-      this.__errors[field].push(error = {
-        field: field,
+      (_base = this.__errors)[attribute] || (_base[attribute] = []);
+      this.__errors[attribute].push(error = {
+        attribute: attribute,
         code: code,
         detail: detail,
         message: detail
@@ -1096,19 +1074,19 @@ window.Promise = es6Promise.Promise;
 
     Errors.prototype.push = function(error) {
       var _base, _name;
-      (_base = this.__errors)[_name = error.field] || (_base[_name] = []);
-      this.__errors[error.field].push(error);
+      (_base = this.__errors)[_name = error.attribute] || (_base[_name] = []);
+      this.__errors[error.attribute].push(error);
       return error;
     };
 
-    Errors.prototype.added = function(field, code) {
-      return ActiveResource.prototype.Collection.build(this.__errors[field]).detect(function(e) {
+    Errors.prototype.added = function(attribute, code) {
+      return ActiveResource.prototype.Collection.build(this.__errors[attribute]).detect(function(e) {
         return e.code === code;
       }) != null;
     };
 
-    Errors.prototype.include = function(field) {
-      return (this.__errors[field] != null) && _.size(this.__errors[field]) > 0;
+    Errors.prototype.include = function(attribute) {
+      return (this.__errors[attribute] != null) && _.size(this.__errors[attribute]) > 0;
     };
 
     Errors.prototype.empty = function() {
@@ -1119,48 +1097,39 @@ window.Promise = es6Promise.Promise;
       return _.size(this.toArray());
     };
 
-    Errors.prototype["delete"] = function(field) {
-      return this.__errors[field] = [];
+    Errors.prototype["delete"] = function(attribute) {
+      return this.__errors[attribute] = [];
     };
 
     Errors.prototype.each = function(iterator) {
-      return _.each(this.__errors, function(errors, field) {
+      return _.each(this.__errors, function(errors, attribute) {
         var error, _i, _len, _results;
         _results = [];
         for (_i = 0, _len = errors.length; _i < _len; _i++) {
           error = errors[_i];
-          _results.push(iterator(field, error));
+          _results.push(iterator(attribute, error));
         }
         return _results;
       });
     };
 
-    Errors.prototype.forField = function(field) {
-      var _this = this;
-      return ActiveResource.prototype.Collection.build(_.keys(this.__errors)).select(function(k) {
-        return s.startsWith(k, field);
-      }).map(function(k) {
-        return _this.__errors[k];
-      }).flatten();
-    };
-
-    Errors.prototype.detailsForField = function(field) {
-      return this.forField(field).inject({}, function(out, error) {
-        out[error.code] = error.detail;
+    Errors.prototype.forAttribute = function(attribute) {
+      return ActiveResource.prototype.Collection.build(this.__errors[attribute]).inject({}, function(out, error) {
+        out[error.code] = error.message;
         return out;
       });
     };
 
     Errors.prototype.forBase = function() {
-      return this.forField('base');
+      return this.forAttribute('base');
     };
 
     Errors.prototype.toArray = function() {
-      var errors, field, output, _ref;
+      var attribute, errors, output, _ref;
       output = [];
       _ref = this.__errors;
-      for (field in _ref) {
-        errors = _ref[field];
+      for (attribute in _ref) {
+        errors = _ref[attribute];
         output.push.apply(output, errors);
       }
       return output;
@@ -1256,46 +1225,6 @@ window.Promise = es6Promise.Promise;
 }).call(this);
 
 (function() {
-  var __slice = [].slice;
-
-  ActiveResource.prototype.Links = (function() {
-    function Links() {}
-
-    Links.prototype.links = function() {
-      return this.__links || (this.__links = _.clone(this.klass().links()));
-    };
-
-    Links.links = function() {
-      if (this.resourceLibrary.baseUrl == null) {
-        throw 'baseUrl is not set';
-      }
-      if (this.queryName == null) {
-        throw 'queryName is not set';
-      }
-      return this.__links || (this.__links = {
-        related: this.resourceLibrary.baseUrl + this.queryName + '/'
-      });
-    };
-
-    Links.__constructLink = function() {
-      var args;
-      args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      return _.map(args, function(str) {
-        if (s.endsWith(str, '/')) {
-          return str;
-        } else {
-          return str + '/';
-        }
-      }).join('');
-    };
-
-    return Links;
-
-  })();
-
-}).call(this);
-
-(function() {
   ActiveResource.prototype.Persistence = (function() {
     function Persistence() {}
 
@@ -1308,7 +1237,7 @@ window.Promise = es6Promise.Promise;
     };
 
     Persistence.save = function(callback) {
-      return this.__createOrUpdate().then(callback, callback);
+      return this.__createOrUpdate().always(callback);
     };
 
     Persistence.update = function(attributes, callback) {
@@ -1318,7 +1247,7 @@ window.Promise = es6Promise.Promise;
       return this.__createOrUpdate().then(null, function(resource) {
         resource.assignAttributes(oldAttributes);
         return resource;
-      }).then(callback, callback);
+      }).always(callback);
     };
 
     Persistence.destroy = function() {
@@ -1846,12 +1775,10 @@ window.Promise = es6Promise.Promise;
     };
 
     Relation.prototype.find = function(primaryKey) {
-      var url;
       if (primaryKey == null) {
         return;
       }
-      url = ActiveResource.prototype.Links.__constructLink(this.links()['related'], primaryKey.toString());
-      return this["interface"]().get(url, this.queryParams());
+      return this["interface"]().get(this.links()['related'] + primaryKey.toString(), this.queryParams());
     };
 
     Relation.prototype.findBy = function(conditions) {
@@ -1909,8 +1836,6 @@ window.Promise = es6Promise.Promise;
 
     ActiveResource.extend(Base, ActiveResource.prototype.Relation.prototype);
 
-    ActiveResource.extend(Base, ActiveResource.prototype.Links);
-
     ActiveResource.include(Base, ActiveResource.prototype.Associations.prototype);
 
     ActiveResource.include(Base, ActiveResource.prototype.Attributes);
@@ -1920,8 +1845,6 @@ window.Promise = es6Promise.Promise;
     ActiveResource.include(Base, ActiveResource.prototype.Errors);
 
     ActiveResource.include(Base, ActiveResource.prototype.Fields);
-
-    ActiveResource.include(Base, ActiveResource.prototype.Links.prototype);
 
     ActiveResource.include(Base, ActiveResource.prototype.Persistence);
 
@@ -1938,6 +1861,22 @@ window.Promise = es6Promise.Promise;
     function Base() {
       this.__initializeFields();
     }
+
+    Base.links = function() {
+      if (this.resourceLibrary.baseUrl == null) {
+        throw 'baseUrl is not set';
+      }
+      if (this.queryName == null) {
+        throw 'queryName is not set';
+      }
+      return this.__links || (this.__links = {
+        related: this.resourceLibrary.baseUrl + this.queryName + '/'
+      });
+    };
+
+    Base.prototype.links = function() {
+      return this.__links || (this.__links = _.clone(this.klass().links()));
+    };
 
     Base["interface"] = function() {
       return this.resourceLibrary["interface"];
@@ -2050,7 +1989,7 @@ window.Promise = es6Promise.Promise;
           _this.target = loadedTarget;
           _this.loaded(true);
           return loadedTarget;
-        })["catch"](function() {
+        }).fail(function() {
           return _this.reset();
         });
       } else {
@@ -2931,6 +2870,7 @@ window.Promise = es6Promise.Promise;
   })(ActiveResource.prototype.Associations.prototype.Builder.prototype.SingularAssociation);
 
 }).call(this);
+
 
 return ActiveResource;
 
