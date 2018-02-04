@@ -923,6 +923,14 @@ window.Promise = es6Promise.Promise;
       }
     };
 
+    Collection.prototype.replace = function(original, next) {
+      var index;
+      if ((index = this.indexOf(original)) > -1) {
+        this.set(index, next);
+      }
+      return next;
+    };
+
     Collection.prototype.toArray = function() {
       return this.__collection;
     };
@@ -1985,7 +1993,7 @@ window.Promise = es6Promise.Promise;
     };
 
     Base.prototype.__createClone = function(_arg) {
-      var changedFields, clone, newCloner, newFields, oldCloner,
+      var clone, newCloner, oldCloner,
         _this = this;
       oldCloner = _arg.oldCloner, newCloner = _arg.newCloner;
       clone = this.klass().build();
@@ -1994,46 +2002,36 @@ window.Promise = es6Promise.Promise;
       });
       clone.__links = _.clone(this.links());
       clone.__queryParams = _.clone(this.queryParams());
-      changedFields = this.changedFields();
-      newFields = this.attributes();
+      clone.__assignAttributes(this.attributes());
       this.klass().fields().each(function(f) {
-        var associationClones, newAssociation, newTarget, oldAssociation, reflection, _base;
+        var c, inverse, newAssociation, oldAssociation, reflection, target, _ref, _ref1, _ref2, _ref3;
+        clone.__fields[f] = ((_ref = _this.__fields[f]) != null ? _ref.toArray : void 0) != null ? _this.__fields[f].clone() : _this.__fields[f];
         try {
           oldAssociation = _this.association(f);
           newAssociation = clone.association(f);
           newAssociation.__links = _.clone(oldAssociation.links());
           reflection = oldAssociation.reflection;
-          newTarget = reflection.collection() ? (associationClones = oldAssociation.target.map(function(resource) {
-            return resource.__createClone({
+          target = reflection.collection() ? reflection.autosave() && oldAssociation.target.include(oldCloner) ? (c = oldAssociation.target.clone(), c.replace(oldCloner, newCloner), (inverse = reflection.inverseOf()) != null ? c.each(function(t) {
+            if (t.__fields[inverse.name] === _this) {
+              t.__fields[inverse.name] = clone;
+            }
+            return t.association(inverse.name).writer(clone);
+          }) : void 0, clone.__fields[f].replace(oldCloner, newCloner), c) : ((_ref1 = reflection.inverseOf()) != null ? _ref1.autosave() : void 0) ? oldAssociation.target.map(function(t) {
+            c = t.__createClone({
               oldCloner: _this,
               newCloner: clone
             });
-          }), _this.__fields[f] != null ? clone.__fields[f] = _this.__fields[f].map(function(resource) {
-            var associationIndex;
-            associationIndex = oldAssociation.target.indexOf(resource);
-            if (associationIndex >= 0) {
-              return associationClones.get(associationIndex);
-            } else {
-              return resource.__createClone({
-                oldCloner: _this,
-                newCloner: clone
-              });
-            }
-          }) : void 0, associationClones) : (_this.__fields[f] != null ? clone.__fields[f] = _this.__fields[f] === oldCloner ? newCloner : _this.__fields[f].__createClone({
+            clone.__fields[f].replace(t, c);
+            return c;
+          }) : oldAssociation.target : reflection.autosave() && oldAssociation.target === oldCloner ? (clone.__fields[f] = newCloner, newCloner) : ((_ref2 = reflection.inverseOf()) != null ? _ref2.autosave() : void 0) ? (c = (_ref3 = oldAssociation.target) != null ? _ref3.__createClone({
             oldCloner: _this,
             newCloner: clone
-          }) : void 0, changedFields.include(f) && oldAssociation.target !== oldCloner ? typeof (_base = oldAssociation.target).__createClone === "function" ? _base.__createClone({
-            oldCloner: _this,
-            newCloner: clone
-          }) : void 0 : clone.__fields[f]);
-          if (newTarget) {
-            return newFields[reflection.name] = newTarget;
-          }
+          }) : void 0, clone.__fields[f] === oldAssociation.target ? clone.__fields[f] = c : void 0, c) : oldAssociation.target;
+          return newAssociation.writer(target, false);
         } catch (_error) {
-          return clone.__fields[f] = _this.__fields[f];
+          return true;
         }
       });
-      clone.__assignAttributes(newFields);
       return clone;
     };
 

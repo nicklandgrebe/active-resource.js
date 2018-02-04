@@ -76,9 +76,15 @@ class ActiveResource::Base
 
     clone.__queryParams = _.clone(@queryParams())
 
-    changedFields = @changedFields()
-    newFields = @attributes()
+    clone.__assignAttributes(@attributes())
+
     @klass().fields().each (f) =>
+      clone.__fields[f] =
+        if @__fields[f]?.toArray?
+          @__fields[f].clone()
+        else
+          @__fields[f]
+
       try
         oldAssociation = @association(f)
         newAssociation = clone.association(f)
@@ -87,47 +93,52 @@ class ActiveResource::Base
 
         reflection = oldAssociation.reflection
 
-        newTarget =
+        target =
           if reflection.collection()
-            associationClones = oldAssociation.target.map (resource) =>
-              resource.__createClone(oldCloner: this, newCloner: clone)
+            if reflection.autosave() && oldAssociation.target.include(oldCloner)
+              c = oldAssociation.target.clone()
 
-            if @__fields[f]?
-              clone.__fields[f] = @__fields[f].map (resource) =>
-                associationIndex = oldAssociation.target.indexOf(resource)
+              c.replace(oldCloner, newCloner)
 
-                if associationIndex >= 0
-                  associationClones.get(associationIndex)
-                else
-                  resource.__createClone(oldCloner: this, newCloner: clone)
+              if(inverse = reflection.inverseOf())?
+                c.each((t) =>
+                  if t.__fields[inverse.name] == this
+                    t.__fields[inverse.name] = clone
 
-            associationClones
-          else
-            if @__fields[f]?
-              clone.__fields[f] =
-                if @__fields[f] == oldCloner
-                  newCloner
-                else
-                  @__fields[f].__createClone(
-                    oldCloner: this,
-                    newCloner: clone
-                  )
+                  t.association(inverse.name).writer(clone)
+                )
 
-            if changedFields.include(f) && oldAssociation.target != oldCloner
-              oldAssociation.target.__createClone?(
-                oldCloner: this,
-                newCloner: clone
+              clone.__fields[f].replace(oldCloner, newCloner)
+
+              c
+            else if reflection.inverseOf()?.autosave()
+              oldAssociation.target.map((t) =>
+                c = t.__createClone(oldCloner: this, newCloner: clone)
+
+                clone.__fields[f].replace(t, c)
+
+                c
               )
             else
-              clone.__fields[f]
+              oldAssociation.target
+          else
+            if reflection.autosave() && oldAssociation.target == oldCloner
+              clone.__fields[f] = newCloner
 
-        if newTarget
-          newFields[reflection.name] = newTarget
+              newCloner
+            else if reflection.inverseOf()?.autosave()
+              c = oldAssociation.target?.__createClone(oldCloner: this, newCloner: clone)
 
+              if clone.__fields[f] == oldAssociation.target
+                clone.__fields[f] = c
+
+              c
+            else
+              oldAssociation.target
+
+        newAssociation.writer(target, false)
       catch
-        clone.__fields[f] = @__fields[f]
-
-    clone.__assignAttributes(newFields)
+        true
 
     clone
 

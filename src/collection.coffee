@@ -57,6 +57,17 @@ class ActiveResource::Collection
   set: (index, item) ->
     @__collection[index] = item unless index >= @size()
 
+  # Finds original in the collection and if found, replaces it with next
+  #
+  # @param [Value] original the original item to replace in the collection
+  # @param [Value] next the next value to replace the item
+  # @return [
+  replace: (original, next) ->
+    if(index = @indexOf(original)) > -1
+      @set(index, next)
+
+    next
+
   # @return [Array] all the resources loaded in this collection as an array
   toArray: ->
     @__collection

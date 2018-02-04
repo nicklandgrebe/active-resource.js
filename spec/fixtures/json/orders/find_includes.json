@@ -49,6 +49,16 @@
           "self": "https://example.com/api/v1/orders/1/relationships/gift_card/",
           "related": "https://example.com/api/v1/orders/1/gift_card/"
         }
+      },
+      "rating": {
+        "data": {
+          "id": "1",
+          "type": "ratings"
+        },
+        "links": {
+          "self": "https://example.com/api/v1/orders/1/relationships/rating/",
+          "related": "https://example.com/api/v1/orders/1/rating/"
+        }
       }
     },
     "links": {
@@ -56,6 +66,26 @@
     }
   },
   "included": [
+    {
+      "id": "1",
+      "type": "comments",
+      "attributes": {
+        "body": "asd"
+      },
+      "links": {
+        "self": "https://example.com/api/v1/comments/1/"
+      }
+    },
+    {
+      "id": "2",
+      "type": "comments",
+      "attributes": {
+        "body": "asdf"
+      },
+      "links": {
+        "self": "https://example.com/api/v1/comments/2/"
+      }
+    },
     {
       "id": "1",
       "type": "order_items",
@@ -84,6 +114,16 @@
       },
       "links": {
         "self": "https://example.com/api/v1/gift_cards/5/"
+      }
+    },
+    {
+      "id": "1",
+      "type": "ratings",
+      "attributes": {
+        "value": 5
+      },
+      "links": {
+        "self": "https://example.com/api/v1/ratings/1/"
       }
     }
   ]
