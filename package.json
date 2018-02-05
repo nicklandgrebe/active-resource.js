@@ -22,7 +22,7 @@
     "grunt-contrib-concat": "^1.0.1",
     "grunt-contrib-connect": "0.4.x",
     "grunt-contrib-jasmine": "latest",
-    "grunt-contrib-uglify": "0.2.x",
+    "grunt-contrib-uglify": "^3.3.0",
     "grunt-contrib-watch": "0.5.x",
     "grunt-template-jasmine-requirejs": "^0.2.3",
     "grunt-umd": "^2.4.0",
