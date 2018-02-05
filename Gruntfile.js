@@ -68,7 +68,8 @@ module.exports = function(grunt) {
     uglify: {
       build: {
         options: {
-          mangle: false
+          mangle: false,
+          sourceMap: true,
         },
         files: {
           'build/active-resource.min.js': 'build/active-resource.js'
@@ -76,7 +77,7 @@ module.exports = function(grunt) {
       }
     },
     concat: {
-      raw: {
+      release: {
         options: {
           banner:
           '/*\n' +
@@ -86,21 +87,11 @@ module.exports = function(grunt) {
           '\tPortions of active-resource were inspired by or borrowed from Rail\'s ActiveRecord library\n' +
           '*/\n\n'
         },
-        src: 'build/active-resource.js',
-        dest: 'dist/active-resource.js'
-      },
-      min: {
-        options: {
-          banner:
-          '/*\n' +
-          '\tactive-resource <%= pkg.version %>\n' +
-          '\t(c) <%= grunt.template.today("yyyy") %> Nick Landgrebe && Peak Labs, LLC DBA Occasion App\n' +
-          '\tactive-resource may be freely distributed under the MIT license\n' +
-          '\tPortions of active-resource were inspired by or borrowed from Rail\'s ActiveRecord library\n' +
-          '*/\n\n'
-        },
-        src: 'build/active-resource.min.js',
-        dest: 'dist/active-resource.min.js'
+        files: {
+          'dist/active-resource.js': ['build/active-resource.js'],
+          'dist/active-resource.min.js': ['build/active-resource.min.js'],
+          'dist/active-resource.min.js.map': ['build/active-resource.min.js.map']
+        }
       },
       build: {
         src: [
@@ -225,7 +216,7 @@ module.exports = function(grunt) {
   grunt.registerTask(
     'release',
     'Creates a new release of the library in the dist folder',
-    [ 'clean:dist', 'compile', 'concat' ]
+    [ 'clean:dist', 'compile', 'concat:release' ]
   );
 
   grunt.registerTask(

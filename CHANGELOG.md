@@ -59,3 +59,4 @@ changes to each resource
   be in the result of `resource.attributes()`. If false, any non-function properties of the resource will be returned.
 * Add `afterRequest` callback that is called after GET, POST, PATCH, PUT requests of a resource
   * `afterBuild` will be called on GET, but it is called before any fields are assigned to the resource
+* Add source maps
