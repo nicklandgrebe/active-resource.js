@@ -60,7 +60,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     for k, v of object
       underscored[s.underscored(k)] =
         if _.isArray(v)
-          _.map v, (i) ->
+          _.map v, (i) =>
             this.toUnderscored(i)
         else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection) && !_.isDate(v)
           this.toUnderscored(v)
@@ -81,7 +81,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     for k, v of object
       camelized[s.camelize(k)] =
         if _.isArray(v)
-          _.map v, (i) ->
+          _.map v, (i) =>
             this.toCamelCase(i)
         else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection)
           this.toCamelCase(v)
