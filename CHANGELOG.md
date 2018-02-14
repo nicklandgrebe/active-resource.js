@@ -60,3 +60,4 @@ changes to each resource
 * Add `afterRequest` callback that is called after GET, POST, PATCH, PUT requests of a resource
   * `afterBuild` will be called on GET, but it is called before any fields are assigned to the resource
 * Add source maps
+* Fix bug in array processing in `Interfaces.JsonApi#toCamelCase` and `toUnderscored`
