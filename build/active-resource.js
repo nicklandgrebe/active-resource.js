@@ -143,15 +143,17 @@ window.Promise = es6Promise.Promise;
 
       function Base(resourceLibrary) {
         this.resourceLibrary = resourceLibrary;
+        this.axios = axios.create({
+          headers: _.extend(this.resourceLibrary.headers || {}, {
+            'Content-Type': this.constructor.contentType
+          })
+        });
       }
 
       Base.prototype.request = function(url, method, data) {
         var options;
         options = {
           responseType: 'json',
-          headers: _.extend(this.resourceLibrary.headers || {}, {
-            'Content-Type': this.constructor.contentType
-          }),
           method: method,
           url: url
         };
@@ -165,7 +167,7 @@ window.Promise = es6Promise.Promise;
         } else {
           options.data = data;
         }
-        return axios(options);
+        return this.axios.request(options);
       };
 
       Base.prototype.get = function(url, queryParams) {

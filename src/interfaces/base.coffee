@@ -5,6 +5,11 @@ ActiveResource.Interfaces = class ActiveResource::Interfaces
     @contentType = 'application/json'
 
     constructor: (@resourceLibrary) ->
+      @axios = axios.create(
+        headers: _.extend(@resourceLibrary.headers || {}, {
+          'Content-Type': @constructor.contentType
+        })
+      )
 
     # Makes an HTTP request to a url with data
     #
@@ -14,9 +19,6 @@ ActiveResource.Interfaces = class ActiveResource::Interfaces
     request: (url, method, data) ->
       options =
         responseType: 'json'
-        headers: _.extend(@resourceLibrary.headers || {}, {
-          'Content-Type': @constructor.contentType
-        }),
         method: method
         url: url
 
@@ -27,7 +29,7 @@ ActiveResource.Interfaces = class ActiveResource::Interfaces
       else
         options.data = data
 
-      axios options
+      @axios.request options
 
     # Make GET request
     #

@@ -1,6 +1,6 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    moxios.install()
+    moxios.install(MyLibrary.interface.axios)
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
@@ -22,7 +22,10 @@ describe 'ActiveResource', ->
       expect(@myLibrary.baseUrl).toEqual('https://www.example.com/')
 
     it 'adds the headers to the library', ->
-      expect(@myLibrary.headers).toEqual({ Authorization: 'xxx' })
+      expect(@myLibrary.headers).toEqual({
+        Authorization: 'xxx',
+        'Content-Type': 'application/vnd.api+json'
+      })
 
     it 'adds the interface to the library', ->
       expect(@myLibrary.interface.constructor).toBe(ActiveResource.Interfaces.JsonApi)

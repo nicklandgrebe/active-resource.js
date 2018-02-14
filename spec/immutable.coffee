@@ -1,7 +1,5 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    moxios.install()
-
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
@@ -15,6 +13,8 @@ describe 'ActiveResource', ->
         'https://example.com/api/v1',
         immutable: true
       )
+
+      moxios.install(ImmutableLibrary.interface.axios)
 
       class ImmutableLibrary::Comment extends ImmutableLibrary.Base
         this.className = 'Comment'
