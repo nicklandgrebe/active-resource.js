@@ -61,3 +61,7 @@ changes to each resource
   * `afterBuild` will be called on GET, but it is called before any fields are assigned to the resource
 * Add source maps
 * Fix bug in array processing in `Interfaces.JsonApi#toCamelCase` and `toUnderscored`
+
+## 1.0.0-alpha.1
+
+* Add source map for dist release
