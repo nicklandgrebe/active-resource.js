@@ -1,5 +1,5 @@
 /*
-	active-resource 1.0.0-alpha.0
+	active-resource 1.0.0-alpha.1
 	(c) 2018 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	active-resource may be freely distributed under the MIT license
 	Portions of active-resource were inspired by or borrowed from Rail's ActiveRecord library

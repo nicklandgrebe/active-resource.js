@@ -61,6 +61,13 @@ changes to each resource
   * `afterBuild` will be called on GET, but it is called before any fields are assigned to the resource
 * Add source maps
 * Fix bug in array processing in `Interfaces.JsonApi#toCamelCase` and `toUnderscored`
+
+## 1.0.0-alpha.1
+
+* Add source map for dist release
+
+## Master
+
 * Use a single instance of `axios` in interfaces, so that `resourceLibrary.interface.axios.request` can be easily stubbed
 * Fix bug in Interfaces.JsonApi#toCamelCase that mishandles attributes with arrays of strings as the value
 * Add pop and shift to Collection
