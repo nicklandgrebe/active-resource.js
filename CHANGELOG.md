@@ -68,6 +68,7 @@ changes to each resource
 
 ## Master
 
+* Allow resources to be provided as values in `where` statements, transforming their primaryKey as value
 * Use a single instance of `axios` in interfaces, so that `resourceLibrary.interface.axios.request` can be easily stubbed
 * Fix bug in Interfaces.JsonApi#toCamelCase that mishandles attributes with arrays of strings as the value
 * Add pop and shift to Collection

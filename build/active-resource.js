@@ -277,6 +277,16 @@ window.Promise = es6Promise.Promise;
       return camelized;
     };
 
+    JsonApi.prototype.buildFilters = function(filters) {
+      return this.toUnderscored(_.mapObject(filters, function(value) {
+        if (typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Base) : void 0) {
+          return value[value.klass().primaryKey];
+        } else {
+          return value;
+        }
+      }));
+    };
+
     JsonApi.prototype.buildSparseFieldset = function(fields) {
       return _.mapObject(fields, function(fieldArray) {
         return _.map(fieldArray, function(f) {
@@ -544,7 +554,7 @@ window.Promise = es6Promise.Promise;
       }
       data = {};
       if (queryParams['filter'] != null) {
-        data['filter'] = this.toUnderscored(queryParams['filter']);
+        data['filter'] = this.buildFilters(queryParams['filter']);
       }
       if (queryParams['fields'] != null) {
         data['fields'] = this.buildSparseFieldset(queryParams['fields']);
@@ -865,7 +875,7 @@ window.Promise = es6Promise.Promise;
 
     Attributes.__validAttribute = function(attribute, value, options) {
       var e, reserved;
-      reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams'];
+      reserved = ['__super__', '__associations', '__errors', '__fields', '__links', '__queryParams'];
       if (this.klass().resourceLibrary.strictAttributes) {
         if (options.readOnly) {
           return this.klass().attributes().read.include(attribute);
