@@ -126,8 +126,10 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # 1. Go through each key of the object, map its array of fields to underscored fields
   # 2. Take the mapped array of fields and join them, replacing the value of the key with the joined string
   buildSparseFieldset: (fields) ->
-    _.mapObject fields, (fieldArray) ->
-      _.map(fieldArray, (f) -> s.underscored(f)).join()
+    this.toUnderscored(
+      _.mapObject fields, (fieldArray) ->
+        _.map(fieldArray, (f) -> s.underscored(f)).join()
+    )
 
   # Takes in an array of include objects (strings, nested strings in objects) and turns them into a
   # dotted include tree

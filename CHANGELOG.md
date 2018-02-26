@@ -69,3 +69,4 @@ changes to each resource
 ### Master
 
 * Allow resources to be provided as values in `where` statements, transforming their primaryKey as value
+* Fix bug that left `Relation#select` field classes camelCased in requests
