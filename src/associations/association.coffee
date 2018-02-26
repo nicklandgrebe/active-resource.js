@@ -103,7 +103,10 @@ class ActiveResource::Associations::Association
   setInverseInstance: (resource) ->
     if @__invertibleFor(resource)
       inverse = resource.association(@__inverseReflectionFor(resource).name)
-      inverse.target = @owner
+      if inverse.reflection.collection()
+        inverse.addToTarget(@owner)
+      else
+        inverse.target = @owner
     resource
 
   # private

@@ -2122,7 +2122,11 @@ window.Promise = es6Promise.Promise;
       var inverse;
       if (this.__invertibleFor(resource)) {
         inverse = resource.association(this.__inverseReflectionFor(resource).name);
-        inverse.target = this.owner;
+        if (inverse.reflection.collection()) {
+          inverse.addToTarget(this.owner);
+        } else {
+          inverse.target = this.owner;
+        }
       }
       return resource;
     };
@@ -2752,12 +2756,6 @@ window.Promise = es6Promise.Promise;
 
     BelongsToAssociation.prototype.__foreignKeyPresent = function() {
       return this.owner.__readAttribute(this.reflection.foreignKey()) != null;
-    };
-
-    BelongsToAssociation.prototype.__invertibleFor = function(resource) {
-      var inverse;
-      inverse = this.__inverseReflectionFor(resource);
-      return inverse && (typeof inverse.hasOne === "function" ? inverse.hasOne() : void 0);
     };
 
     return BelongsToAssociation;

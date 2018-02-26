@@ -92,7 +92,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     index = null if index < 0
     @replaceOnTarget(resource, index)
 
-  # Pushs the resource onto the target or replaces it if there is an index
+  # Pushes the resource onto the target or replaces it if there is an index
   #
   # @param [ActiveResource::Base] resource the resource to add to/replace on the target
   # @param [Integer] index the index of the existing resource to replace
