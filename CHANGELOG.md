@@ -65,3 +65,7 @@ changes to each resource
 ## 1.0.0-alpha.1
 
 * Add source map for dist release
+
+### Master
+
+* Allow resources to be provided as values in `where` statements, transforming their primaryKey as value
