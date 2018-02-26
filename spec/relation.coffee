@@ -182,6 +182,13 @@ describe 'ActiveResource', ->
           @paramStr = requestParams(moxios.requests.mostRecent())
           expect(@paramStr).toContain('fields[products]=id&fields[orders]=price')
 
+      it 'underscores class names', ->
+        MyLibrary::Product.select(timeSlots: 'startsAt').all()
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('fields[time_slots]=starts_at')
+
       it 'merges fields', ->
         MyLibrary::Product.select('id', 'createdAt').select(orders: 'price').all()
 
