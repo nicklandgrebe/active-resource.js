@@ -7,7 +7,7 @@
 #     unless product.valid?()
 #       product.errors()
 #
-class ActiveResource::Errors
+ActiveResource.Errors = class ActiveResource::Errors
   # Caches an instance of this class on ActiveResource::Base#errors in order to manage
   # that resource's errors
   #

@@ -1,5 +1,5 @@
 # Adds methods for managing reflections, which reflect on associations of ActiveResources
-class ActiveResource::Reflection
+ActiveResource.Reflection = class ActiveResource::Reflection
   # Returns an object with the name of the reflection as the key and a Reflection as the value
   #
   # @example

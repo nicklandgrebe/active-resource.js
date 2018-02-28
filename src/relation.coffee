@@ -21,7 +21,7 @@
 # @example
 #   Order.includes('transactions').findBy(token: 'as8h2nW')
 #
-class ActiveResource::Relation
+ActiveResource.Relation = class ActiveResource::Relation
   ActiveResource.include(@, ActiveResource::QueryParams)
   ActiveResource.include(@, ActiveResource::Typing)
 

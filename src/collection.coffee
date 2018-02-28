@@ -1,5 +1,5 @@
 # Wraps a Javascript array with some useful functions native to Ruby Arrays
-class ActiveResource::Collection
+ActiveResource.Collection = class ActiveResource::Collection
   ActiveResource.include(@, ActiveResource::Typing)
 
   # Builds a new ActiveResource::Collection

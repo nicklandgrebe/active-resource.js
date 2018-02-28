@@ -879,7 +879,7 @@ window.Promise = es6Promise.Promise;
 (function() {
   var __slice = [].slice;
 
-  ActiveResource.prototype.Collection = (function() {
+  ActiveResource.Collection = ActiveResource.prototype.Collection = (function() {
     ActiveResource.include(Collection, ActiveResource.prototype.Typing);
 
     Collection.build = function(array) {
@@ -1036,7 +1036,7 @@ window.Promise = es6Promise.Promise;
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  ActiveResource.prototype.CollectionResponse = (function(_super) {
+  ActiveResource.CollectionResponse = ActiveResource.prototype.CollectionResponse = (function(_super) {
     __extends(CollectionResponse, _super);
 
     function CollectionResponse() {
@@ -1096,7 +1096,7 @@ window.Promise = es6Promise.Promise;
 }).call(this);
 
 (function() {
-  ActiveResource.prototype.Errors = (function() {
+  ActiveResource.Errors = ActiveResource.prototype.Errors = (function() {
     Errors.errors = function() {
       return this.__errors || (this.__errors = new ActiveResource.prototype.Errors(this));
     };
@@ -1297,7 +1297,7 @@ window.Promise = es6Promise.Promise;
 (function() {
   var __slice = [].slice;
 
-  ActiveResource.prototype.Links = (function() {
+  ActiveResource.Links = ActiveResource.prototype.Links = (function() {
     function Links() {}
 
     Links.prototype.links = function() {
@@ -1482,7 +1482,7 @@ window.Promise = es6Promise.Promise;
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-  ActiveResource.prototype.Reflection = (function() {
+  ActiveResource.Reflection = ActiveResource.prototype.Reflection = (function() {
     var _ref, _ref1, _ref2;
 
     function Reflection() {}
@@ -1777,7 +1777,7 @@ window.Promise = es6Promise.Promise;
 (function() {
   var __slice = [].slice;
 
-  ActiveResource.prototype.Relation = (function() {
+  ActiveResource.Relation = ActiveResource.prototype.Relation = (function() {
     ActiveResource.include(Relation, ActiveResource.prototype.QueryParams);
 
     ActiveResource.include(Relation, ActiveResource.prototype.Typing);

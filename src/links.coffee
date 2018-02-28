@@ -1,5 +1,5 @@
 # ActiveResource methods for managing links of resources to their servers
-class ActiveResource::Links
+ActiveResource.Links = class ActiveResource::Links
   # Links to query the server for this persisted resource with
   links: ->
     @__links ||= _.clone(@klass().links())
