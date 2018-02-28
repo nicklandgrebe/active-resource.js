@@ -2008,7 +2008,7 @@ window.Promise = es6Promise.Promise;
       clone.__queryParams = _.clone(this.queryParams());
       clone.__assignAttributes(this.attributes());
       this.klass().fields().each(function(f) {
-        var c, inverse, newAssociation, oldAssociation, reflection, target, _ref, _ref1, _ref2, _ref3;
+        var c, inverse, newAssociation, oldAssociation, reflection, target, _ref, _ref1, _ref2, _ref3, _ref4;
         clone.__fields[f] = ((_ref = _this.__fields[f]) != null ? _ref.toArray : void 0) != null ? _this.__fields[f].clone() : _this.__fields[f];
         try {
           oldAssociation = _this.association(f);
@@ -2030,7 +2030,7 @@ window.Promise = es6Promise.Promise;
           }) : oldAssociation.target : reflection.autosave() && oldAssociation.target === oldCloner ? (clone.__fields[f] = newCloner, newCloner) : ((_ref2 = reflection.inverseOf()) != null ? _ref2.autosave() : void 0) ? (c = (_ref3 = oldAssociation.target) != null ? _ref3.__createClone({
             oldCloner: _this,
             newCloner: clone
-          }) : void 0, clone.__fields[f] === oldAssociation.target ? clone.__fields[f] = c : void 0, c) : oldAssociation.target;
+          }) : void 0, clone.__fields[f] === oldAssociation.target ? clone.__fields[f] = c : void 0, c) : (((_ref4 = (inverse = reflection.inverseOf())) != null ? _ref4.collection() : void 0) ? oldAssociation.target.association(inverse.name).target.replace(_this, clone) : void 0, oldAssociation.target);
           return newAssociation.writer(target, false);
         } catch (_error) {
           return true;
