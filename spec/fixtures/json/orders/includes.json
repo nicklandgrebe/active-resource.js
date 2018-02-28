@@ -50,6 +50,16 @@
           "self": "https://example.com/api/v1/orders/1/relationships/gift_card/",
           "related": "https://example.com/api/v1/orders/1/gift_card/"
         }
+      },
+      "customer": {
+        "data": {
+          "id": "1",
+          "type": "customers"
+        },
+        "links": {
+          "self": "https://example.com/api/v1/orders/1/relationships/customer/",
+          "related": "https://example.com/api/v1/orders/1/customer/"
+        }
       }
     },
     "links": {

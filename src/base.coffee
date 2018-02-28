@@ -134,6 +134,9 @@ class ActiveResource::Base
 
               c
             else
+              if(inverse = reflection.inverseOf())?.collection()
+                oldAssociation.target.association(inverse.name).target.replace(this, clone)
+
               oldAssociation.target
 
         newAssociation.writer(target, false)

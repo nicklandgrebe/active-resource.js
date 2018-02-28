@@ -28,7 +28,7 @@ describe 'ActiveResource', ->
 
         this.attributes('name')
 
-        this.hasMany 'orders'
+        this.hasMany 'orders', inverseOf: 'customer'
 
       class ImmutableLibrary::GiftCard extends ImmutableLibrary.Base
         this.className = 'GiftCard'
@@ -42,7 +42,7 @@ describe 'ActiveResource', ->
 
         this.attributes('price', 'tax')
 
-        this.belongsTo 'customer', autosave: true
+        this.belongsTo 'customer', autosave: true, inverseOf: 'orders'
         this.belongsTo 'giftCard'
 
         this.hasMany 'comments'
@@ -262,116 +262,229 @@ describe 'ActiveResource', ->
 
       describe 'assigning relationships', ->
         describe 'singular relationship', ->
-          beforeEach ->
-            @singularResource = ImmutableLibrary::GiftCard.build(id: '1')
-            @resource2 = @resource.assignAttributes({
-              giftCard: @singularResource
-            })
-
-          it 'clones a new resource', ->
-            expect(@resource).not.toBe(@resource2)
-
-          it 'does not change the old resource', ->
-            expect(@resource.giftCard()).toBeNull()
-
-          it 'does not track the change on the old resource', ->
-            expect(@resource.changedFields().include('giftCard')).toBeFalsy()
-
-          it 'creates a new resource with the changes', ->
-            expect(@resource2.giftCard()).toEqual(@singularResource)
-
-          it 'creates a new resource with the changed relationship tracked', ->
-            expect(@resource2.changedFields().include('giftCard')).toBeTruthy()
-
-          describe 'saving the resource', ->
+          describe 'when inverse is singular', ->
             beforeEach ->
-              @resource2.save((resource3) =>
-                @resource3 = resource3
-              )
+              @singularResource = ImmutableLibrary::GiftCard.build(id: '1')
+              @resource2 = @resource.assignAttributes({
+                giftCard: @singularResource
+              })
 
-              null
+            it 'clones a new resource', ->
+              expect(@resource).not.toBe(@resource2)
 
-            describe 'on success', ->
+            it 'does not change the old resource', ->
+              expect(@resource.giftCard()).toBeNull()
+
+            it 'does not track the change on the old resource', ->
+              expect(@resource.changedFields().include('giftCard')).toBeFalsy()
+
+            it 'creates a new resource with the changes', ->
+              expect(@resource2.giftCard()).toEqual(@singularResource)
+
+            it 'creates a new resource with the changed relationship tracked', ->
+              expect(@resource2.changedFields().include('giftCard')).toBeTruthy()
+
+            describe 'saving the resource', ->
               beforeEach ->
-                @promise = moxios.wait =>
-                  moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.save.includes)
+                @resource2.save((resource3) =>
+                  @resource3 = resource3
+                )
 
-              it 'clones a new resource', ->
-                @promise.then =>
-                  expect(@resource2).not.toBe(@resource3)
+                null
 
-              it 'does not persist the old resource', ->
-                @promise.then =>
-                  expect(@resource2.persisted()).toBeFalsy()
+              describe 'on success', ->
+                beforeEach ->
+                  @promise = moxios.wait =>
+                    moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.save.includes)
 
-              it 'indicates the relationship was still changed on the old resource', ->
-                @promise.then =>
-                  expect(@resource2.changedFields().include('giftCard')).toBeTruthy()
+                it 'clones a new resource', ->
+                  @promise.then =>
+                    expect(@resource2).not.toBe(@resource3)
 
-              it 'persists a new resource', ->
-                @promise.then =>
-                  expect(@resource3.persisted()).toBeTruthy()
+                it 'does not persist the old resource', ->
+                  @promise.then =>
+                    expect(@resource2.persisted()).toBeFalsy()
 
-              it 'assigns relationship resource to clone', ->
-                @promise.then =>
-                  expect(@resource2.giftCard()).toBe(@resource3.giftCard())
+                it 'indicates the relationship was still changed on the old resource', ->
+                  @promise.then =>
+                    expect(@resource2.changedFields().include('giftCard')).toBeTruthy()
 
-              it 'changes the inverse target of the new relationship resource', ->
-                @promise.then =>
-                  expect(@resource3.giftCard().order()).toBe(@resource3)
+                it 'persists a new resource', ->
+                  @promise.then =>
+                    expect(@resource3.persisted()).toBeTruthy()
 
-              it 'does not indicate the new relationship resource inverse target was changed', ->
-                @promise.then =>
-                  expect(@resource3.giftCard().changedFields().include('order')).toBeFalsy()
+                it 'assigns relationship resource to clone', ->
+                  @promise.then =>
+                    expect(@resource2.giftCard()).toBe(@resource3.giftCard())
 
-              it 'does not indicate the relationship was changed', ->
-                @promise.then =>
-                  expect(@resource3.changedFields().include('giftCard')).toBeFalsy()
+                it 'changes the inverse target of the new relationship resource', ->
+                  @promise.then =>
+                    expect(@resource3.giftCard().order()).toBe(@resource3)
 
-            describe 'on failure', ->
+                it 'does not indicate the new relationship resource inverse target was changed', ->
+                  @promise.then =>
+                    expect(@resource3.giftCard().changedFields().include('order')).toBeFalsy()
+
+                it 'does not indicate the relationship was changed', ->
+                  @promise.then =>
+                    expect(@resource3.changedFields().include('giftCard')).toBeFalsy()
+
+              describe 'on failure', ->
+                beforeEach ->
+                  @promise = moxios.wait =>
+                    moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.save.failure)
+
+                it 'clones a new resource', ->
+                  @promise.catch =>
+                    expect(@resource2).not.toBe(@resource3)
+
+                it 'does not persist the old resource', ->
+                  @promise.catch =>
+                    expect(@resource2.persisted()).toBeFalsy()
+
+                it 'does not add errors from the server to the old resource', ->
+                  @promise.catch =>
+                    expect(@resource2.errors().empty()).toBeTruthy()
+
+                it 'indicates the relationship was still changed on the old resource', ->
+                  @promise.catch =>
+                    expect(@resource2.changedFields().include('giftCard')).toBeTruthy()
+
+                it 'does not persist the new resource', ->
+                  @promise.catch =>
+                    expect(@resource3.persisted()).toBeFalsy()
+
+                it 'adds errors from the server to the new resource', ->
+                  @promise.catch =>
+                    expect(@resource3.errors().empty()).toBeFalsy()
+
+                it 'assigns relationship resource to clone', ->
+                  @promise.catch =>
+                    expect(@resource2.giftCard()).toBe(@resource3.giftCard())
+
+                it 'changes the inverse target of the new relationship resource', ->
+                  @promise.catch =>
+                    expect(@resource3.giftCard().order()).toBe(@resource3)
+
+                it 'indicates the relationship resource inverse target was still changed', ->
+                  @promise.catch =>
+                    expect(@resource3.giftCard().changedFields().include('order')).toBeTruthy()
+
+                it 'indicates the relationship was still changed', ->
+                  @promise.catch =>
+                    expect(@resource3.changedFields().include('giftCard')).toBeTruthy()
+
+          describe 'when inverse is collection', ->
+            beforeEach ->
+              @singularResource = ImmutableLibrary::Customer.build(id: '1')
+              @resource2 = @resource.assignAttributes({
+                customer: @singularResource
+              })
+
+            it 'clones a new resource', ->
+              expect(@resource).not.toBe(@resource2)
+
+            it 'does not change the old resource', ->
+              expect(@resource.customer()).toBeNull()
+
+            it 'does not track the change on the old resource', ->
+              expect(@resource.changedFields().include('customer')).toBeFalsy()
+
+            it 'creates a new resource with the changes', ->
+              expect(@resource2.customer()).toEqual(@singularResource)
+
+            it 'creates a new resource with the changed relationship tracked', ->
+              expect(@resource2.changedFields().include('customer')).toBeTruthy()
+
+            describe 'saving the resource', ->
               beforeEach ->
-                @promise = moxios.wait =>
-                  moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.save.failure)
+                @resource2.save((resource3) =>
+                  @resource3 = resource3
+                )
 
-              it 'clones a new resource', ->
-                @promise.catch =>
-                  expect(@resource2).not.toBe(@resource3)
+                null
 
-              it 'does not persist the old resource', ->
-                @promise.catch =>
-                  expect(@resource2.persisted()).toBeFalsy()
+              describe 'on success', ->
+                beforeEach ->
+                  @promise = moxios.wait =>
+                    moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.save.includes)
 
-              it 'does not add errors from the server to the old resource', ->
-                @promise.catch =>
-                  expect(@resource2.errors().empty()).toBeTruthy()
+                it 'clones a new resource', ->
+                  @promise.then =>
+                    expect(@resource2).not.toBe(@resource3)
 
-              it 'indicates the relationship was still changed on the old resource', ->
-                @promise.catch =>
-                  expect(@resource2.changedFields().include('giftCard')).toBeTruthy()
+                it 'does not persist the old resource', ->
+                  @promise.then =>
+                    expect(@resource2.persisted()).toBeFalsy()
 
-              it 'does not persist the new resource', ->
-                @promise.catch =>
-                  expect(@resource3.persisted()).toBeFalsy()
+                it 'indicates the relationship was still changed on the old resource', ->
+                  @promise.then =>
+                    expect(@resource2.changedFields().include('customer')).toBeTruthy()
 
-              it 'adds errors from the server to the new resource', ->
-                @promise.catch =>
-                  expect(@resource3.errors().empty()).toBeFalsy()
+                it 'persists a new resource', ->
+                  @promise.then =>
+                    expect(@resource3.persisted()).toBeTruthy()
 
-              it 'assigns relationship resource to clone', ->
-                @promise.catch =>
-                  expect(@resource2.giftCard()).toBe(@resource3.giftCard())
+                it 'assigns relationship resource to clone', ->
+                  @promise.then =>
+                    expect(@resource2.customer()).toBe(@resource3.customer())
 
-              it 'changes the inverse target of the new relationship resource', ->
-                @promise.catch =>
-                  expect(@resource3.giftCard().order()).toBe(@resource3)
+                it 'changes the inverse target of the new relationship resource', ->
+                  @promise.then =>
+                    expect(@resource3.customer().orders().target().toArray()).toEqual([@resource3])
 
-              it 'indicates the relationship resource inverse target was still changed', ->
-                @promise.catch =>
-                  expect(@resource3.giftCard().changedFields().include('order')).toBeTruthy()
+                it 'does not indicate the new relationship resource inverse target was changed', ->
+                  @promise.then =>
+                    expect(@resource3.customer().changedFields().include('orders')).toBeFalsy()
 
-              it 'indicates the relationship was still changed', ->
-                @promise.catch =>
-                  expect(@resource3.changedFields().include('giftCard')).toBeTruthy()
+                it 'does not indicate the relationship was changed', ->
+                  @promise.then =>
+                    expect(@resource3.changedFields().include('customer')).toBeFalsy()
+
+              describe 'on failure', ->
+                beforeEach ->
+                  @promise = moxios.wait =>
+                    moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.save.failure)
+
+                it 'clones a new resource', ->
+                  @promise.catch =>
+                    expect(@resource2).not.toBe(@resource3)
+
+                it 'does not persist the old resource', ->
+                  @promise.catch =>
+                    expect(@resource2.persisted()).toBeFalsy()
+
+                it 'does not add errors from the server to the old resource', ->
+                  @promise.catch =>
+                    expect(@resource2.errors().empty()).toBeTruthy()
+
+                it 'indicates the relationship was still changed on the old resource', ->
+                  @promise.catch =>
+                    expect(@resource2.changedFields().include('customer')).toBeTruthy()
+
+                it 'does not persist the new resource', ->
+                  @promise.catch =>
+                    expect(@resource3.persisted()).toBeFalsy()
+
+                it 'adds errors from the server to the new resource', ->
+                  @promise.catch =>
+                    expect(@resource3.errors().empty()).toBeFalsy()
+
+                it 'assigns relationship resource to clone', ->
+                  @promise.catch =>
+                    expect(@resource2.customer()).toBe(@resource3.customer())
+
+                it 'changes the inverse target of the new relationship resource', ->
+                  @promise.catch =>
+                    expect(@resource3.customer().orders().target().toArray()).toEqual([@resource3])
+
+                it 'indicates the relationship resource inverse target was still changed', ->
+                  @promise.catch =>
+                    expect(@resource3.customer().changedFields().include('orders')).toBeTruthy()
+
+                it 'indicates the relationship was still changed', ->
+                  @promise.catch =>
+                    expect(@resource3.changedFields().include('customer')).toBeTruthy()
 
         describe 'collection relationship', ->
           beforeEach ->
