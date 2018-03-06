@@ -993,9 +993,15 @@ window.Promise = es6Promise.Promise;
     };
 
     Collection.prototype.push = function() {
-      var objs, _ref;
-      objs = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      return (_ref = this.__collection).push.apply(_ref, objs);
+      var items, _ref;
+      items = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      return (_ref = this.__collection).push.apply(_ref, items);
+    };
+
+    Collection.prototype.unshift = function() {
+      var items, _ref;
+      items = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      return (_ref = this.__collection).unshift.apply(_ref, items);
     };
 
     Collection.prototype["delete"] = function() {
