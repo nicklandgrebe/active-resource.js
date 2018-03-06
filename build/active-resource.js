@@ -2189,7 +2189,7 @@ window.Promise = es6Promise.Promise;
     Association.prototype.__buildResource = function(attributes) {
       var resource;
       resource = this.reflection.buildAssociation();
-      resource.assignAttributes(attributes);
+      resource.__assignAttributes(attributes);
       return resource;
     };
 

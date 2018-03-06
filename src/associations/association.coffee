@@ -184,5 +184,5 @@ class ActiveResource::Associations::Association
   # @return [ActiveResource::Base] the built resource in the association
   __buildResource: (attributes) ->
     resource = @reflection.buildAssociation()
-    resource.assignAttributes(attributes)
+    resource.__assignAttributes(attributes)
     resource
