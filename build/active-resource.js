@@ -419,8 +419,8 @@ window.Promise = es6Promise.Promise;
         var include, reflection, relationshipItems;
         if ((reflection = resource.klass().reflectOnAssociation(s.camelize(relationshipName)))) {
           if (reflection.collection()) {
-            relationshipItems = ActiveResource.prototype.Collection.build(relationship['data']).map(function(relationshipMember) {
-              return _this.findResourceForRelationship(relationshipMember, includes, resource, reflection);
+            relationshipItems = ActiveResource.prototype.Collection.build(relationship['data']).map(function(relationshipMember, index) {
+              return _this.findResourceForRelationship(relationshipMember, includes, resource, reflection, index);
             }).compact();
             if (!(typeof relationshipItems.empty === "function" ? relationshipItems.empty() : void 0)) {
               return attributes[relationshipName] = relationshipItems;
@@ -436,7 +436,7 @@ window.Promise = es6Promise.Promise;
       return attributes;
     };
 
-    JsonApi.prototype.findResourceForRelationship = function(relationshipData, includes, resource, reflection) {
+    JsonApi.prototype.findResourceForRelationship = function(relationshipData, includes, resource, reflection, index) {
       var buildResourceOptions, findConditions, include, parentReflection, potentialTarget, primaryKey, target,
         _this = this;
       primaryKey = resource.klass().primaryKey;
@@ -453,9 +453,9 @@ window.Promise = es6Promise.Promise;
       if (reflection.collection()) {
         target = resource.association(reflection.name).target.detect(function(t) {
           return t[primaryKey] === findConditions[primaryKey];
-        });
+        }) || resource.association(reflection.name).target.get(index);
       } else if ((potentialTarget = resource.association(reflection.name).target) != null) {
-        if (!(reflection.polymorphic() && potentialTarget.klass().queryName !== findConditions['type']) && potentialTarget[primaryKey] === findConditions[primaryKey]) {
+        if (!reflection.polymorphic() || potentialTarget.klass().queryName === findConditions['type']) {
           target = potentialTarget;
         }
       }

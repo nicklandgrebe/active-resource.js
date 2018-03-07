@@ -351,7 +351,8 @@ describe 'ActiveResource', ->
                 @response.data.relationships.order_items.data[0],
                 @response.included,
                 @resource,
-                @resource.klass().reflectOnAssociation('orderItems')
+                @resource.klass().reflectOnAssociation('orderItems'),
+                0
               )
 
           it 'returns resource built from include id', ->
@@ -377,42 +378,94 @@ describe 'ActiveResource', ->
             expect(@result.klass()).toBe(@lib::Customer)
 
       describe 'when included is on relationship target', ->
-        describe 'when relationship collection', ->
-          beforeEach ->
-            @relationshipResource = @lib::OrderItem.build(id: "5")
-            @resource.assignAttributes(orderItems: [
-              @relationshipResource
-            ])
+        describe 'when relationship target persisted', ->
+          describe 'when relationship collection', ->
+            beforeEach ->
+              @relationshipResource = @lib::OrderItem.build(id: "5")
+              @resource.assignAttributes(orderItems: [
+                @relationshipResource
+              ])
 
-            @result =
-              @interface.findResourceForRelationship(
-                @response.data.relationships.order_items.data[0],
-                @response.included,
-                @resource,
-                @resource.klass().reflectOnAssociation('orderItems')
-              )
+              @result =
+                @interface.findResourceForRelationship(
+                  @response.data.relationships.order_items.data[0],
+                  @response.included,
+                  @resource,
+                  @resource.klass().reflectOnAssociation('orderItems')
+                  0
+                )
 
-          it 'returns resource from target', ->
-            expect(@result).toBe(@relationshipResource)
+            it 'returns resource from target', ->
+              expect(@result).toBe(@relationshipResource)
 
-          it 'merges include fields into resource', ->
-            expect(@result.amount).toBeDefined()
+            it 'merges include fields into resource', ->
+              expect(@result.amount).toBeDefined()
 
-        describe 'when relationship singular', ->
-          beforeEach ->
-            @relationshipResource = @lib::Customer.build(id: "1")
-            @resource.assignAttributes(customer: @relationshipResource)
+          describe 'when relationship singular', ->
+            beforeEach ->
+              @relationshipResource = @lib::Customer.build(id: "1")
+              @resource.assignAttributes(customer: @relationshipResource)
 
-            @result =
-              @interface.findResourceForRelationship(
-                @response.data.relationships.customer.data,
-                @response.included,
-                @resource,
-                @resource.klass().reflectOnAssociation('customer')
-              )
+              @result =
+                @interface.findResourceForRelationship(
+                  @response.data.relationships.customer.data,
+                  @response.included,
+                  @resource,
+                  @resource.klass().reflectOnAssociation('customer')
+                )
 
-          it 'returns resource from target', ->
-            expect(@result).toBe(@relationshipResource)
+            it 'returns resource from target', ->
+              expect(@result).toBe(@relationshipResource)
 
-          it 'merges include fields into resource', ->
-            expect(@result.firstName).toBeDefined()
+            it 'merges include fields into resource', ->
+              expect(@result.firstName).toBeDefined()
+
+        describe 'when relationship target unpersisted', ->
+          describe 'when relationship collection', ->
+            beforeEach ->
+              @relationshipResource0 = @lib::OrderItem.build()
+              @relationshipResource1 = @lib::OrderItem.build()
+              @resource.assignAttributes(orderItems: [
+                @relationshipResource0
+                @relationshipResource1
+              ])
+
+              @result =
+                @interface.findResourceForRelationship(
+                  @response.data.relationships.order_items.data[1],
+                  @response.included,
+                  @resource,
+                  @resource.klass().reflectOnAssociation('orderItems')
+                  1
+                )
+
+            it 'returns resource from target at index', ->
+              expect(@result).toBe(@relationshipResource1)
+
+            it 'merges include fields into resource', ->
+              expect(@result.amount).toBeDefined()
+
+            it 'persists resource', ->
+              expect(@result.persisted()).toBeTruthy()
+
+          describe 'when relationship singular', ->
+            beforeEach ->
+              @relationshipResource = @lib::Customer.build()
+              @resource.assignAttributes(customer: @relationshipResource)
+
+              @result =
+                @interface.findResourceForRelationship(
+                  @response.data.relationships.customer.data,
+                  @response.included,
+                  @resource,
+                  @resource.klass().reflectOnAssociation('customer')
+                )
+
+            it 'returns resource from target', ->
+              expect(@result).toBe(@relationshipResource)
+
+            it 'merges include fields into resource', ->
+              expect(@result.firstName).toBeDefined()
+
+            it 'persists resource', ->
+              expect(@result.persisted()).toBeTruthy()

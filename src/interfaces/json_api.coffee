@@ -379,8 +379,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
         if reflection.collection()
           relationshipItems =
             ActiveResource::Collection.build(relationship['data'])
-            .map((relationshipMember) =>
-              @findResourceForRelationship(relationshipMember, includes, resource, reflection)
+            .map((relationshipMember, index) =>
+              @findResourceForRelationship(relationshipMember, includes, resource, reflection, index)
             ).compact()
 
           attributes[relationshipName] = relationshipItems unless relationshipItems.empty?()
@@ -404,8 +404,9 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Array] includes the array of includes to search for relationships in
   # @param [ActiveResource::Base] resource the resource to get the primary key of
   # @param [Reflection] reflection the reflection for the relationship
+  # @param [Integer] index the index of the relationship data (only in collection relationships)
   # @return [ActiveResource::Base] the include built into an ActiveResource::Base
-  findResourceForRelationship: (relationshipData, includes, resource, reflection) ->
+  findResourceForRelationship: (relationshipData, includes, resource, reflection, index) ->
     primaryKey = resource.klass().primaryKey
 
     findConditions = { type: relationshipData.type }
@@ -419,10 +420,12 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     include = _.findWhere(includes, findConditions)
 
     if reflection.collection()
-      target = resource.association(reflection.name).target.detect((t) => t[primaryKey] == findConditions[primaryKey])
+      target =
+        resource.association(reflection.name).target.detect((t) => t[primaryKey] == findConditions[primaryKey]) ||
+          resource.association(reflection.name).target.get(index)
 
     else if(potentialTarget = resource.association(reflection.name).target)?
-      if !(reflection.polymorphic() && potentialTarget.klass().queryName != findConditions['type']) && potentialTarget[primaryKey] == findConditions[primaryKey]
+      if !reflection.polymorphic() || potentialTarget.klass().queryName == findConditions['type']
         target = potentialTarget
 
     if target?
