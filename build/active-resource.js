@@ -437,37 +437,33 @@ window.Promise = es6Promise.Promise;
     };
 
     JsonApi.prototype.findResourceForRelationship = function(relationshipData, includes, resource, reflection) {
-      var findConditions, include, parentReflection, parentRelationship, potentialTarget, primaryKey, target,
+      var buildResourceOptions, findConditions, include, parentReflection, potentialTarget, primaryKey, target,
         _this = this;
       primaryKey = resource.klass().primaryKey;
       findConditions = {
         type: relationshipData.type
       };
       findConditions[primaryKey] = relationshipData[primaryKey];
-      parentRelationship = {};
+      buildResourceOptions = {};
       if ((parentReflection = reflection.inverseOf()) != null) {
-        parentRelationship[parentReflection.name] = resource;
+        buildResourceOptions.parentRelationship = {};
+        buildResourceOptions.parentRelationship[parentReflection.name] = resource;
       }
-      if ((include = _.findWhere(includes, findConditions)) != null) {
-        return this.buildResource(include, includes, {
-          parentRelationship: parentRelationship
+      include = _.findWhere(includes, findConditions);
+      if (reflection.collection()) {
+        target = resource.association(reflection.name).target.detect(function(t) {
+          return t[primaryKey] === findConditions[primaryKey];
         });
-      } else {
-        if (reflection.collection()) {
-          target = resource.association(reflection.name).target.detect(function(t) {
-            return t[primaryKey] === findConditions[primaryKey];
-          });
-        } else if ((potentialTarget = resource.association(reflection.name).target) != null) {
-          if (!(reflection.polymorphic() && potentialTarget.klass().queryName !== findConditions['type']) && potentialTarget[primaryKey] === findConditions[primaryKey]) {
-            target = potentialTarget;
-          }
+      } else if ((potentialTarget = resource.association(reflection.name).target) != null) {
+        if (!(reflection.polymorphic() && potentialTarget.klass().queryName !== findConditions['type']) && potentialTarget[primaryKey] === findConditions[primaryKey]) {
+          target = potentialTarget;
         }
-        if (target != null) {
-          return this.buildResource({}, [], {
-            existingResource: target,
-            parentRelationship: parentRelationship
-          });
-        }
+      }
+      if (target != null) {
+        buildResourceOptions.existingResource = target;
+      }
+      if ((target != null) || (include != null)) {
+        return this.buildResource(include || {}, includes, buildResourceOptions);
       }
     };
 

@@ -86,6 +86,16 @@
       "links": {
         "self": "https://example.com/api/v1/order_items/2/"
       }
+    },
+    {
+      "id": "1",
+      "type": "customers",
+      "attributes": {
+        "first_name": "J"
+      },
+      "links": {
+        "self": "https://example.com/api/v1/customers/1/"
+      }
     }
   ]
 }

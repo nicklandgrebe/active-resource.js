@@ -411,22 +411,26 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     findConditions = { type: relationshipData.type }
     findConditions[primaryKey] = relationshipData[primaryKey]
 
-    parentRelationship = {}
+    buildResourceOptions = {}
     if(parentReflection = reflection.inverseOf())?
-      parentRelationship[parentReflection.name] = resource
+      buildResourceOptions.parentRelationship = {}
+      buildResourceOptions.parentRelationship[parentReflection.name] = resource
 
-    if(include = _.findWhere(includes, findConditions))?
-      @buildResource(include, includes, parentRelationship: parentRelationship)
-    else
-      if reflection.collection()
-        target = resource.association(reflection.name).target.detect((t) => t[primaryKey] == findConditions[primaryKey])
+    include = _.findWhere(includes, findConditions)
 
-      else if(potentialTarget = resource.association(reflection.name).target)?
-        if !(reflection.polymorphic() && potentialTarget.klass().queryName != findConditions['type']) && potentialTarget[primaryKey] == findConditions[primaryKey]
-          target = potentialTarget
+    if reflection.collection()
+      target = resource.association(reflection.name).target.detect((t) => t[primaryKey] == findConditions[primaryKey])
 
-      if target?
-        @buildResource({}, [], existingResource: target, parentRelationship: parentRelationship)
+    else if(potentialTarget = resource.association(reflection.name).target)?
+      if !(reflection.polymorphic() && potentialTarget.klass().queryName != findConditions['type']) && potentialTarget[primaryKey] == findConditions[primaryKey]
+        target = potentialTarget
+
+    if target?
+      buildResourceOptions.existingResource = target
+
+    if target? || include?
+      @buildResource(include || {}, includes, buildResourceOptions)
+
 
   # Merges the changes made from a POST/PUT/PATCH call into the resource that called it
   #

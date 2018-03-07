@@ -323,3 +323,96 @@ describe 'ActiveResource', ->
         it 'sends no data', ->
           @promise.then =>
             expect(moxios.requests.mostRecent().data).toEqual(JSON.stringify({}))
+
+    describe '#findResourceForRelationship', ->
+      beforeEach ->
+        @resource = @lib::Order.build()
+
+        @response = getJSONFixture('orders/includes.json');
+
+      describe 'when relationship not found in included', ->
+        beforeEach ->
+          @result =
+            @interface.findResourceForRelationship(
+              @response.data.relationships.order_items.data[0],
+              [],
+              @resource,
+              @resource.klass().reflectOnAssociation('orderItems')
+            )
+
+        it 'returns undefined', ->
+          expect(@result).toBeUndefined()
+
+      describe 'when included is not on relationship target', ->
+        describe 'when relationship collection', ->
+          beforeEach ->
+            @result =
+              @interface.findResourceForRelationship(
+                @response.data.relationships.order_items.data[0],
+                @response.included,
+                @resource,
+                @resource.klass().reflectOnAssociation('orderItems')
+              )
+
+          it 'returns resource built from include id', ->
+            expect(@result.id).toEqual(@response.data.relationships.order_items.data[0].id)
+
+          it 'returns resource built from include type', ->
+            expect(@result.klass()).toBe(@lib::OrderItem)
+
+        describe 'when relationship singular', ->
+          beforeEach ->
+            @result =
+              @interface.findResourceForRelationship(
+                @response.data.relationships.customer.data,
+                @response.included,
+                @resource,
+                @resource.klass().reflectOnAssociation('customer')
+              )
+
+          it 'returns resource built from include id', ->
+            expect(@result.id).toEqual(@response.data.relationships.customer.data.id)
+
+          it 'returns resource built from include type', ->
+            expect(@result.klass()).toBe(@lib::Customer)
+
+      describe 'when included is on relationship target', ->
+        describe 'when relationship collection', ->
+          beforeEach ->
+            @relationshipResource = @lib::OrderItem.build(id: "5")
+            @resource.assignAttributes(orderItems: [
+              @relationshipResource
+            ])
+
+            @result =
+              @interface.findResourceForRelationship(
+                @response.data.relationships.order_items.data[0],
+                @response.included,
+                @resource,
+                @resource.klass().reflectOnAssociation('orderItems')
+              )
+
+          it 'returns resource from target', ->
+            expect(@result).toBe(@relationshipResource)
+
+          it 'merges include fields into resource', ->
+            expect(@result.amount).toBeDefined()
+
+        describe 'when relationship singular', ->
+          beforeEach ->
+            @relationshipResource = @lib::Customer.build(id: "1")
+            @resource.assignAttributes(customer: @relationshipResource)
+
+            @result =
+              @interface.findResourceForRelationship(
+                @response.data.relationships.customer.data,
+                @response.included,
+                @resource,
+                @resource.klass().reflectOnAssociation('customer')
+              )
+
+          it 'returns resource from target', ->
+            expect(@result).toBe(@relationshipResource)
+
+          it 'merges include fields into resource', ->
+            expect(@result.firstName).toBeDefined()
