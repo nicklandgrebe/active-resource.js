@@ -29,7 +29,7 @@ to use more universal idioms.
 ## Installation
 
 ```
-npm i active-resource --save
+yard add active-resource
 ```
 
 ## Getting Started
