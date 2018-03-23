@@ -96,7 +96,6 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
   # @param [Boolean] save whether or not to persist the assignment on the server
   # @return [Promise] a promise to return a success indicator (204 No Content) **or**
   #   an error indicator (403 Forbidden)
-  # @note A promise will be returned even if `save != true`, using `$.when()`
   assign: (other, save = true) ->
     @base.writer(other, save)
 
@@ -130,8 +129,6 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
       resources
     else
       resources.first()
-
-  # TODO: Add #load
 
   # Create resource for the association
   #

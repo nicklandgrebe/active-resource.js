@@ -74,17 +74,16 @@ class ActiveResource::Associations::Association
   # @return [Promise] a promise to return the loaded target **or** 404 error
   loadTarget: ->
     if @__canFindTarget()
-      _this = this
       @__findTarget()
-      .then (loadedTarget) ->
-        _this.target = loadedTarget
-        _this.loaded(true)
+      .then (loadedTarget) =>
+        this.target = loadedTarget
+        this.loaded(true)
         loadedTarget
-      .catch ->
-        _this.reset()
+      .catch =>
+        this.reset()
     else
       @reset()
-      $.when(null)
+      null
 
   # Sets the inverse association of the resource to the owner of the association
   #
