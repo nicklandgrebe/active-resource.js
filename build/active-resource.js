@@ -1098,6 +1098,8 @@ window.Promise = es6Promise.Promise;
 }).call(this);
 
 (function() {
+  var __slice = [].slice;
+
   ActiveResource.Errors = ActiveResource.prototype.Errors = (function() {
     Errors.errors = function() {
       return this.__errors || (this.__errors = new ActiveResource.prototype.Errors(this));
@@ -1121,18 +1123,37 @@ window.Promise = es6Promise.Promise;
     };
 
     Errors.prototype.add = function(field, code, detail) {
-      var error, _base;
       if (detail == null) {
         detail = '';
       }
-      (_base = this.__errors)[field] || (_base[field] = []);
-      this.__errors[field].push(error = {
-        field: field,
-        code: code,
-        detail: detail,
-        message: detail
+      return this.__add(field, code, detail);
+    };
+
+    Errors.prototype.addAll = function() {
+      var errors,
+        _this = this;
+      errors = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      return _.map(errors, function(error) {
+        return _this.__add.apply(_this, error);
       });
-      return error;
+    };
+
+    Errors.prototype.propagate = function(error) {
+      var association, field, nested_error, nested_field, _ref, _ref1;
+      nested_field = error.field.split('.');
+      field = nested_field.shift();
+      nested_error = _.clone(error);
+      nested_error.field = nested_field.join('.');
+      try {
+        association = this.base.association(field);
+        if (association.reflection.collection()) {
+          return (_ref = association.target.first()) != null ? _ref.errors().propagate(nested_error) : void 0;
+        } else {
+          return (_ref1 = association.target) != null ? _ref1.errors().propagate(nested_error) : void 0;
+        }
+      } catch (_error) {
+        return this.push(error);
+      }
     };
 
     Errors.prototype.push = function(error) {
@@ -1209,6 +1230,21 @@ window.Promise = es6Promise.Promise;
 
     Errors.prototype.toCollection = function() {
       return ActiveResource.prototype.Collection.build(this.toArray());
+    };
+
+    Errors.prototype.__add = function(field, code, detail) {
+      var error, _base;
+      if (detail == null) {
+        detail = '';
+      }
+      (_base = this.__errors)[field] || (_base[field] = []);
+      this.__errors[field].push(error = {
+        field: field,
+        code: code,
+        detail: detail,
+        message: detail
+      });
+      return error;
     };
 
     return Errors;
@@ -2104,9 +2140,8 @@ window.Promise = es6Promise.Promise;
     };
 
     Association.prototype.loadTarget = function() {
-      var _this;
+      var _this = this;
       if (this.__canFindTarget()) {
-        _this = this;
         return this.__findTarget().then(function(loadedTarget) {
           _this.target = loadedTarget;
           _this.loaded(true);
@@ -2116,7 +2151,7 @@ window.Promise = es6Promise.Promise;
         });
       } else {
         this.reset();
-        return $.when(null);
+        return null;
       }
     };
 

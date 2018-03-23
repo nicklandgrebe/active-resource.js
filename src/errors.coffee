@@ -43,9 +43,35 @@ ActiveResource.Errors = class ActiveResource::Errors
   # @param [String] detail the message for the error
   # @return [Object] the error object created and added to storage
   add: (field, code, detail = '') ->
-    @__errors[field] ||= []
-    @__errors[field].push(error = { field: field, code: code, detail: detail, message: detail })
-    error
+    @__add(field, code, detail)
+
+  # Adds an array of errors
+  #
+  # @see #add for individual error params
+  #
+  # @param [Array<Array>] errors error objects to add
+  addAll: (errors...) ->
+    _.map(errors, (error) =>
+      @__add(error...)
+    )
+
+  # Propagates errors with nested fields down through relationships to their appropriate resources
+  propagate: (error) ->
+    nested_field = error.field.split('.')
+    field = nested_field.shift()
+
+    nested_error = _.clone(error)
+    nested_error.field = nested_field.join('.')
+
+    try
+      association = @base.association(field)
+
+      if association.reflection.collection()
+        association.target.first()?.errors().propagate(nested_error)
+      else
+        association.target?.errors().propagate(nested_error)
+    catch
+      @push(error)
 
   # Adds an existing error with field to this errors object
   #
@@ -142,3 +168,17 @@ ActiveResource.Errors = class ActiveResource::Errors
   # @return [Collection] the errors object converted to a collection of errors
   toCollection: ->
     ActiveResource::Collection.build(@toArray())
+
+  # private
+
+  # Adds an error with code and message to the error object for an field
+  #
+  # @param [String] field the field the error applies to
+  #   Or 'base' if it applies to the base object
+  # @param [String] code the code for the error
+  # @param [String] detail the message for the error
+  # @return [Object] the error object created and added to storage
+  __add: (field, code, detail = '') ->
+    @__errors[field] ||= []
+    @__errors[field].push(error = { field: field, code: code, detail: detail, message: detail })
+    error

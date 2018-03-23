@@ -53,8 +53,18 @@ class MyLibrary::Product extends MyLibrary.Base
 
   this.attributes('title')
 
+  this.belongsTo 'merchant'
+
   this.hasMany 'orders'
   this.hasMany 'timeSlots'
+
+class MyLibrary::Merchant extends MyLibrary.Base
+  this.className = 'Merchant'
+  this.queryName = 'merchants'
+
+  this.attributes('name')
+
+  this.hasMany 'products'
 
 class MyLibrary::TimeSlot extends MyLibrary.Base
   this.className = 'TimeSlot'
