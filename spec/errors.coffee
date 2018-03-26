@@ -27,23 +27,32 @@ describe 'ActiveResource', ->
       describe 'collection', ->
         beforeEach ->
           @resource.orders().build()
-          @resource.errors().propagate({
-            field: 'orders.price',
-            code: 'code',
-            message: 'message'
-          })
+          errors = ActiveResource.Collection.build([
+            {
+              field: 'orders.price',
+              code: 'code',
+              message: 'message'
+            }
+          ])
 
-        it 'propagates error to nested resource', ->
+          @resource.errors().propagate(errors)
+
+        it 'propagates errors to nested resource', ->
           expect(@resource.orders().target().first().errors().forField('price').size()).toEqual(1)
 
       describe 'singular', ->
         beforeEach ->
           @resource.buildMerchant()
-          @resource.errors().propagate({
-            field: 'merchant.name',
-            code: 'code',
-            message: 'message'
-          })
+
+          errors = ActiveResource.Collection.build([
+            {
+              field: 'merchant.name',
+              code: 'code',
+              message: 'message'
+            }
+          ])
+
+          @resource.errors().propagate(errors)
 
         it 'propagates error to nested resource', ->
           expect(@resource.merchant().errors().forField('name').size()).toEqual(1)

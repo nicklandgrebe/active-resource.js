@@ -470,17 +470,20 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [ActiveResource::Base] the resource to add errors onto
   # @return [ActiveResource::Base] the unpersisted resource, now with errors
   resourceErrors: (resource, errors) ->
-    _.each errors, (error) ->
+    errorCollection =
+      ActiveResource.Collection.build(errors).map((error) ->
+        field = []
+        if error['source']['pointer'] == '/data'
+          field.push 'base'
+        else
+          _.each error['source']['pointer'].split('/data'), (i) ->
+            if(m = i.match(/\/(attributes|relationships|)\/(\w+)/))?
+              field.push s.camelize(m[2])
 
-      attribute = []
-      if error['source']['pointer'] == '/data'
-        attribute.push 'base'
-      else
-        _.each error['source']['pointer'].split('/data'), (i) ->
-          if(m = i.match(/\/(attributes|relationships|)\/(\w+)/))?
-            attribute.push s.camelize(m[2])
+        resource.errors().__add(field.join('.'), s.camelize(error['code']), error['detail'])
+      )
 
-      resource.errors().add(attribute.join('.'), s.camelize(error['code']), error['detail'])
+    resource.errors().propagate(errorCollection)
     resource
 
   # De-serializes errors from the error response to GET and DELETE requests,

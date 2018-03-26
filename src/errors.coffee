@@ -56,22 +56,28 @@ ActiveResource.Errors = class ActiveResource::Errors
     )
 
   # Propagates errors with nested fields down through relationships to their appropriate resources
-  propagate: (error) ->
-    nested_field = error.field.split('.')
-    field = nested_field.shift()
+  #
+  # @param [ActiveResource.Collection<Object>] errors the errors to propagate down the resource
+  propagate: (errors) ->
+    errors.each((error) =>
+      nestedField = error.field.split('.')
+      field = nestedField.shift()
 
-    nested_error = _.clone(error)
-    nested_error.field = nested_field.join('.')
+      try
+        association = @base.association(field)
 
-    try
-      association = @base.association(field)
+        nestedError = _.clone(error)
+        nestedError.field = nestedField.length == 0 && 'base' || nestedField.join('.')
 
-      if association.reflection.collection()
-        association.target.first()?.errors().propagate(nested_error)
-      else
-        association.target?.errors().propagate(nested_error)
-    catch
-      @push(error)
+        nestedErrors = ActiveResource.Collection.build([nestedError])
+
+        if association.reflection.collection()
+          association.target.first()?.errors().propagate(nestedErrors)
+        else
+          association.target?.errors().propagate(nestedErrors)
+      catch
+        @push(error)
+    )
 
   # Adds an existing error with field to this errors object
   #
@@ -180,5 +186,13 @@ ActiveResource.Errors = class ActiveResource::Errors
   # @return [Object] the error object created and added to storage
   __add: (field, code, detail = '') ->
     @__errors[field] ||= []
-    @__errors[field].push(error = { field: field, code: code, detail: detail, message: detail })
+    @__errors[field].push(error = @__buildError(field, code, detail))
     error
+
+  # @param [String] field the field the error applies to
+  #   Or 'base' if it applies to the base object
+  # @param [String] code the code for the error
+  # @param [String] detail the message for the error
+  # @return [Object] a mapped object that represents an error
+  __buildError: (field, code, detail) ->
+    { field: field, code: code, detail: detail, message: detail }
