@@ -66,6 +66,98 @@ describe 'ActiveResource', ->
 
         this.belongsTo 'order'
 
+    describe 'adding errors', ->
+      beforeEach ->
+        @resource = ImmutableLibrary::Order.build()
+
+      describe '#add', ->
+        beforeEach ->
+          @resource2 = @resource.errors().add('field', 'code', 'message')
+
+        it 'returns new resource', ->
+          expect(@resource2).not.toBe(@resource)
+
+        it 'adds error to new resource', ->
+          expect(@resource2.errors().size()).toBe(1)
+
+      describe '#addAll', ->
+        beforeEach ->
+          @resource2 = @resource.errors().addAll(
+            ['field', 'code', 'message'],
+            ['field2', 'code2', 'message2'],
+          )
+
+        it 'returns new resource', ->
+          expect(@resource2).not.toBe(@resource)
+
+        it 'adds errors to new resource', ->
+          expect(@resource2.errors().size()).toBe(2)
+
+    describe 'propagating errors', ->
+      beforeEach ->
+        @resource = ImmutableLibrary::Order.build()
+
+      describe 'singular relationship', ->
+        beforeEach ->
+          @customer = @resource.buildCustomer()
+
+          errors = ActiveResource.Collection.build([
+            {
+              field: 'customer',
+              code: 'invalid',
+              message: 'invalid'
+            },
+            {
+              field: 'customer.firstName',
+              code: 'invalid',
+              message: 'invalid'
+            },
+            {
+              field: 'customer.lastName',
+              code: 'invalid',
+              message: 'invalid'
+            }
+          ])
+
+          @resource.errors().propagate(errors)
+
+        it 'adds nested base errors to the nested relationship resource base', ->
+          expect(@resource.customer().errors().forBase().size()).toEqual(1)
+
+        it 'adds nested field errors to the nested relationship resource', ->
+          expect(@resource.customer().errors().forField('firstName').size()).toEqual(1)
+
+        it 'clones the relationship resource', ->
+          expect(@resource.customer()).not.toBe(@customer)
+
+      describe 'collection relationship', ->
+        beforeEach ->
+          @orderItem = @resource.orderItems().build()
+
+          errors = ActiveResource.Collection.build([
+            {
+              field: 'orderItems',
+              code: 'invalid',
+              message: 'invalid'
+            },
+            {
+              field: 'orderItems.amount',
+              code: 'invalid',
+              message: 'invalid'
+            }
+          ])
+
+          @resource.errors().propagate(errors)
+
+        it 'adds non-nested errors to the resource', ->
+          expect(@resource.errors().forField('orderItems').size()).toEqual(1)
+
+        it 'adds nested errors to the nested relationship resource', ->
+          expect(@resource.orderItems().target().first().errors().forField('amount').size()).toEqual(1)
+
+        it 'clones the relationship resource', ->
+          expect(@resource.orderItems().target().first()).not.toBe(@orderItem)
+
     describe 'when resource unpersisted', ->
       beforeEach ->
         @resource = ImmutableLibrary::Order.build()

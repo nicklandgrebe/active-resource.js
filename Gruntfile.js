@@ -130,6 +130,7 @@ module.exports = function(grunt) {
           'build/associations/builder/has_one.js',
           'build/immutable.js',
           'build/immutable/attributes.js',
+          'build/immutable/errors.js',
           'build/immutable/persistence.js',
           'build/immutable/base.js',
         ],

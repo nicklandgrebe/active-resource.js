@@ -474,21 +474,23 @@ window.Promise = es6Promise.Promise;
     };
 
     JsonApi.prototype.resourceErrors = function(resource, errors) {
-      _.each(errors, function(error) {
-        var attribute;
-        attribute = [];
+      var errorCollection;
+      errorCollection = ActiveResource.Collection.build(errors).map(function(error) {
+        var field;
+        field = [];
         if (error['source']['pointer'] === '/data') {
-          attribute.push('base');
+          field.push('base');
         } else {
           _.each(error['source']['pointer'].split('/data'), function(i) {
             var m;
             if ((m = i.match(/\/(attributes|relationships|)\/(\w+)/)) != null) {
-              return attribute.push(s.camelize(m[2]));
+              return field.push(s.camelize(m[2]));
             }
           });
         }
-        return resource.errors().add(attribute.join('.'), s.camelize(error['code']), error['detail']);
+        return resource.errors().__add(field.join('.'), s.camelize(error['code']), error['detail']);
       });
+      resource.errors().propagate(errorCollection);
       return resource;
     };
 
@@ -1138,22 +1140,26 @@ window.Promise = es6Promise.Promise;
       });
     };
 
-    Errors.prototype.propagate = function(error) {
-      var association, field, nested_error, nested_field, _ref, _ref1;
-      nested_field = error.field.split('.');
-      field = nested_field.shift();
-      nested_error = _.clone(error);
-      nested_error.field = nested_field.join('.');
-      try {
-        association = this.base.association(field);
-        if (association.reflection.collection()) {
-          return (_ref = association.target.first()) != null ? _ref.errors().propagate(nested_error) : void 0;
-        } else {
-          return (_ref1 = association.target) != null ? _ref1.errors().propagate(nested_error) : void 0;
+    Errors.prototype.propagate = function(errors) {
+      var _this = this;
+      return errors.each(function(error) {
+        var association, field, nestedError, nestedErrors, nestedField, _ref, _ref1;
+        nestedField = error.field.split('.');
+        field = nestedField.shift();
+        try {
+          association = _this.base.association(field);
+          nestedError = _.clone(error);
+          nestedError.field = nestedField.length === 0 && 'base' || nestedField.join('.');
+          nestedErrors = ActiveResource.Collection.build([nestedError]);
+          if (association.reflection.collection()) {
+            return (_ref = association.target.first()) != null ? _ref.errors().propagate(nestedErrors) : void 0;
+          } else {
+            return (_ref1 = association.target) != null ? _ref1.errors().propagate(nestedErrors) : void 0;
+          }
+        } catch (_error) {
+          return _this.push(error);
         }
-      } catch (_error) {
-        return this.push(error);
-      }
+      });
     };
 
     Errors.prototype.push = function(error) {
@@ -1238,13 +1244,17 @@ window.Promise = es6Promise.Promise;
         detail = '';
       }
       (_base = this.__errors)[field] || (_base[field] = []);
-      this.__errors[field].push(error = {
+      this.__errors[field].push(error = this.__buildError(field, code, detail));
+      return error;
+    };
+
+    Errors.prototype.__buildError = function(field, code, detail) {
+      return {
         field: field,
         code: code,
         detail: detail,
         message: detail
-      });
-      return error;
+      };
     };
 
     return Errors;
@@ -2035,9 +2045,9 @@ window.Promise = es6Promise.Promise;
     };
 
     Base.prototype.__createClone = function(_arg) {
-      var clone, newCloner, oldCloner,
+      var clone, cloner, newCloner,
         _this = this;
-      oldCloner = _arg.oldCloner, newCloner = _arg.newCloner;
+      cloner = _arg.cloner, newCloner = _arg.newCloner;
       clone = this.klass().build();
       this.errors().each(function(attribute, e) {
         return clone.errors().push(_.clone(e));
@@ -2046,29 +2056,33 @@ window.Promise = es6Promise.Promise;
       clone.__queryParams = _.clone(this.queryParams());
       clone.__assignAttributes(this.attributes());
       this.klass().fields().each(function(f) {
-        var c, inverse, newAssociation, oldAssociation, reflection, target, _ref, _ref1, _ref2, _ref3, _ref4;
+        var c, inverse, newAssociation, oldAssociation, reflection, target, _ref, _ref1, _ref2, _ref3;
         clone.__fields[f] = ((_ref = _this.__fields[f]) != null ? _ref.toArray : void 0) != null ? _this.__fields[f].clone() : _this.__fields[f];
         try {
           oldAssociation = _this.association(f);
           newAssociation = clone.association(f);
           newAssociation.__links = _.clone(oldAssociation.links());
           reflection = oldAssociation.reflection;
-          target = reflection.collection() ? reflection.autosave() && oldAssociation.target.include(oldCloner) ? (c = oldAssociation.target.clone(), c.replace(oldCloner, newCloner), (inverse = reflection.inverseOf()) != null ? c.each(function(t) {
+          target = reflection.collection() ? reflection.autosave() && oldAssociation.target.include(cloner) ? (c = oldAssociation.target.clone(), c.replace(cloner, newCloner), (inverse = reflection.inverseOf()) != null ? c.each(function(t) {
             if (t.__fields[inverse.name] === _this) {
               t.__fields[inverse.name] = clone;
             }
             return t.association(inverse.name).writer(clone);
-          }) : void 0, clone.__fields[f].replace(oldCloner, newCloner), c) : ((_ref1 = reflection.inverseOf()) != null ? _ref1.autosave() : void 0) ? oldAssociation.target.map(function(t) {
-            c = t.__createClone({
-              oldCloner: _this,
-              newCloner: clone
-            });
-            clone.__fields[f].replace(t, c);
-            return c;
-          }) : oldAssociation.target : reflection.autosave() && oldAssociation.target === oldCloner ? (clone.__fields[f] = newCloner, newCloner) : ((_ref2 = reflection.inverseOf()) != null ? _ref2.autosave() : void 0) ? (c = (_ref3 = oldAssociation.target) != null ? _ref3.__createClone({
-            oldCloner: _this,
+          }) : void 0, clone.__fields[f].replace(cloner, newCloner), c) : ((_ref1 = reflection.inverseOf()) != null ? _ref1.autosave() : void 0) ? oldAssociation.target.map(function(t) {
+            if ((cloner != null) && cloner === t) {
+              return cloner;
+            } else {
+              c = t.__createClone({
+                cloner: _this,
+                newCloner: clone
+              });
+              clone.__fields[f].replace(t, c);
+              return c;
+            }
+          }) : oldAssociation.target : reflection.autosave() && oldAssociation.target === cloner ? (clone.__fields[f] = newCloner, newCloner) : ((_ref2 = reflection.inverseOf()) != null ? _ref2.autosave() : void 0) ? oldAssociation.target != null ? oldAssociation.target === cloner ? cloner : (c = oldAssociation.target.__createClone({
+            cloner: _this,
             newCloner: clone
-          }) : void 0, clone.__fields[f] === oldAssociation.target ? clone.__fields[f] = c : void 0, c) : (((_ref4 = (inverse = reflection.inverseOf())) != null ? _ref4.collection() : void 0) ? oldAssociation.target.association(inverse.name).target.replace(_this, clone) : void 0, oldAssociation.target);
+          }), clone.__fields[f] === oldAssociation.target ? clone.__fields[f] = c : void 0, c) : void 0 : (((_ref3 = (inverse = reflection.inverseOf())) != null ? _ref3.collection() : void 0) ? oldAssociation.target.association(inverse.name).target.replace(_this, clone) : void 0, oldAssociation.target);
           return newAssociation.writer(target, false);
         } catch (_error) {
           return true;
@@ -3054,6 +3068,113 @@ window.Promise = es6Promise.Promise;
 }).call(this);
 
 (function() {
+  var _ref,
+    __hasProp = {}.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+    __slice = [].slice;
+
+  ActiveResource.prototype.Immutable.prototype.Errors = (function(_super) {
+    __extends(Errors, _super);
+
+    function Errors() {
+      _ref = Errors.__super__.constructor.apply(this, arguments);
+      return _ref;
+    }
+
+    Errors.errors = function() {
+      return this.__errors || (this.__errors = new ActiveResource.prototype.Immutable.prototype.Errors(this));
+    };
+
+    Errors.prototype.add = function(field, code, detail) {
+      var clone;
+      if (detail == null) {
+        detail = '';
+      }
+      clone = this.base.clone();
+      clone.errors().__add(field, code, detail);
+      return clone;
+    };
+
+    Errors.prototype.addAll = function() {
+      var clone, errors,
+        _this = this;
+      errors = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
+      clone = this.base.clone();
+      _.map(errors, function(error) {
+        var _ref1;
+        return (_ref1 = clone.errors()).__add.apply(_ref1, error);
+      });
+      return clone;
+    };
+
+    Errors.prototype.propagate = function(errors) {
+      var errorsByTarget,
+        _this = this;
+      errorsByTarget = errors.inject({}, function(targetObject, error) {
+        var association, field, nestedError, nestedField;
+        nestedField = error.field.split('.');
+        field = nestedField.shift();
+        nestedError = _.clone(error);
+        if (targetObject[field] == null) {
+          try {
+            association = _this.base.association(field);
+          } catch (_error) {
+            association = null;
+          }
+          targetObject[field] = {
+            association: association,
+            errors: ActiveResource.Collection.build()
+          };
+        }
+        if (targetObject[field].association != null) {
+          nestedError.field = nestedField.length === 0 && 'base' || nestedField.join('.');
+        }
+        targetObject[field].errors.push(nestedError);
+        return targetObject;
+      });
+      return _.each(errorsByTarget, function(errorsForTarget, k) {
+        var association, baseErrors, clone, relationshipResource, _ref1;
+        if (errorsForTarget.association != null) {
+          association = errorsForTarget.association;
+          if (association.reflection.collection()) {
+            baseErrors = errorsForTarget.errors.select(function(e) {
+              return e.field === 'base';
+            });
+            baseErrors.each(function(e) {
+              e.field = k;
+              return errorsForTarget.errors["delete"](e);
+            });
+            baseErrors.each(function(e) {
+              return _this.push(e);
+            });
+            relationshipResource = association.target.first();
+            if (clone = relationshipResource != null ? relationshipResource.__createClone({
+              cloner: _this.base
+            }) : void 0) {
+              clone.errors().propagate(errorsForTarget.errors);
+              association.target.replace(relationshipResource, clone);
+              return _this.base.__fields[association.reflection.name].replace(relationshipResource, clone);
+            }
+          } else {
+            return (_ref1 = association.target) != null ? _ref1.__createClone({
+              cloner: _this.base
+            }).errors().propagate(errorsForTarget.errors) : void 0;
+          }
+        } else {
+          return errorsForTarget.errors.each(function(e) {
+            return _this.push(e);
+          });
+        }
+      });
+    };
+
+    return Errors;
+
+  })(ActiveResource.prototype.Errors);
+
+}).call(this);
+
+(function() {
   ActiveResource.prototype.Immutable.prototype.Persistence = (function() {
     function Persistence() {}
 
@@ -3098,6 +3219,8 @@ window.Promise = es6Promise.Promise;
     __extends(Base, _super);
 
     ActiveResource.include(Base, ActiveResource.prototype.Immutable.prototype.Attributes);
+
+    ActiveResource.include(Base, ActiveResource.prototype.Immutable.prototype.Errors);
 
     ActiveResource.include(Base, ActiveResource.prototype.Immutable.prototype.Persistence);
 
