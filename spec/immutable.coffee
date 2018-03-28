@@ -101,7 +101,7 @@ describe 'ActiveResource', ->
         beforeEach ->
           @customer = @resource.buildCustomer()
 
-          errors = ActiveResource.Collection.build([
+          @errors = ActiveResource.Collection.build([
             {
               field: 'customer',
               code: 'invalid',
@@ -119,7 +119,7 @@ describe 'ActiveResource', ->
             }
           ])
 
-          @resource.errors().propagate(errors)
+          @resource.errors().propagate(@errors)
 
         it 'adds nested base errors to the nested relationship resource base', ->
           expect(@resource.customer().errors().forBase().size()).toEqual(1)
@@ -130,11 +130,18 @@ describe 'ActiveResource', ->
         it 'clones the relationship resource', ->
           expect(@resource.customer()).not.toBe(@customer)
 
+        describe 'repeated propagation', ->
+          beforeEach ->
+            @resource.errors().propagate(@errors)
+
+          it 'does not result in duplicate errors', ->
+            expect(@resource.customer().errors().forField('firstName').size()).toEqual(1)
+
       describe 'collection relationship', ->
         beforeEach ->
           @orderItem = @resource.orderItems().build()
 
-          errors = ActiveResource.Collection.build([
+          @errors = ActiveResource.Collection.build([
             {
               field: 'orderItems',
               code: 'invalid',
@@ -147,7 +154,7 @@ describe 'ActiveResource', ->
             }
           ])
 
-          @resource.errors().propagate(errors)
+          @resource.errors().propagate(@errors)
 
         it 'adds non-nested errors to the resource', ->
           expect(@resource.errors().forField('orderItems').size()).toEqual(1)
@@ -157,6 +164,13 @@ describe 'ActiveResource', ->
 
         it 'clones the relationship resource', ->
           expect(@resource.orderItems().target().first()).not.toBe(@orderItem)
+
+        describe 'repeated propagation', ->
+          beforeEach ->
+            @resource.errors().propagate(@errors)
+
+          it 'does not result in duplicate errors', ->
+            expect(@resource.orderItems().target().first().errors().forField('amount').size()).toEqual(1)
 
     describe 'when resource unpersisted', ->
       beforeEach ->

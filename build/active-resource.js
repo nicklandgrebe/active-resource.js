@@ -3151,14 +3151,18 @@ window.Promise = es6Promise.Promise;
             if (clone = relationshipResource != null ? relationshipResource.__createClone({
               cloner: _this.base
             }) : void 0) {
-              clone.errors().propagate(errorsForTarget.errors);
+              _this.base.__fields[association.reflection.name].replace(relationshipResource, clone);
               association.target.replace(relationshipResource, clone);
-              return _this.base.__fields[association.reflection.name].replace(relationshipResource, clone);
+              clone.errors().clear();
+              return clone.errors().propagate(errorsForTarget.errors);
             }
           } else {
-            return (_ref1 = association.target) != null ? _ref1.__createClone({
+            if (clone = (_ref1 = association.target) != null ? _ref1.__createClone({
               cloner: _this.base
-            }).errors().propagate(errorsForTarget.errors) : void 0;
+            }) : void 0) {
+              clone.errors().clear();
+              return clone.errors().propagate(errorsForTarget.errors);
+            }
           }
         } else {
           return errorsForTarget.errors.each(function(e) {

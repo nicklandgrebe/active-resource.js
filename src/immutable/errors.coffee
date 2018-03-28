@@ -75,11 +75,16 @@ class ActiveResource::Immutable::Errors extends ActiveResource::Errors
 
           relationshipResource = association.target.first()
           if clone = relationshipResource?.__createClone(cloner: @base)
-            clone.errors().propagate(errorsForTarget.errors)
-            association.target.replace(relationshipResource, clone)
             @base.__fields[association.reflection.name].replace(relationshipResource, clone)
+            association.target.replace(relationshipResource, clone)
+
+            clone.errors().clear()
+            clone.errors().propagate(errorsForTarget.errors)
+
         else
-          association.target?.__createClone(cloner: @base).errors().propagate(errorsForTarget.errors)
+          if clone = association.target?.__createClone(cloner: @base)
+            clone.errors().clear()
+            clone.errors().propagate(errorsForTarget.errors)
       else
         errorsForTarget.errors.each((e) => @push(e))
     )
