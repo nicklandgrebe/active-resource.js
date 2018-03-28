@@ -480,7 +480,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
             if(m = i.match(/\/(attributes|relationships|)\/(\w+)/))?
               field.push s.camelize(m[2])
 
-        resource.errors().__add(field.join('.'), s.camelize(error['code']), error['detail'])
+        resource.errors().__buildError(field.join('.'), s.camelize(error['code']), error['detail'])
       )
 
     resource.errors().propagate(errorCollection)

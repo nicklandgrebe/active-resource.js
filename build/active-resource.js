@@ -488,7 +488,7 @@ window.Promise = es6Promise.Promise;
             }
           });
         }
-        return resource.errors().__add(field.join('.'), s.camelize(error['code']), error['detail']);
+        return resource.errors().__buildError(field.join('.'), s.camelize(error['code']), error['detail']);
       });
       resource.errors().propagate(errorCollection);
       return resource;
