@@ -504,7 +504,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @return [Collection] the collection of errors
   parameterErrors: (errors) ->
     ActiveResource::Collection.build(errors).map((error) ->
-      out = { details: error['detail'] }
+      out = { detail: error['detail'], message: error['detail'] }
       out['parameter'] = s.camelize(error['source']['parameter']) if error['source']?['parameter']?
       out['code'] = s.camelize(error['code'])
       out

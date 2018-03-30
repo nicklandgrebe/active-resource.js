@@ -498,7 +498,8 @@ window.Promise = es6Promise.Promise;
       return ActiveResource.prototype.Collection.build(errors).map(function(error) {
         var out, _ref1;
         out = {
-          details: error['detail']
+          detail: error['detail'],
+          message: error['detail']
         };
         if (((_ref1 = error['source']) != null ? _ref1['parameter'] : void 0) != null) {
           out['parameter'] = s.camelize(error['source']['parameter']);
