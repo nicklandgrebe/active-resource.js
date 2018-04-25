@@ -246,7 +246,11 @@ window.Promise = es6Promise.Promise;
       for (k in object) {
         v = object[k];
         camelized[s.camelize(k)] = _.isArray(v) ? _.map(v, function(i) {
-          return _this.toCamelCase(i);
+          if (_.isObject(i)) {
+            return _this.toCamelCase(i);
+          } else {
+            return i;
+          }
         }) : _.isObject(v) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Collection) : void 0) ? this.toCamelCase(v) : v;
       }
       return camelized;

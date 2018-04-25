@@ -82,7 +82,10 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
       camelized[s.camelize(k)] =
         if _.isArray(v)
           _.map v, (i) =>
-            this.toCamelCase(i)
+            if _.isObject(i)
+              this.toCamelCase(i)
+            else
+              i
         else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection)
           this.toCamelCase(v)
         else

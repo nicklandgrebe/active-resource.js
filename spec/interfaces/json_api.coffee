@@ -14,6 +14,53 @@ describe 'ActiveResource', ->
       @lib = window.MyLibrary
       @interface = @lib.interface
 
+    describe '#toCamelCase()', ->
+      describe 'values', ->
+        beforeEach ->
+          @camelCase = @interface.toCamelCase({
+            first_attribute: 'value',
+            second_attribute: 'value'
+          })
+
+        it 'transforms keys to camelCase', ->
+          expect(@camelCase).toEqual({
+            firstAttribute: 'value',
+            secondAttribute: 'value'
+          })
+
+      describe 'array', ->
+        describe 'of objects', ->
+          beforeEach ->
+            @camelCase = @interface.toCamelCase({
+              first_attribute: [
+                {
+                  other_attribute: 'value',
+                  another_attribute: 'value'
+                }
+              ]
+            })
+
+          it 'transforms arrays objects keys to camelCase', ->
+            expect(@camelCase).toEqual({
+              firstAttribute: [
+                {
+                  otherAttribute: 'value',
+                  anotherAttribute: 'value'
+                }
+              ]
+            })
+
+        describe 'of values', ->
+          beforeEach ->
+            @camelCase = @interface.toCamelCase({
+              first_attribute: ['value1', 'value2']
+            })
+
+          it 'transforms arrays objects keys to camelCase', ->
+            expect(@camelCase).toEqual({
+              firstAttribute: ['value1', 'value2']
+            })
+
     describe '#get()', ->
       describe 'getting resources', ->
         beforeEach ->
