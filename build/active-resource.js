@@ -1007,6 +1007,14 @@ window.Promise = es6Promise.Promise;
       return (_ref = this.__collection).unshift.apply(_ref, items);
     };
 
+    Collection.prototype.pop = function() {
+      return this.__collection.pop();
+    };
+
+    Collection.prototype.shift = function() {
+      return this.__collection.shift();
+    };
+
     Collection.prototype["delete"] = function() {
       var deleted, items;
       items = 1 <= arguments.length ? __slice.call(arguments, 0) : [];

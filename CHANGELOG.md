@@ -63,3 +63,4 @@ changes to each resource
 * Fix bug in array processing in `Interfaces.JsonApi#toCamelCase` and `toUnderscored`
 * Use a single instance of `axios` in interfaces, so that `resourceLibrary.interface.axios.request` can be easily stubbed
 * Fix bug in Interfaces.JsonApi#toCamelCase that mishandles attributes with arrays of strings as the value
+* Add pop and shift to Collection

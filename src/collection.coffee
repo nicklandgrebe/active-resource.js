@@ -152,7 +152,17 @@ ActiveResource.Collection = class ActiveResource::Collection
   unshift: (items...) ->
     @__collection.unshift(items...)
 
-  # TODO: Add pop, shift with specs
+  # Pops items off the end of this collection
+  #
+  # @return [Item] the last item popped off the collection
+  pop: ->
+    @__collection.pop()
+
+  # Shifts items off the beginning of this collection
+  #
+  # @return [Item] the first item shifted off the collection
+  shift: ->
+    @__collection.shift()
 
   # Deletes an item from the collection and returns it
   #
