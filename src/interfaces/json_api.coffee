@@ -302,8 +302,9 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     attributes = _.extend(attributes, parentRelationship) if parentRelationship?
 
     attributes = @addRelationshipsToFields(attributes, data['relationships'], includes, resource)
+    attributes = this.toCamelCase(attributes)
 
-    resource.__assignFields(this.toCamelCase(attributes))
+    resource.__assignFields(attributes)
 
     resource.__links = _.extend(resource.links(), data['links'])
     resource.klass().reflectOnAllAssociations().each (reflection) ->

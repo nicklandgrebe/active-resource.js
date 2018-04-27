@@ -66,7 +66,7 @@ describe 'ActiveResource', ->
 
     describe '.clone()', ->
       beforeEach ->
-        MyLibrary::Order.includes('orderItems').select('price').find(1)
+        MyLibrary::Order.includes('giftCard', 'orderItems').select('price').find(1)
         .then window.onSuccess
 
         @promise = moxios.wait =>
@@ -102,7 +102,7 @@ describe 'ActiveResource', ->
         @promise.then =>
           expect(@clone.queryParams()).toEqual({
             fields: { orders: ['price'] },
-            include: ['orderItems']
+            include: ['giftCard', 'orderItems']
           })
 
       it 'sets relationships to clone', ->
@@ -111,6 +111,13 @@ describe 'ActiveResource', ->
             name = reflection.name
 
             expect(@clone.association(name).target).toEqual(@resource.association(name).target)
+
+      it 'sets loaded relationships to loaded', ->
+        @promise.then =>
+          @clone.klass().reflectOnAllAssociations().each (reflection) =>
+            name = reflection.name
+
+            expect(@clone.association(name).loaded()).toEqual(@resource.association(name).loaded())
 
       it 'clones relationship resources attributes', ->
         @promise.then =>

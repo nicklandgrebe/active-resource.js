@@ -90,6 +90,8 @@ class ActiveResource::Base
         newAssociation = clone.association(f)
 
         newAssociation.__links = _.clone(oldAssociation.links())
+        if oldAssociation.loaded()
+          newAssociation.loaded(true)
 
         reflection = oldAssociation.reflection
 

@@ -391,7 +391,8 @@ window.Promise = es6Promise.Promise;
         attributes = _.extend(attributes, parentRelationship);
       }
       attributes = this.addRelationshipsToFields(attributes, data['relationships'], includes, resource);
-      resource.__assignFields(this.toCamelCase(attributes));
+      attributes = this.toCamelCase(attributes);
+      resource.__assignFields(attributes);
       resource.__links = _.extend(resource.links(), data['links']);
       resource.klass().reflectOnAllAssociations().each(function(reflection) {
         var association, relationship, relationshipEmpty, relationshipLinks, selfLink, url_safe_reflection_name, _ref1, _ref2, _ref3, _ref4,
@@ -2075,6 +2076,9 @@ window.Promise = es6Promise.Promise;
           oldAssociation = _this.association(f);
           newAssociation = clone.association(f);
           newAssociation.__links = _.clone(oldAssociation.links());
+          if (oldAssociation.loaded()) {
+            newAssociation.loaded(true);
+          }
           reflection = oldAssociation.reflection;
           target = reflection.collection() ? reflection.autosave() && oldAssociation.target.include(cloner) ? (c = oldAssociation.target.clone(), c.replace(cloner, newCloner), (inverse = reflection.inverseOf()) != null ? c.each(function(t) {
             if (t.__fields[inverse.name] === _this) {
