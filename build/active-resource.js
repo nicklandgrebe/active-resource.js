@@ -2059,7 +2059,7 @@ window.Promise = es6Promise.Promise;
     };
 
     Base.prototype.__createClone = function(_arg) {
-      var clone, cloner, newCloner,
+      var attributes, clone, cloner, newCloner,
         _this = this;
       cloner = _arg.cloner, newCloner = _arg.newCloner;
       clone = this.klass().build();
@@ -2068,7 +2068,9 @@ window.Promise = es6Promise.Promise;
       });
       clone.__links = _.clone(this.links());
       clone.__queryParams = _.clone(this.queryParams());
-      clone.__assignAttributes(this.attributes());
+      attributes = {};
+      attributes[this.klass().primaryKey] = this[this.klass().primaryKey];
+      clone.__assignAttributes(_.extend(attributes, this.attributes()));
       this.klass().fields().each(function(f) {
         var c, inverse, newAssociation, oldAssociation, reflection, target, _ref, _ref1, _ref2, _ref3;
         clone.__fields[f] = ((_ref = _this.__fields[f]) != null ? _ref.toArray : void 0) != null ? _this.__fields[f].clone() : _this.__fields[f];

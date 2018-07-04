@@ -76,7 +76,10 @@ class ActiveResource::Base
 
     clone.__queryParams = _.clone(@queryParams())
 
-    clone.__assignAttributes(@attributes())
+    attributes = {}
+    attributes[@klass().primaryKey] = @[@klass().primaryKey]
+
+    clone.__assignAttributes(_.extend(attributes, @attributes()));
 
     @klass().fields().each (f) =>
       clone.__fields[f] =
