@@ -1342,10 +1342,10 @@ window.Promise = es6Promise.Promise;
             });
             return !newTargets.empty();
           } else {
-            return oldField !== newField || association.reflection.autosave() && newField.changed();
+            return oldField != newField || association.reflection.autosave() && newField.changed();
           }
         } catch (_error) {
-          return oldField !== newField && !_.isUndefined(newField);
+          return oldField != newField && !_.isUndefined(newField);
         }
       });
     };

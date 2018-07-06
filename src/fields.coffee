@@ -65,10 +65,10 @@ class ActiveResource::Fields
 
           return !newTargets.empty()
         else
-          oldField != newField ||
+          `oldField != newField` ||
             association.reflection.autosave() && newField.changed()
       catch
         # Attribute field if association not found
         # Check that they are not equal, and that its not a case of undefined !== null
-        oldField != newField && !_.isUndefined(newField)
+        `oldField != newField` && !_.isUndefined(newField)
     )
