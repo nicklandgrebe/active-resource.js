@@ -219,7 +219,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
 
       target = resource.association(reflection.name).target
 
-      return if (reflection.collection() && target.empty()) || !target?
+      return if !onlyChanged && ((reflection.collection() && target.empty()) || !target?)
 
       output[s.underscored(reflection.name)] = {
         data: this.buildResourceDocument({

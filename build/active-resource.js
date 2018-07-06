@@ -330,7 +330,7 @@ window.Promise = es6Promise.Promise;
         var reflection, target;
         reflection = resource.klass().reflectOnAssociation(relationship);
         target = resource.association(reflection.name).target;
-        if ((reflection.collection() && target.empty()) || (target == null)) {
+        if (!onlyChanged && ((reflection.collection() && target.empty()) || (target == null))) {
           return;
         }
         return output[s.underscored(reflection.name)] = {
