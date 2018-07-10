@@ -219,7 +219,7 @@ describe 'ActiveResource', ->
 
           it 'sends a blank document', ->
             @promise3.then =>
-              expect(moxios.requests.mostRecent().data).toEqual(JSON.stringify({}))
+              expect(moxios.requests.mostRecent().data).toEqual(JSON.stringify({ data: null }))
 
           describe 'when update succeeds', ->
             beforeEach ->

@@ -271,7 +271,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     if _.isArray(resourceData) || (_.isObject(resourceData) && resourceData.isA?(ActiveResource::Collection))
       data.toArray()
     else
-      data.first()
+      data.first() || null
 
   #---------------------------------------------------------------------------
   #---------------------------------------------------------------------------

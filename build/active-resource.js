@@ -375,7 +375,7 @@ window.Promise = es6Promise.Promise;
       if (_.isArray(resourceData) || (_.isObject(resourceData) && (typeof resourceData.isA === "function" ? resourceData.isA(ActiveResource.prototype.Collection) : void 0))) {
         return data.toArray();
       } else {
-        return data.first();
+        return data.first() || null;
       }
     };
 

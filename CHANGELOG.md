@@ -64,3 +64,4 @@ changes to each resource
 * Use a single instance of `axios` in interfaces, so that `resourceLibrary.interface.axios.request` can be easily stubbed
 * Fix bug in Interfaces.JsonApi#toCamelCase that mishandles attributes with arrays of strings as the value
 * Add pop and shift to Collection
+* Fix JSON API interface sending invalid relationship data format when relationship assigned to null
