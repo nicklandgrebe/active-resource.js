@@ -17,10 +17,23 @@ class ActiveResource::Attributes
   # @param [Array<String>] attributes the attributes to add to the list of attributes the class tracks
   # @return [Collection<String>] the klass attributes
   attributes: (attributes...) ->
-    if @__attributes?
-      @__attributes.push(attributes...)
+    options = {}
+    if _.isObject(_.last(attributes))
+      options = attributes.pop();
+
+    if !@__attributes?
+      @__attributes = {
+        all: ActiveResource::Collection.build(),
+        read: ActiveResource::Collection.build(),
+        readWrite: ActiveResource::Collection.build(),
+      }
+
+    if(options.readOnly)
+      @__attributes.read.push(attributes...)
     else
-      @__attributes = ActiveResource::Collection.build(attributes)
+      @__attributes.readWrite.push(attributes...)
+
+    @__attributes.all.push(attributes...)
 
     @__attributes
 
@@ -41,11 +54,11 @@ class ActiveResource::Attributes
   # Retrieves all the attributes of the resource
   #
   # @return [Object] the attributes of the resource
-  @attributes: ->
+  @attributes: (options = {}) ->
     output = {}
 
     for k, v of @
-      if @__validAttribute(k, v)
+      if @__validAttribute(k, v, options)
         output[k] = v
 
     output
@@ -112,11 +125,17 @@ class ActiveResource::Attributes
   #
   # @param [String] attribute the attribute to determine validity for
   # @param [Number,String,Object] value the value for the attribute, relevant for !strictAttributes mode
-  @__validAttribute: (attribute, value) ->
+  # @param [Object] options the options to modify valid attributes with
+  @__validAttribute: (attribute, value, options) ->
     reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams']
 
     if @klass().resourceLibrary.strictAttributes
-      @klass().attributes().include(attribute)
+      if options.readOnly
+        @klass().attributes().read.include(attribute)
+      else if options.readWrite
+        @klass().attributes().readWrite.include(attribute)
+      else
+        @klass().attributes().all.include(attribute)
     else
       !_.isFunction(value) && !_.contains(reserved, attribute) &&
         try !@association(attribute)? catch e then true

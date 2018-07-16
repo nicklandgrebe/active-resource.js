@@ -65,3 +65,4 @@ changes to each resource
 * Fix bug in Interfaces.JsonApi#toCamelCase that mishandles attributes with arrays of strings as the value
 * Add pop and shift to Collection
 * Fix JSON API interface sending invalid relationship data format when relationship assigned to null
+* Add readOnly and readWrite attributes and only send readWrite attributes to server via JsonApi interface

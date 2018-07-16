@@ -355,7 +355,9 @@ window.Promise = es6Promise.Promise;
         var attributes, changedFields, documentResource, relationships;
         documentResource = _this.buildResourceIdentifier(resource);
         if (!onlyResourceIdentifiers) {
-          attributes = _.omit(resource.attributes(), resource.klass().primaryKey);
+          attributes = _.omit(resource.attributes({
+            readWrite: true
+          }), resource.klass().primaryKey);
           relationships = _.keys(resource.klass().reflections());
           if (parentReflection) {
             if (!(parentReflection.polymorphic() && _this.resourceLibrary.includePolymorphicRepeats)) {
@@ -753,13 +755,25 @@ window.Promise = es6Promise.Promise;
     function Attributes() {}
 
     Attributes.prototype.attributes = function() {
-      var attributes, _ref;
+      var attributes, options, _ref, _ref1, _ref2;
       attributes = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      if (this.__attributes != null) {
-        (_ref = this.__attributes).push.apply(_ref, attributes);
-      } else {
-        this.__attributes = ActiveResource.prototype.Collection.build(attributes);
+      options = {};
+      if (_.isObject(_.last(attributes))) {
+        options = attributes.pop();
       }
+      if (this.__attributes == null) {
+        this.__attributes = {
+          all: ActiveResource.prototype.Collection.build(),
+          read: ActiveResource.prototype.Collection.build(),
+          readWrite: ActiveResource.prototype.Collection.build()
+        };
+      }
+      if (options.readOnly) {
+        (_ref = this.__attributes.read).push.apply(_ref, attributes);
+      } else {
+        (_ref1 = this.__attributes.readWrite).push.apply(_ref1, attributes);
+      }
+      (_ref2 = this.__attributes.all).push.apply(_ref2, attributes);
       return this.__attributes;
     };
 
@@ -771,12 +785,15 @@ window.Promise = es6Promise.Promise;
       return this.__assignAttributes(attributes);
     };
 
-    Attributes.attributes = function() {
+    Attributes.attributes = function(options) {
       var k, output, v;
+      if (options == null) {
+        options = {};
+      }
       output = {};
       for (k in this) {
         v = this[k];
-        if (this.__validAttribute(k, v)) {
+        if (this.__validAttribute(k, v, options)) {
           output[k] = v;
         }
       }
@@ -825,11 +842,17 @@ window.Promise = es6Promise.Promise;
       return this.attributes()[attribute];
     };
 
-    Attributes.__validAttribute = function(attribute, value) {
+    Attributes.__validAttribute = function(attribute, value, options) {
       var e, reserved;
       reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams'];
       if (this.klass().resourceLibrary.strictAttributes) {
-        return this.klass().attributes().include(attribute);
+        if (options.readOnly) {
+          return this.klass().attributes().read.include(attribute);
+        } else if (options.readWrite) {
+          return this.klass().attributes().readWrite.include(attribute);
+        } else {
+          return this.klass().attributes().all.include(attribute);
+        }
       } else {
         return !_.isFunction(value) && !_.contains(reserved, attribute) && (function() {
           try {
@@ -1282,8 +1305,10 @@ window.Promise = es6Promise.Promise;
     function Fields() {}
 
     Fields.prototype.fields = function() {
-      var output;
-      output = ActiveResource.prototype.Collection.build(this.attributes());
+      var attributes, output;
+      attributes = this.attributes();
+      output = ActiveResource.prototype.Collection.build(attributes.all);
+      output.push.apply(output, attributes.read.toArray());
       output.push.apply(output, _.keys(this.reflections()));
       return output;
     };

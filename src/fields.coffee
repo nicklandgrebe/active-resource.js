@@ -3,7 +3,10 @@ class ActiveResource::Fields
   # Returns all of the fields of the klass (attributes + relationships)
   # @return [Collection<String>] the names of all the fields of the klass
   fields: ->
-    output = ActiveResource::Collection.build(@attributes())
+    attributes = @attributes()
+
+    output = ActiveResource::Collection.build(attributes.all)
+    output.push attributes.read.toArray()...
     output.push _.keys(@reflections())...
     output
 

@@ -251,7 +251,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
         documentResource = this.buildResourceIdentifier(resource)
 
         unless onlyResourceIdentifiers
-          attributes = _.omit(resource.attributes(), resource.klass().primaryKey)
+          attributes = _.omit(resource.attributes({ readWrite: true }), resource.klass().primaryKey)
           relationships = _.keys(resource.klass().reflections())
 
           if parentReflection
