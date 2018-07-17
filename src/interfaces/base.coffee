@@ -11,6 +11,24 @@ ActiveResource.Interfaces = class ActiveResource::Interfaces
         })
       )
 
+      @axios.interceptors.response.use(
+        (config) => config,
+        (error) =>
+          if (error.response.status == 408 || error.code == 'ECONNABORTED')
+            Promise.reject(
+              response:
+                data:
+                  errors: [
+                    {
+                      code: 'timeout',
+                      detail: "Timeout occurred while loading #{error.config.url}"
+                    }
+                  ]
+            )
+          else
+            Promise.reject(error)
+      );
+
     # Makes an HTTP request to a url with data
     #
     # @param [String] url the url to query

@@ -142,11 +142,32 @@ window.Promise = es6Promise.Promise;
       Base.contentType = 'application/json';
 
       function Base(resourceLibrary) {
+        var _this = this;
         this.resourceLibrary = resourceLibrary;
         this.axios = axios.create({
           headers: _.extend(this.resourceLibrary.headers || {}, {
             'Content-Type': this.constructor.contentType
           })
+        });
+        this.axios.interceptors.response.use(function(config) {
+          return config;
+        }, function(error) {
+          if (error.response.status === 408 || error.code === 'ECONNABORTED') {
+            return Promise.reject({
+              response: {
+                data: {
+                  errors: [
+                    {
+                      code: 'timeout',
+                      detail: "Timeout occurred while loading " + error.config.url
+                    }
+                  ]
+                }
+              }
+            });
+          } else {
+            return Promise.reject(error);
+          }
         });
       }
 

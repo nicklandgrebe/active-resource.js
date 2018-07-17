@@ -76,6 +76,25 @@ describe 'ActiveResource', ->
           @promise.then =>
             expect(moxios.requests.mostRecent().headers['Content-Type']).toEqual('application/vnd.api+json')
 
+        describe 'on timeout', ->
+          beforeEach ->
+            @promise2 = @promise.then =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.timeout)
+              .catch =>
+                Promise.reject(@errors = window.onFailure.calls.mostRecent().args[0])
+
+          it 'returns errors Collection', ->
+            @promise2.catch =>
+              expect(@errors.isA?(ActiveResource::Collection)).toBeTruthy()
+
+          it 'returns error with detail', ->
+            @promise2.catch =>
+              expect(@errors.first()).toEqual({
+                code: 'timeout',
+                message: "Timeout occurred while loading https://example.com/api/v1/products/",
+                detail: "Timeout occurred while loading https://example.com/api/v1/products/",
+              })
+
         describe 'on success', ->
           beforeEach ->
             @promise2 = @promise.then =>
