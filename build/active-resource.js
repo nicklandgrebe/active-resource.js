@@ -925,6 +925,136 @@ window.Promise = es6Promise.Promise;
 }).call(this);
 
 (function() {
+  ActiveResource.prototype.Cloning = (function() {
+    function Cloning() {}
+
+    Cloning.clone = function() {
+      return this.__createClone({});
+    };
+
+    Cloning.__createClone = function(_arg) {
+      var attributes, clone, cloner, newCloner,
+        _this = this;
+      cloner = _arg.cloner, newCloner = _arg.newCloner;
+      clone = this.klass().build();
+      this.errors().each(function(attribute, e) {
+        return clone.errors().push(_.clone(e));
+      });
+      clone.__links = _.clone(this.links());
+      clone.__queryParams = _.clone(this.queryParams());
+      attributes = {};
+      attributes[this.klass().primaryKey] = this[this.klass().primaryKey];
+      clone.__assignAttributes(_.extend(attributes, this.attributes()));
+      this.klass().fields().each(function(f) {
+        var newAssociation, oldAssociation, reflection, target, _ref, _ref1, _ref2, _ref3;
+        clone.__fields[f] = ((_ref = _this.__fields[f]) != null ? _ref.toArray : void 0) != null ? _this.__fields[f].clone() : _this.__fields[f];
+        try {
+          oldAssociation = _this.association(f);
+          newAssociation = clone.association(f);
+          newAssociation.__links = _.clone(oldAssociation.links());
+          if (oldAssociation.loaded()) {
+            newAssociation.loaded(true);
+          }
+          reflection = oldAssociation.reflection;
+          target = reflection.collection() ? reflection.autosave() && oldAssociation.target.include(cloner) ? _this.__createCollectionAutosaveAssociationClone(oldAssociation, {
+            parentClone: clone,
+            cloner: cloner,
+            newCloner: newCloner
+          }) : ((_ref1 = reflection.inverseOf()) != null ? _ref1.autosave() : void 0) ? _this.__createCollectionInverseAutosaveAssociationClone(oldAssociation, {
+            parentClone: clone,
+            cloner: cloner
+          }) : oldAssociation.target : reflection.autosave() && oldAssociation.target === cloner ? _this.__createSingularAutosaveAssociationClone(oldAssociation, {
+            parentClone: clone,
+            newCloner: newCloner
+          }) : ((_ref2 = reflection.inverseOf()) != null ? _ref2.autosave() : void 0) && (oldAssociation.target != null) ? _this.__createSingularInverseAutosaveAssociationClone(oldAssociation, {
+            parentClone: clone,
+            cloner: cloner
+          }) : (((_ref3 = reflection.inverseOf()) != null ? _ref3.collection() : void 0) ? _this.__replaceSingularInverseCollectionAssociationClone(oldAssociation, {
+            parentClone: clone
+          }) : void 0, oldAssociation.target);
+          return newAssociation.writer(target, false);
+        } catch (_error) {
+          return true;
+        }
+      });
+      return clone;
+    };
+
+    Cloning.__createCollectionAutosaveAssociationClone = function(association, _arg) {
+      var clone, cloner, inverse, newCloner, parentClone,
+        _this = this;
+      parentClone = _arg.parentClone, cloner = _arg.cloner, newCloner = _arg.newCloner;
+      clone = association.target.clone();
+      clone.replace(cloner, newCloner);
+      parentClone.__fields[association.reflection.name].replace(cloner, newCloner);
+      if ((inverse = association.reflection.inverseOf()) != null) {
+        clone.each(function(t) {
+          if (t.__fields[inverse.name] === _this) {
+            t.__fields[inverse.name] = parentClone;
+          }
+          return t.association(inverse.name).writer(parentClone);
+        });
+      }
+      return clone;
+    };
+
+    Cloning.__createCollectionInverseAutosaveAssociationClone = function(association, _arg) {
+      var cloner, parentClone,
+        _this = this;
+      parentClone = _arg.parentClone, cloner = _arg.cloner;
+      return association.target.map(function(t) {
+        var clone;
+        if ((cloner != null) && cloner === t) {
+          return cloner;
+        } else {
+          clone = t.__createClone({
+            cloner: _this,
+            newCloner: parentClone
+          });
+          parentClone.__fields[association.reflection.name].replace(t, clone);
+          return clone;
+        }
+      });
+    };
+
+    Cloning.__createSingularAutosaveAssociationClone = function(association, _arg) {
+      var newCloner, parentClone;
+      parentClone = _arg.parentClone, newCloner = _arg.newCloner;
+      parentClone.__fields[association.reflection.name] = newCloner;
+      return newCloner;
+    };
+
+    Cloning.__createSingularInverseAutosaveAssociationClone = function(association, _arg) {
+      var clone, cloner, parentClone;
+      parentClone = _arg.parentClone, cloner = _arg.cloner;
+      if (association.target === cloner) {
+        return cloner;
+      } else {
+        clone = association.target.__createClone({
+          cloner: this,
+          newCloner: parentClone
+        });
+        if (parentClone.__fields[association.reflection.name] === association.target) {
+          parentClone.__fields[association.reflection.name] = clone;
+        }
+        return clone;
+      }
+    };
+
+    Cloning.__replaceSingularInverseCollectionAssociationClone = function(association, _arg) {
+      var inverse, parentClone;
+      parentClone = _arg.parentClone;
+      inverse = association.reflection.inverseOf();
+      return association.target.association(inverse.name).target.replace(this, parentClone);
+    };
+
+    return Cloning;
+
+  })();
+
+}).call(this);
+
+(function() {
   var __slice = [].slice;
 
   ActiveResource.Collection = ActiveResource.prototype.Collection = (function() {
@@ -2070,6 +2200,8 @@ window.Promise = es6Promise.Promise;
 
     ActiveResource.include(Base, ActiveResource.prototype.Callbacks);
 
+    ActiveResource.include(Base, ActiveResource.prototype.Cloning);
+
     ActiveResource.include(Base, ActiveResource.prototype.Errors);
 
     ActiveResource.include(Base, ActiveResource.prototype.Fields);
@@ -2098,126 +2230,6 @@ window.Promise = es6Promise.Promise;
 
     Base.prototype["interface"] = function() {
       return this.klass()["interface"]();
-    };
-
-    Base.prototype.clone = function() {
-      return this.__createClone({});
-    };
-
-    Base.prototype.__createClone = function(_arg) {
-      var attributes, clone, cloner, newCloner,
-        _this = this;
-      cloner = _arg.cloner, newCloner = _arg.newCloner;
-      clone = this.klass().build();
-      this.errors().each(function(attribute, e) {
-        return clone.errors().push(_.clone(e));
-      });
-      clone.__links = _.clone(this.links());
-      clone.__queryParams = _.clone(this.queryParams());
-      attributes = {};
-      attributes[this.klass().primaryKey] = this[this.klass().primaryKey];
-      clone.__assignAttributes(_.extend(attributes, this.attributes()));
-      this.klass().fields().each(function(f) {
-        var newAssociation, oldAssociation, reflection, target, _ref, _ref1, _ref2, _ref3;
-        clone.__fields[f] = ((_ref = _this.__fields[f]) != null ? _ref.toArray : void 0) != null ? _this.__fields[f].clone() : _this.__fields[f];
-        try {
-          oldAssociation = _this.association(f);
-          newAssociation = clone.association(f);
-          newAssociation.__links = _.clone(oldAssociation.links());
-          if (oldAssociation.loaded()) {
-            newAssociation.loaded(true);
-          }
-          reflection = oldAssociation.reflection;
-          target = reflection.collection() ? reflection.autosave() && oldAssociation.target.include(cloner) ? _this.__createCollectionAutosaveAssociationClone(oldAssociation, {
-            parentClone: clone,
-            cloner: cloner,
-            newCloner: newCloner
-          }) : ((_ref1 = reflection.inverseOf()) != null ? _ref1.autosave() : void 0) ? _this.__createCollectionInverseAutosaveAssociationClone(oldAssociation, {
-            parentClone: clone,
-            cloner: cloner
-          }) : oldAssociation.target : reflection.autosave() && oldAssociation.target === cloner ? _this.__createSingularAutosaveAssociationClone(oldAssociation, {
-            parentClone: clone,
-            newCloner: newCloner
-          }) : ((_ref2 = reflection.inverseOf()) != null ? _ref2.autosave() : void 0) && (oldAssociation.target != null) ? _this.__createSingularInverseAutosaveAssociationClone(oldAssociation, {
-            parentClone: clone,
-            cloner: cloner
-          }) : (((_ref3 = reflection.inverseOf()) != null ? _ref3.collection() : void 0) ? _this.__replaceSingularInverseCollectionAssociationClone(oldAssociation, {
-            parentClone: clone
-          }) : void 0, oldAssociation.target);
-          return newAssociation.writer(target, false);
-        } catch (_error) {
-          return true;
-        }
-      });
-      return clone;
-    };
-
-    Base.prototype.__createCollectionAutosaveAssociationClone = function(association, _arg) {
-      var clone, cloner, inverse, newCloner, parentClone,
-        _this = this;
-      parentClone = _arg.parentClone, cloner = _arg.cloner, newCloner = _arg.newCloner;
-      clone = association.target.clone();
-      clone.replace(cloner, newCloner);
-      parentClone.__fields[association.reflection.name].replace(cloner, newCloner);
-      if ((inverse = association.reflection.inverseOf()) != null) {
-        clone.each(function(t) {
-          if (t.__fields[inverse.name] === _this) {
-            t.__fields[inverse.name] = parentClone;
-          }
-          return t.association(inverse.name).writer(parentClone);
-        });
-      }
-      return clone;
-    };
-
-    Base.prototype.__createCollectionInverseAutosaveAssociationClone = function(association, _arg) {
-      var cloner, parentClone,
-        _this = this;
-      parentClone = _arg.parentClone, cloner = _arg.cloner;
-      return association.target.map(function(t) {
-        var clone;
-        if ((cloner != null) && cloner === t) {
-          return cloner;
-        } else {
-          clone = t.__createClone({
-            cloner: _this,
-            newCloner: parentClone
-          });
-          parentClone.__fields[association.reflection.name].replace(t, clone);
-          return clone;
-        }
-      });
-    };
-
-    Base.prototype.__createSingularAutosaveAssociationClone = function(association, _arg) {
-      var newCloner, parentClone;
-      parentClone = _arg.parentClone, newCloner = _arg.newCloner;
-      parentClone.__fields[association.reflection.name] = newCloner;
-      return newCloner;
-    };
-
-    Base.prototype.__createSingularInverseAutosaveAssociationClone = function(association, _arg) {
-      var clone, cloner, parentClone;
-      parentClone = _arg.parentClone, cloner = _arg.cloner;
-      if (association.target === cloner) {
-        return cloner;
-      } else {
-        clone = association.target.__createClone({
-          cloner: this,
-          newCloner: parentClone
-        });
-        if (parentClone.__fields[association.reflection.name] === association.target) {
-          parentClone.__fields[association.reflection.name] = clone;
-        }
-        return clone;
-      }
-    };
-
-    Base.prototype.__replaceSingularInverseCollectionAssociationClone = function(association, _arg) {
-      var inverse, parentClone;
-      parentClone = _arg.parentClone;
-      inverse = association.reflection.inverseOf();
-      return association.target.association(inverse.name).target.replace(this, parentClone);
     };
 
     Base.__newRelation = function(queryParams) {

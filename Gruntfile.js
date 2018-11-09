@@ -104,6 +104,7 @@ module.exports = function(grunt) {
           'build/associations.js',
           'build/attributes.js',
           'build/callbacks.js',
+          'build/cloning.js',
           'build/collection.js',
           'build/collection_response.js',
           'build/errors.js',
