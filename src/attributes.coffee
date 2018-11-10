@@ -124,7 +124,7 @@ class ActiveResource::Attributes
   # @param [Number,String,Object] value the value for the attribute, relevant for !strictAttributes mode
   # @param [Object] options the options to modify valid attributes with
   @__validAttribute: (attribute, value, options) ->
-    reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams']
+    reserved = ['__super__', '__associations', '__errors', '__fields', '__links', '__queryParams']
 
     if @klass().resourceLibrary.strictAttributes
       if options.readOnly
