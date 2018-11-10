@@ -100,6 +100,22 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   #---------------------------------------------------------------------------
   #---------------------------------------------------------------------------
 
+  # Takes in an object of filter key/value pairs and builds them into a JSON API filter object
+  #
+  # @note Used in constructing queryParams of GET queries
+  # @note If value is an ActiveResource, it will be transformed to use the resource's primaryKey
+  #
+  # @param [Object] filters the object containing filter data to be transformed
+  # @return [Object] the transformed filters
+  buildFilters: (filters) ->
+    this.toUnderscored(
+      _.mapObject filters, (value) ->
+        if value.isA?(ActiveResource::Base)
+          value[value.klass().primaryKey]
+        else
+          value
+    )
+
   # Takes in an object of modelName/fieldArray pairs and joins the fieldArray into a string
   #
   # @note Used in constructing queryParams of GET queries
@@ -113,8 +129,10 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # 1. Go through each key of the object, map its array of fields to underscored fields
   # 2. Take the mapped array of fields and join them, replacing the value of the key with the joined string
   buildSparseFieldset: (fields) ->
-    _.mapObject fields, (fieldArray) ->
-      _.map(fieldArray, (f) -> s.underscored(f)).join()
+    this.toUnderscored(
+      _.mapObject fields, (fieldArray) ->
+        _.map(fieldArray, (f) -> s.underscored(f)).join()
+    )
 
   # Takes in an array of include objects (strings, nested strings in objects) and turns them into a
   # dotted include tree
@@ -527,11 +545,11 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Object] queryParams query params to send to the server
   get: (url, queryParams = {}) ->
     data = {}
-    data['filter']  = this.toUnderscored(queryParams['filter'])       if queryParams['filter']?
+    data['filter']  = this.buildFilters(queryParams['filter'])        if queryParams['filter']?
     data['fields']  = this.buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
     data['include'] = this.buildIncludeTree(queryParams['include'])   if queryParams['include']?
-    if queryParams['sort']?
-      data['sort']  = this.buildSortList(queryParams['sort'])
+    data['sort']    = this.buildSortList(queryParams['sort'])         if queryParams['sort']?
+
     data['page']    = queryParams['page']                        if queryParams['page']?
     data['limit']   = queryParams['limit']                       if queryParams['limit']?
     data['offset']  = queryParams['offset']                      if queryParams['offset']?

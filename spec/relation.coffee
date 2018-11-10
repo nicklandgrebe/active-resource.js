@@ -144,6 +144,14 @@ describe 'ActiveResource', ->
           @paramStr = requestParams(moxios.requests.mostRecent())
           expect(@paramStr).toContain('filter[token]=jshf8e&filter[another]=param')
 
+      describe 'when value is resource', ->
+        it 'adds resource primary key as value', ->
+          MyLibrary::OrderItem.where(order: MyLibrary::Order.build(id: '5')).all()
+
+          moxios.wait =>
+            @paramStr = requestParams(moxios.requests.mostRecent())
+            expect(@paramStr).toContain('filter[order]=5')
+
     describe '#order()', ->
       it 'adds sort params to a query', ->
         MyLibrary::Product.order(createdAt: 'asc').all()
@@ -173,6 +181,13 @@ describe 'ActiveResource', ->
         moxios.wait =>
           @paramStr = requestParams(moxios.requests.mostRecent())
           expect(@paramStr).toContain('fields[products]=id&fields[orders]=price')
+
+      it 'underscores class names', ->
+        MyLibrary::Product.select(timeSlots: 'startsAt').all()
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('fields[time_slots]=starts_at')
 
       it 'merges fields', ->
         MyLibrary::Product.select('id', 'createdAt').select(orders: 'price').all()

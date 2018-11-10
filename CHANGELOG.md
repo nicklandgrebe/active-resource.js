@@ -42,7 +42,7 @@ changes to each resource
 * Add `resourceLibrary.includePolymorphicRepeats` option that if `true` allows primary data’s relationships to send polymorphic
   owner data to the server, despite that data also being the primary data
 
-### Master
+## 1.0.0-alpha.0
 
 * **Breaking:** Switched from `jQuery.ajax` to `axios`, which have different promise interfaces
 * **Breaking:** Switched all references of `attribute` in `errors()` object to `field`:
@@ -61,6 +61,15 @@ changes to each resource
   * `afterBuild` will be called on GET, but it is called before any fields are assigned to the resource
 * Add source maps
 * Fix bug in array processing in `Interfaces.JsonApi#toCamelCase` and `toUnderscored`
+
+## 1.0.0-alpha.1
+
+* Add source map for dist release
+
+### Master
+
+* Allow resources to be provided as values in `where` statements, transforming their primaryKey as value
+* Fix bug that left `Relation#select` field classes camelCased in requests
 * Use a single instance of `axios` in interfaces, so that `resourceLibrary.interface.axios.request` can be easily stubbed
 * Fix bug in Interfaces.JsonApi#toCamelCase that mishandles attributes with arrays of strings as the value
 * Add pop and shift to Collection

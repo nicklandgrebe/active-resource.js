@@ -277,12 +277,22 @@ window.Promise = es6Promise.Promise;
       return camelized;
     };
 
+    JsonApi.prototype.buildFilters = function(filters) {
+      return this.toUnderscored(_.mapObject(filters, function(value) {
+        if (typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Base) : void 0) {
+          return value[value.klass().primaryKey];
+        } else {
+          return value;
+        }
+      }));
+    };
+
     JsonApi.prototype.buildSparseFieldset = function(fields) {
-      return _.mapObject(fields, function(fieldArray) {
+      return this.toUnderscored(_.mapObject(fields, function(fieldArray) {
         return _.map(fieldArray, function(f) {
           return s.underscored(f);
         }).join();
-      });
+      }));
     };
 
     JsonApi.prototype.buildIncludeTree = function(includes) {
@@ -544,7 +554,7 @@ window.Promise = es6Promise.Promise;
       }
       data = {};
       if (queryParams['filter'] != null) {
-        data['filter'] = this.toUnderscored(queryParams['filter']);
+        data['filter'] = this.buildFilters(queryParams['filter']);
       }
       if (queryParams['fields'] != null) {
         data['fields'] = this.buildSparseFieldset(queryParams['fields']);
