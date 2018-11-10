@@ -861,7 +861,7 @@ window.Promise = es6Promise.Promise;
 
     Attributes.__validAttribute = function(attribute, value, options) {
       var e, reserved;
-      reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams'];
+      reserved = ['__super__', '__associations', '__errors', '__fields', '__links', '__queryParams'];
       if (this.klass().resourceLibrary.strictAttributes) {
         if (options.readOnly) {
           return this.klass().attributes().read.include(attribute);
@@ -2230,6 +2230,12 @@ window.Promise = es6Promise.Promise;
 
     Base.__newRelation = function(queryParams) {
       return new ActiveResource.prototype.Relation(this, queryParams);
+    };
+
+    Base.prototype.toString = function() {
+      return JSON.stringify(this["interface"]().buildResourceDocument({
+        resourceData: this
+      }));
     };
 
     return Base;

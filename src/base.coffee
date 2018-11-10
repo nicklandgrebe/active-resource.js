@@ -63,3 +63,6 @@ class ActiveResource::Base
   # @return [ActiveResource::Relation] the new Relation for the extended query
   @__newRelation: (queryParams) ->
     new ActiveResource::Relation(this, queryParams)
+
+  toString: ->
+    JSON.stringify(@interface().buildResourceDocument(resourceData: this))
