@@ -99,7 +99,8 @@ describe 'ActiveResource', ->
 
       describe 'singular relationship', ->
         beforeEach ->
-          @customer = @resource.buildCustomer()
+          @resource = @resource.buildCustomer()
+          @customer = @resource.customer()
 
           @errors = ActiveResource.Collection.build([
             {
@@ -139,7 +140,8 @@ describe 'ActiveResource', ->
 
       describe 'collection relationship', ->
         beforeEach ->
-          @orderItem = @resource.orderItems().build()
+          @resource = @resource.orderItems().build()
+          @orderItem = @resource.orderItems().first()
 
           @errors = ActiveResource.Collection.build([
             {
@@ -1182,3 +1184,229 @@ describe 'ActiveResource', ->
           it 'indicates the cloned inverse target of the relationship was changed', ->
             @promise.then =>
               expect(@resource2.order().changedFields().include('rating')).toBeTruthy()
+
+    describe 'when using relationship management', ->
+      beforeEach ->
+        ImmutableLibrary::Order.find('1')
+        .then window.onSuccess
+
+        @promise = moxios.wait =>
+          moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
+          .then =>
+            @resource = window.onSuccess.calls.mostRecent().args[0]
+
+      describe 'singular', ->
+        beforeEach ->
+          ImmutableLibrary::Customer.find('1')
+          .then window.onSuccess
+
+          @promise2 = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Customer.find.includes)
+            .then =>
+              @relatedResource = window.onSuccess.calls.mostRecent().args[0]
+
+        describe 'assign', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @clone = @resource.assignCustomer(@relatedResource)
+
+          it 'returns owner of relationship', ->
+            @promise3.then =>
+              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+
+          it 'clones resource', ->
+            @promise3.then =>
+              expect(@clone).not.toBe(@resource)
+
+          it 'clones related resource', ->
+            @promise3.then =>
+              expect(@clone.customer().isA(ImmutableLibrary::Customer)).toBeTruthy()
+              expect(@clone.customer()).not.toBe(@relatedResource)
+
+        describe 'update', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @resource.updateCustomer(@relatedResource)
+              .then window.onSuccess
+
+              moxios.wait =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
+                .then =>
+                  @clone = window.onSuccess.calls.mostRecent().args[0]
+
+          it 'returns owner of relationship', ->
+            @promise3.then =>
+              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+
+          it 'clones resource', ->
+            @promise3.then =>
+              expect(@clone).not.toBe(@resource)
+
+          it 'clones related resource', ->
+            @promise3.then =>
+              expect(@clone.customer().isA(ImmutableLibrary::Customer)).toBeTruthy()
+              expect(@clone.customer()).not.toBe(@relatedResource)
+
+        describe 'build', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @clone = @resource.buildCustomer({ name: 'J' })
+
+          it 'returns owner of relationship', ->
+            @promise3.then =>
+              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+
+          it 'clones resource', ->
+            @promise3.then =>
+              expect(@clone).not.toBe(@resource)
+
+        describe 'create', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @resource.createCustomer({ name: 'M' })
+                .then window.onSuccess
+
+              moxios.wait =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.Customer.find.includes)
+                .then =>
+                  @clone = window.onSuccess.calls.mostRecent().args[0]
+
+          it 'returns owner of relationship', ->
+            @promise3.then =>
+              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+
+          it 'clones resource', ->
+            @promise3.then =>
+              expect(@clone).not.toBe(@resource)
+
+      describe 'collection', ->
+        beforeEach ->
+          ImmutableLibrary::Comment.find('1')
+          .then window.onSuccess
+
+          @promise2 = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Comment.find.success)
+            .then =>
+              @relatedResource = window.onSuccess.calls.mostRecent().args[0]
+
+        describe 'assign', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @clone = @resource.comments().assign([@relatedResource], false)
+
+          it 'returns owner of relationship', ->
+            @promise3.then =>
+              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+
+          it 'clones resource', ->
+            @promise3.then =>
+              expect(@clone).not.toBe(@resource)
+
+          it 'clones related resources', ->
+            @promise3.then =>
+              expect(@clone.comments().target().first().isA(ImmutableLibrary::Comment)).toBeTruthy()
+              expect(@clone.comments().target().first()).not.toBe(@relatedResource)
+
+        describe 'update', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @resource.comments().assign([@relatedResource])
+                .then window.onSuccess
+
+              moxios.wait =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
+                .then =>
+                  @clone = window.onSuccess.calls.mostRecent().args[0]
+
+          it 'returns owner of relationship', ->
+            @promise3.then =>
+              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+
+          it 'clones resource', ->
+            @promise3.then =>
+              expect(@clone).not.toBe(@resource)
+
+          it 'clones related resources', ->
+            @promise3.then =>
+              expect(@clone.comments().target().first().isA(ImmutableLibrary::Comment)).toBeTruthy()
+              expect(@clone.comments().target().first()).not.toBe(@relatedResource)
+
+        describe 'build', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @clone = @resource.comments().build({ body: 'J' })
+
+          it 'returns owner of relationship', ->
+            @promise3.then =>
+              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+
+          it 'clones resource', ->
+            @promise3.then =>
+              expect(@clone).not.toBe(@resource)
+
+        describe 'create', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @resource.comments().create({ body: 'M' })
+                .then window.onSuccess
+
+              moxios.wait =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.Comment.find.success)
+                .then =>
+                  @clone = window.onSuccess.calls.mostRecent().args[0]
+
+          it 'returns owner of relationship', ->
+            @promise3.then =>
+              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+
+          it 'clones resource', ->
+            @promise3.then =>
+              expect(@clone).not.toBe(@resource)
+
+        describe 'push', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @resource.comments().push(@relatedResource)
+                .then window.onSuccess
+
+              moxios.wait =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
+                .then =>
+                  @clone = window.onSuccess.calls.mostRecent().args[0]
+
+          it 'returns owner of relationship', ->
+            @promise3.then =>
+              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+
+          it 'clones resource', ->
+            @promise3.then =>
+              expect(@clone).not.toBe(@resource)
+
+          it 'clones related resources', ->
+            @promise3.then =>
+              expect(@clone.comments().target().first().isA(ImmutableLibrary::Comment)).toBeTruthy()
+              expect(@clone.comments().target().first()).not.toBe(@relatedResource)
+
+        describe 'delete', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @resource.comments().delete(@relatedResource)
+                .then window.onSuccess
+
+              moxios.wait =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.relationships.update.success)
+                .then =>
+                  @clone = window.onSuccess.calls.mostRecent().args[0]
+
+          it 'returns owner of relationship', ->
+            @promise3.then =>
+              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+
+          it 'clones resource', ->
+            @promise3.then =>
+              expect(@clone).not.toBe(@resource)
+
+          it 'clones related resources', ->
+            @promise3.then =>
+              expect(@clone.comments().target().first().isA(ImmutableLibrary::Comment)).toBeTruthy()
+              expect(@clone.comments().target().first()).not.toBe(@relatedResource)

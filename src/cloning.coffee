@@ -140,7 +140,7 @@ class ActiveResource::Cloning
         if t.__fields[inverse.name] == this
           t.__fields[inverse.name] = parentClone
 
-        t.association(inverse.name).writer(parentClone)
+        t.association(inverse.name).writer(parentClone, false)
       )
 
     clone

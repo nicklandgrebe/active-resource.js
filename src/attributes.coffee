@@ -100,10 +100,7 @@ class ActiveResource::Attributes
   @__assignAttributes: (attributes) ->
     for k, v of attributes
       try
-        if @association(k).reflection.collection?()
-          @[k]().assign(v, false)
-        else
-          @["assign#{s.capitalize(k)}"](v)
+        @association(k).writer(v, false)
       catch
         @[k] = v
 

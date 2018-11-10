@@ -141,6 +141,36 @@ class ActiveResource::Associations::Association
 
     attributes
 
+  # If the resource library of the owner klass is immutable, then execute callback in the context
+  #   of a clone of the owner association, and return the cloned owner from the method calling
+  #   __cloneOnCallbackIfImmutable
+  #
+  # @note If immutable is true, then value will be cloned before assignment to owner.clone
+  #
+  # @note Used by association writer, build, create, concat, delete
+  # @param [Boolean] checkImmutable if true, check if immutable, otherwise just run the normal fn
+  # @param [ActiveResource, Array<ActiveResource>] value the value to assign to the relationship
+  # @param [Function] fn the function to execute, potentially in the scope of the cloned owner
+  # @return [Resource, Promise] if immutable, return cloned owner, otherwise return the value returned by fn
+  __executeOnCloneIfImmutable: (checkImmutable, value, fn) ->
+    if checkImmutable && @owner.klass().resourceLibrary.immutable
+      clone = @owner.clone()
+
+      newValue = ActiveResource.Collection
+        .build(value)
+        .map((val) => val?.__createClone({ cloner: @owner, newCloner: clone }) || null)
+
+      result = _.bind(fn, clone.association(this.reflection.name))(
+        _.isArray(value) && newValue.toArray() || newValue.first()
+      )
+
+      if result.then?
+        result.then => clone
+      else
+        clone
+    else
+      _.bind(fn, this)(value)
+
   # Used by hasOne and hasMany to set their owner attributes on belongsTo resources
   __setOwnerAttributes: (resource) ->
     for key, value of @__creationAttributes()
