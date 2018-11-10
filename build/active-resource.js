@@ -2236,6 +2236,12 @@ window.Promise = es6Promise.Promise;
       return new ActiveResource.prototype.Relation(this, queryParams);
     };
 
+    Base.prototype.toString = function() {
+      return JSON.stringify(this["interface"]().buildResourceDocument({
+        resourceData: this
+      }));
+    };
+
     return Base;
 
   })();
