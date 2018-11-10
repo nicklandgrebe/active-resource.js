@@ -141,7 +141,7 @@ describe 'ActiveResource', ->
       describe 'collection relationship', ->
         beforeEach ->
           @resource = @resource.orderItems().build()
-          @orderItem = @resource.orderItems().first()
+          @orderItem = @resource.orderItems().target().first()
 
           @errors = ActiveResource.Collection.build([
             {
