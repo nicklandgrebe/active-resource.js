@@ -67,3 +67,6 @@ changes to each resource
 * Fix JSON API interface sending invalid relationship data format when relationship assigned to null
 * Add readOnly and readWrite attributes and only send readWrite attributes to server via JsonApi interface
 * Add default error message for timeouts to requests
+* Add immutable mode that makes all resources immutable and all behavior conform to this
+* Reserve `__super__` attribute from being used publicly
+* Add pretty print for `Base.toString()`
