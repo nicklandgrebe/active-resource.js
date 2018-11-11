@@ -55,3 +55,30 @@ ActiveResource.createResourceLibrary = (baseUrl, options = {}) ->
 
       throw "NameError: klass #{className} does not exist" unless klass?
       klass
+
+    # Creates an ActiveResource::Base class from klass provided
+    #
+    # @param [Class] klass the klass to create into an ActiveResource::Base class in the library
+    # @return [Class] the klass now inheriting from ActiveResource::Base
+    @createResource: (klass) ->
+      extend = `
+        function(child, parent) {
+          for (var key in parent) { if (parent.hasOwnProperty(key)) child[key] = parent[key]; }
+          function ctor() { this.constructor = child; }
+          ctor.prototype = parent.prototype;
+          child.prototype = new ctor();
+          child.__super__ = parent.prototype;
+          return child;
+        }
+      `
+
+      klass = extend(klass, @Base)
+
+      klass.className ||= klass.name
+      klass.queryName ||= _.pluralize(s.underscored(klass.className))
+
+      klass.define?()
+
+      (@constantizeScope || @)[klass.className] = klass
+
+      klass

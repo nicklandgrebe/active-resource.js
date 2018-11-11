@@ -50,13 +50,13 @@ describe 'ActiveResource', ->
         headers: { Authorization: 'xxx' }
       )
 
-      class @MyLibrary::Product extends @MyLibrary.Base
+      class @MyLibrary.Product extends @MyLibrary.Base
         @className = 'Product'
         @queryName = 'products'
 
     describe '#constantize', ->
       it 'returns the correct class', ->
-        expect(@MyLibrary.constantize('Product')).toEqual(@MyLibrary::Product)
+        expect(@MyLibrary.constantize('Product')).toEqual(@MyLibrary.Product)
 
       describe 'when class does not exist', ->
         beforeEach -> @className = 'ClassThatDoesNotExist'
@@ -77,9 +77,62 @@ describe 'ActiveResource', ->
         it 'uses the scope', ->
           expect(@MyLibrary.constantize('Product')).toEqual(window.Product)
 
+    describe '#createResource', ->
+      beforeEach ->
+        @Order = @MyLibrary.createResource(
+          class Order
+            @define: ->
+              @attributes('price')
+
+              @belongsTo('product')
+              @hasMany('comments')
+        )
+
+      it 'creates resource class that inherits from Base', ->
+        expect(@Order.build().isA(@MyLibrary.Order)).toBeTruthy()
+
+      it 'sets className', ->
+        expect(@Order.className).toEqual('Order')
+
+      it 'sets queryName', ->
+        expect(@Order.queryName).toEqual('orders')
+
+      it 'calls define', ->
+        expect(@Order.reflections().comments).toBeDefined()
+
+      it 'finds constants for other resources', ->
+        expect(@Order.build().buildProduct().isA(@MyLibrary.Product)).toBeTruthy()
+
+      describe 'custom className', ->
+        beforeEach ->
+          @Comment = @MyLibrary.createResource(
+            class Comment
+              @className = 'NotComment'
+          )
+
+        it 'does not override className', ->
+          expect(@Comment.className).toEqual('NotComment')
+
+        it 'derives queryName from className', ->
+          expect(@Comment.queryName).toEqual('not_comments')
+
+      describe 'custom library constantizeScope', ->
+        beforeEach ->
+          @MyLibrary = ActiveResource.createResourceLibrary(
+            'https://www.example.com',
+            constantizeScope: window
+          )
+
+          @GiftCard = @MyLibrary.createResource(
+            class GiftCard
+          )
+
+        it 'adds klass to constantizeScope', ->
+          expect(window.GiftCard).toBeDefined()
+
     describe 'when making a request', ->
       beforeEach ->
-        @MyLibrary::Product.find(1)
+        @MyLibrary.Product.find(1)
 
         @promise = moxios.wait => true
 

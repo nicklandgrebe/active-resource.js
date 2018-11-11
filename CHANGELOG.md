@@ -79,3 +79,5 @@ changes to each resource
 * Add immutable mode that makes all resources immutable and all behavior conform to this
 * Reserve `__super__` attribute from being used publicly
 * Add pretty print for `Base.toString()`
+* Add `ResourceLibrary#createResource` that takes in class and composes it with `Base` class, calling static `define`
+  on it to define fields directly in the class

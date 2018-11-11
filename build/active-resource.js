@@ -127,6 +127,28 @@ window.Promise = es6Promise.Promise;
         return klass;
       };
 
+      ResourceLibrary.createResource = function(klass) {
+        var extend;
+        extend = 
+        function(child, parent) {
+          for (var key in parent) { if (parent.hasOwnProperty(key)) child[key] = parent[key]; }
+          function ctor() { this.constructor = child; }
+          ctor.prototype = parent.prototype;
+          child.prototype = new ctor();
+          child.__super__ = parent.prototype;
+          return child;
+        }
+      ;
+        klass = extend(klass, this.Base);
+        klass.className || (klass.className = klass.name);
+        klass.queryName || (klass.queryName = _.pluralize(s.underscored(klass.className)));
+        if (typeof klass.define === "function") {
+          klass.define();
+        }
+        (this.constantizeScope || this)[klass.className] = klass;
+        return klass;
+      };
+
       return ResourceLibrary;
 
     }).call(this);
@@ -2220,15 +2242,11 @@ window.Promise = es6Promise.Promise;
 
     ActiveResource.include(Base, ActiveResource.prototype.Typing);
 
-    Base.queryName = '';
-
-    Base.className = '';
-
-    Base.primaryKey = 'id';
-
     function Base() {
       this.__initializeFields();
     }
+
+    Base.primaryKey = 'id';
 
     Base["interface"] = function() {
       return this.resourceLibrary["interface"];
