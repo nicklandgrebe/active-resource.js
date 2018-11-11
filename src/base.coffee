@@ -30,9 +30,8 @@ class ActiveResource::Base
   ActiveResource.include(@, ActiveResource::QueryParams)
   ActiveResource.include(@, ActiveResource::Typing)
 
-  # The name to use when querying the server for this resource
-  # @example 'products'
-  @queryName = ''
+  constructor: ->
+    @__initializeFields()
 
   # The name to use when constantizing on the client
   # @example 'Product'
@@ -41,13 +40,14 @@ class ActiveResource::Base
   #   `@constructor.name` will change from `Product` to perhaps `p`. But, since a class
   #   is added as a variable to its resource library (or its prototype), we can use this
   #   method to determine the name of the variable in the resource library scope
-  @className = ''
+  # @className = ''
+
+  # The name to use when querying the server for this resource
+  # @example 'products'
+  # @queryName = ''
 
   # The primary key by which to index this resource
   @primaryKey = 'id'
-
-  constructor: ->
-    @__initializeFields()
 
   # The interface to use when querying the server for this class
   @interface: ->
