@@ -5,11 +5,19 @@ jasmine.getJSONFixtures().fixturesPath = 'spec/fixtures/json'
 moxios.delay = 1
 
 window.JsonApiResponses =
+  timeout:
+    status: 408
+    response: getJSONFixture('timeout.json')
   Comment:
     find:
       success:
         status: 200
         response: getJSONFixture('comments/singular.json')
+  Customer:
+    find:
+      includes:
+        status: 200
+        response: getJSONFixture('customers/includes.json')
   GiftCard:
     find:
       success:
@@ -42,11 +50,14 @@ window.JsonApiResponses =
         response: getJSONFixture('orders/singular.json')
       includes:
         status: 200
-        response: getJSONFixture('orders/includes.json')
+        response: getJSONFixture('orders/find_includes.json')
     save:
       success:
         status: 200
         response: getJSONFixture('orders/singular.json')
+      includes:
+        status: 200
+        response: getJSONFixture('orders/includes.json')
       failure:
         status: 422
         response: getJSONFixture('orders/422_resource_invalid.json')

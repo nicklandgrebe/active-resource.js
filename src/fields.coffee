@@ -3,7 +3,10 @@ class ActiveResource::Fields
   # Returns all of the fields of the klass (attributes + relationships)
   # @return [Collection<String>] the names of all the fields of the klass
   fields: ->
-    output = ActiveResource::Collection.build(@attributes())
+    attributes = @attributes()
+
+    output = ActiveResource::Collection.build(attributes.all)
+    output.push attributes.read.toArray()...
     output.push _.keys(@reflections())...
     output
 
@@ -36,7 +39,7 @@ class ActiveResource::Fields
       catch
         @__fields[k] = v
 
-    @assignAttributes(fields)
+    @__assignAttributes(fields)
 
   # If true, at least one field on the resource has changed
   # @return [Boolean] whether or not the resource has changed
@@ -65,9 +68,10 @@ class ActiveResource::Fields
 
           return !newTargets.empty()
         else
-          oldField != newField ||
+          `oldField != newField` ||
             association.reflection.autosave() && newField.changed()
       catch
         # Attribute field if association not found
-        oldField != newField
+        # Check that they are not equal, and that its not a case of undefined !== null
+        `oldField != newField` && !_.isUndefined(newField)
     )

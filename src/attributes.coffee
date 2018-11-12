@@ -17,10 +17,23 @@ class ActiveResource::Attributes
   # @param [Array<String>] attributes the attributes to add to the list of attributes the class tracks
   # @return [Collection<String>] the klass attributes
   attributes: (attributes...) ->
-    if @__attributes?
-      @__attributes.push(attributes...)
+    options = {}
+    if _.isObject(_.last(attributes))
+      options = attributes.pop();
+
+    if !@__attributes?
+      @__attributes = {
+        all: ActiveResource::Collection.build(),
+        read: ActiveResource::Collection.build(),
+        readWrite: ActiveResource::Collection.build(),
+      }
+
+    if(options.readOnly)
+      @__attributes.read.push(attributes...)
     else
-      @__attributes = ActiveResource::Collection.build(attributes)
+      @__attributes.readWrite.push(attributes...)
+
+    @__attributes.all.push(attributes...)
 
     @__attributes
 
@@ -31,43 +44,21 @@ class ActiveResource::Attributes
   @hasAttribute: (attribute) ->
     @__readAttribute(attribute)?
 
-  # Assigns `attributes` to the resource
+  # Assigns `attributes` to the resource, using @__assignAttributes to allow this method
+  #   to be overridden easier
   #
   # @param [Object] attributes the attributes to assign
   @assignAttributes: (attributes) ->
-    for k, v of attributes
-      try
-        if @association(k).reflection.collection?()
-          @[k]().assign(v, false)
-        else
-          @["assign#{s.capitalize(k)}"](v)
-      catch
-        @[k] = v
-
-    null
+    @__assignAttributes(attributes)
 
   # Retrieves all the attributes of the resource
   #
-  # @note A property is valid to be in `attributes` if it meets these conditions:
-  #   1. It must not be a function
-  #   2. It must not be a reserved keyword
-  #   3. It must not be an association
-  #
   # @return [Object] the attributes of the resource
-  @attributes: ->
-    reserved = ['__associations', '__errors', '__fields', '__links', '__queryParams']
-
-    validOutput = (k, v) =>
-      if @klass().resourceLibrary.strictAttributes
-        @klass().attributes().include(k)
-      else
-        !_.isFunction(v) && !_.contains(reserved, k) &&
-        try !@association(k)? catch e then true
-
+  @attributes: (options = {}) ->
     output = {}
 
     for k, v of @
-      if validOutput(k, v)
+      if @__validAttribute(k, v, options)
         output[k] = v
 
     output
@@ -103,9 +94,45 @@ class ActiveResource::Attributes
 
   # private
 
+  # Assigns `attributes` to the resource
+  #
+  # @param [Object] attributes the attributes to assign
+  @__assignAttributes: (attributes) ->
+    for k, v of attributes
+      try
+        @association(k).writer(v, false)
+      catch
+        @[k] = v
+
+    null
+
   # Reads an attribute on the resource
   #
   # @param [String] attribute the attribute to read
   # @return [Object] the attribute
   @__readAttribute: (attribute) ->
     @attributes()[attribute]
+
+  # Determines whether or not an attribute is a valid attribute on the resource class
+  #
+  # @note A property is valid to be in `attributes` if it meets these conditions:
+  #   1. It must not be a function
+  #   2. It must not be a reserved keyword
+  #   3. It must not be an association
+  #
+  # @param [String] attribute the attribute to determine validity for
+  # @param [Number,String,Object] value the value for the attribute, relevant for !strictAttributes mode
+  # @param [Object] options the options to modify valid attributes with
+  @__validAttribute: (attribute, value, options) ->
+    reserved = ['__super__', '__associations', '__errors', '__fields', '__links', '__queryParams']
+
+    if @klass().resourceLibrary.strictAttributes
+      if options.readOnly
+        @klass().attributes().read.include(attribute)
+      else if options.readWrite
+        @klass().attributes().readWrite.include(attribute)
+      else
+        @klass().attributes().all.include(attribute)
+    else
+      !_.isFunction(value) && !_.contains(reserved, attribute) &&
+        try !@association(attribute)? catch e then true

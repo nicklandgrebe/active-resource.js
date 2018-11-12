@@ -13,6 +13,50 @@ describe 'ActiveResource', ->
       it 'adds an error with code and message', ->
         expect(@resource.errors().forField('title').size()).toEqual(1)
 
+    describe '#addAll()', ->
+      beforeEach ->
+        @resource.errors().addAll(
+          ['title', 'taken', 'Title is not unique'],
+          ['description', 'blank', 'Description cannot be blank']
+        )
+
+      it 'adds errors', ->
+        expect(@resource.errors().size()).toEqual(3)
+
+    describe '#propagate', ->
+      describe 'collection', ->
+        beforeEach ->
+          @resource.orders().build()
+          errors = ActiveResource.Collection.build([
+            {
+              field: 'orders.price',
+              code: 'code',
+              message: 'message'
+            }
+          ])
+
+          @resource.errors().propagate(errors)
+
+        it 'propagates errors to nested resource', ->
+          expect(@resource.orders().target().first().errors().forField('price').size()).toEqual(1)
+
+      describe 'singular', ->
+        beforeEach ->
+          @resource.buildMerchant()
+
+          errors = ActiveResource.Collection.build([
+            {
+              field: 'merchant.name',
+              code: 'code',
+              message: 'message'
+            }
+          ])
+
+          @resource.errors().propagate(errors)
+
+        it 'propagates error to nested resource', ->
+          expect(@resource.merchant().errors().forField('name').size()).toEqual(1)
+
     describe '#added()', ->
       describe 'when added', ->
         it 'returns true', ->

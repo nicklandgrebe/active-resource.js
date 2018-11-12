@@ -41,8 +41,3 @@ class ActiveResource::Associations::BelongsToAssociation extends ActiveResource:
 
   __foreignKeyPresent: ->
     @owner.__readAttribute(@reflection.foreignKey())?
-
-  # @note For now, we're only supporting inverse setting from belongs_to back onto has_one associations
-  __invertibleFor: (resource) ->
-    inverse = @__inverseReflectionFor(resource)
-    inverse && inverse.hasOne?()

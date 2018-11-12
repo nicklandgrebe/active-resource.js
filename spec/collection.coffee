@@ -116,7 +116,7 @@ describe 'ActiveResource', ->
         expect(@collection.flatten().toArray()).toEqual([1,2,3,4,5])
 
     describe '#push()', ->
-      it 'pushes an item onto the collection', ->
+      it 'pushes an item onto the end of the collection', ->
         @collection.push(10)
         expect(@collection.toArray()).toEqual([1,2,3,10])
 
@@ -124,6 +124,16 @@ describe 'ActiveResource', ->
         it 'pushes all items onto the collection', ->
           @collection.push(10,30)
           expect(@collection.toArray()).toEqual([1,2,3,10,30])
+
+    describe '#unshift()', ->
+      it 'unshifts an item onto the beginning of the collection', ->
+        @collection.unshift(10)
+        expect(@collection.toArray()).toEqual([10,1,2,3])
+
+      describe 'when unshifting multiple items', ->
+        it 'unshifts all items onto the collection', ->
+          @collection.unshift(10,30)
+          expect(@collection.toArray()).toEqual([10,30,1,2,3])
 
     describe '#delete()', ->
       it 'removes the item from the collection', ->

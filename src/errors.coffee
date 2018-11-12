@@ -7,7 +7,7 @@
 #     unless product.valid?()
 #       product.errors()
 #
-class ActiveResource::Errors
+ActiveResource.Errors = class ActiveResource::Errors
   # Caches an instance of this class on ActiveResource::Base#errors in order to manage
   # that resource's errors
   #
@@ -43,9 +43,41 @@ class ActiveResource::Errors
   # @param [String] detail the message for the error
   # @return [Object] the error object created and added to storage
   add: (field, code, detail = '') ->
-    @__errors[field] ||= []
-    @__errors[field].push(error = { field: field, code: code, detail: detail, message: detail })
-    error
+    @__add(field, code, detail)
+
+  # Adds an array of errors
+  #
+  # @see #add for individual error params
+  #
+  # @param [Array<Array>] errors error objects to add
+  addAll: (errors...) ->
+    _.map(errors, (error) =>
+      @__add(error...)
+    )
+
+  # Propagates errors with nested fields down through relationships to their appropriate resources
+  #
+  # @param [ActiveResource.Collection<Object>] errors the errors to propagate down the resource
+  propagate: (errors) ->
+    errors.each((error) =>
+      nestedField = error.field.split('.')
+      field = nestedField.shift()
+
+      try
+        association = @base.association(field)
+
+        nestedError = _.clone(error)
+        nestedError.field = nestedField.length == 0 && 'base' || nestedField.join('.')
+
+        nestedErrors = ActiveResource.Collection.build([nestedError])
+
+        if association.reflection.collection()
+          association.target.first()?.errors().propagate(nestedErrors)
+        else
+          association.target?.errors().propagate(nestedErrors)
+      catch
+        @push(error)
+    )
 
   # Adds an existing error with field to this errors object
   #
@@ -142,3 +174,25 @@ class ActiveResource::Errors
   # @return [Collection] the errors object converted to a collection of errors
   toCollection: ->
     ActiveResource::Collection.build(@toArray())
+
+  # private
+
+  # Adds an error with code and message to the error object for an field
+  #
+  # @param [String] field the field the error applies to
+  #   Or 'base' if it applies to the base object
+  # @param [String] code the code for the error
+  # @param [String] detail the message for the error
+  # @return [Object] the error object created and added to storage
+  __add: (field, code, detail = '') ->
+    @__errors[field] ||= []
+    @__errors[field].push(error = @__buildError(field, code, detail))
+    error
+
+  # @param [String] field the field the error applies to
+  #   Or 'base' if it applies to the base object
+  # @param [String] code the code for the error
+  # @param [String] detail the message for the error
+  # @return [Object] a mapped object that represents an error
+  __buildError: (field, code, detail) ->
+    { field: field, code: code, detail: detail, message: detail }

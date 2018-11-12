@@ -1,5 +1,5 @@
 # Wraps an ActiveResource::Collection with some useful functions specific to GET responses
-class ActiveResource::CollectionResponse extends ActiveResource::Collection
+ActiveResource.CollectionResponse = class ActiveResource::CollectionResponse extends ActiveResource::Collection
   # Builds a new ActiveResource::CollectionResponse
   #
   # @param [Array,Collection,Object] array the array/object to wrap in a collection

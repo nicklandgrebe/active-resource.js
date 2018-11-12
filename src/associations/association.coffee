@@ -74,17 +74,16 @@ class ActiveResource::Associations::Association
   # @return [Promise] a promise to return the loaded target **or** 404 error
   loadTarget: ->
     if @__canFindTarget()
-      _this = this
       @__findTarget()
-      .then (loadedTarget) ->
-        _this.target = loadedTarget
-        _this.loaded(true)
+      .then (loadedTarget) =>
+        this.target = loadedTarget
+        this.loaded(true)
         loadedTarget
-      .catch ->
-        _this.reset()
+      .catch =>
+        this.reset()
     else
       @reset()
-      $.when(null)
+      null
 
   # Sets the inverse association of the resource to the owner of the association
   #
@@ -103,7 +102,10 @@ class ActiveResource::Associations::Association
   setInverseInstance: (resource) ->
     if @__invertibleFor(resource)
       inverse = resource.association(@__inverseReflectionFor(resource).name)
-      inverse.target = @owner
+      if inverse.reflection.collection()
+        inverse.addToTarget(@owner)
+      else
+        inverse.target = @owner
     resource
 
   # private
@@ -139,6 +141,36 @@ class ActiveResource::Associations::Association
 
     attributes
 
+  # If the resource library of the owner klass is immutable, then execute callback in the context
+  #   of a clone of the owner association, and return the cloned owner from the method calling
+  #   __cloneOnCallbackIfImmutable
+  #
+  # @note If immutable is true, then value will be cloned before assignment to owner.clone
+  #
+  # @note Used by association writer, build, create, concat, delete
+  # @param [Boolean] checkImmutable if true, check if immutable, otherwise just run the normal fn
+  # @param [ActiveResource, Array<ActiveResource>] value the value to assign to the relationship
+  # @param [Function] fn the function to execute, potentially in the scope of the cloned owner
+  # @return [Resource, Promise] if immutable, return cloned owner, otherwise return the value returned by fn
+  __executeOnCloneIfImmutable: (checkImmutable, value, fn) ->
+    if checkImmutable && @owner.klass().resourceLibrary.immutable
+      clone = @owner.clone()
+
+      newValue = ActiveResource.Collection
+        .build(value)
+        .map((val) => val?.__createClone({ cloner: @owner, newCloner: clone }) || null)
+
+      result = _.bind(fn, clone.association(this.reflection.name))(
+        _.isArray(value) && newValue.toArray() || newValue.first()
+      )
+
+      if result.then?
+        result.then => clone
+      else
+        clone
+    else
+      _.bind(fn, this)(value)
+
   # Used by hasOne and hasMany to set their owner attributes on belongsTo resources
   __setOwnerAttributes: (resource) ->
     for key, value of @__creationAttributes()
@@ -169,7 +201,7 @@ class ActiveResource::Associations::Association
   # @param [ActiveResource::Base] the resource to determine if we need to set the inverse association for
   # @return [Boolean] whether or not the inverse association needs to be set
   __invertibleFor: (resource) ->
-    @__foreignKeyFor(resource) && @__inverseReflectionFor(resource)
+    @__inverseReflectionFor(resource)?
 
   # @return [Boolean] returns true if the resource contains the foreignKey
   __foreignKeyFor: (resource) ->
@@ -181,5 +213,5 @@ class ActiveResource::Associations::Association
   # @return [ActiveResource::Base] the built resource in the association
   __buildResource: (attributes) ->
     resource = @reflection.buildAssociation()
-    resource.assignAttributes(attributes)
+    resource.__assignAttributes(attributes)
     resource

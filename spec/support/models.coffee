@@ -9,6 +9,12 @@ class MyLibrary::Comment extends MyLibrary.Base
 
   this.belongsTo 'resource', polymorphic: true, inverseOf: 'comments'
 
+class MyLibrary::Customer extends MyLibrary.Base
+  this.className = 'Customer'
+  this.queryName = 'customers'
+
+  this.hasMany 'orders', inverseOf: 'customer'
+
 class MyLibrary::GiftCard extends MyLibrary.Base
   this.className = 'GiftCard'
   this.queryName = 'gift_cards'
@@ -21,6 +27,7 @@ class MyLibrary::Order extends MyLibrary.Base
 
   this.attributes('price')
 
+  this.belongsTo 'customer', inverseOf: 'orders'
   this.belongsTo 'giftCard'
   this.belongsTo 'product'
 
@@ -46,8 +53,18 @@ class MyLibrary::Product extends MyLibrary.Base
 
   this.attributes('title')
 
+  this.belongsTo 'merchant'
+
   this.hasMany 'orders'
   this.hasMany 'timeSlots'
+
+class MyLibrary::Merchant extends MyLibrary.Base
+  this.className = 'Merchant'
+  this.queryName = 'merchants'
+
+  this.attributes('name')
+
+  this.hasMany 'products'
 
 class MyLibrary::TimeSlot extends MyLibrary.Base
   this.className = 'TimeSlot'

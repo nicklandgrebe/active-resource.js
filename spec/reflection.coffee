@@ -1,10 +1,14 @@
 describe 'ActiveResource', ->
   describe '::Reflection', ->
     describe '#reflections', ->
+      beforeEach ->
+        @reflections = MyLibrary::Product.reflections()
+
       it 'returns a reflections object', ->
-        reflections = MyLibrary::Product.reflections()
-        expect(_.keys(reflections)[0]).toEqual('orders')
-        expect(_.values(reflections)[0].isA?(ActiveResource::Reflection::HasManyReflection)).toBeTruthy()
+        expect(_.keys(@reflections)).toContain('orders', 'merchant')
+
+      it 'returns a reflections object', ->
+        expect(_.values(@reflections)[0].isA?(ActiveResource::Reflection::AbstractReflection)).toBeTruthy()
 
     describe '#reflectOnAllAssociations', ->
       beforeEach ->

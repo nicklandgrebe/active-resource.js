@@ -66,7 +66,7 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
   load: ->
     @all()
     .then (collection) =>
-      @base.writer(collection, false)
+      @base.writer(collection, false, true)
 
   # Gets the cached association collection and returns it as an array
   #
@@ -96,9 +96,8 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
   # @param [Boolean] save whether or not to persist the assignment on the server
   # @return [Promise] a promise to return a success indicator (204 No Content) **or**
   #   an error indicator (403 Forbidden)
-  # @note A promise will be returned even if `save != true`, using `$.when()`
   assign: (other, save = true) ->
-    @base.writer(other, save)
+    @base.writer(other, save, true)
 
   # Pushes the resources onto the association
   #
@@ -130,8 +129,6 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
       resources
     else
       resources.first()
-
-  # TODO: Add #load
 
   # Create resource for the association
   #

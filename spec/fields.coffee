@@ -1,6 +1,6 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    moxios.install()
+    moxios.install(MyLibrary.interface.axios)
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
@@ -22,7 +22,7 @@ describe 'ActiveResource', ->
       it 'returns fields', ->
         @promise.then =>
           expect(@resource.klass().fields().toArray().sort()).toEqual([
-            'price', 'comments', 'giftCard', 'orderItems', 'product', 'transactions'
+            'price', 'customer', 'comments', 'giftCard', 'orderItems', 'product', 'transactions'
           ].sort())
 
     describe 'updating changed fields', ->
@@ -154,7 +154,7 @@ describe 'ActiveResource', ->
               @resource.save()
 
               moxios.wait =>
-                moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.save.includes)
 
           it 'adds relationship to resource document', ->
             @promise2.then =>

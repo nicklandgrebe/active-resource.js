@@ -1,6 +1,6 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    moxios.install()
+    moxios.install(MyLibrary.interface.axios)
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
@@ -208,7 +208,7 @@ describe 'ActiveResource', ->
 
             it 'does not assign the owner\'s foreign key', ->
               @promise4.catch =>
-                expect(@resource.giftCardId).toEqual('1')
+                expect(@resource.giftCardId).toEqual('5')
 
         describe 'when assigning null', ->
           beforeEach ->
@@ -219,7 +219,7 @@ describe 'ActiveResource', ->
 
           it 'sends a blank document', ->
             @promise3.then =>
-              expect(moxios.requests.mostRecent().data).toEqual(JSON.stringify({}))
+              expect(moxios.requests.mostRecent().data).toEqual(JSON.stringify({ data: null }))
 
           describe 'when update succeeds', ->
             beforeEach ->
@@ -240,44 +240,65 @@ describe 'ActiveResource', ->
                 expect(@resource.giftCardId).toBeNull()
 
       describe 'building', ->
-        beforeEach ->
-          MyLibrary::Order.includes('giftCard').find(1)
-          .then window.onSuccess
-
-          @promise = moxios.wait =>
-            moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
-
-          @promise2 = @promise.then =>
-            @resource = window.onSuccess.calls.mostRecent().args[0]
-            @target = @resource.buildGiftCard(value: 5)
-
-        it 'builds a resource of reflection klass type', ->
-          @promise2.then =>
-            expect(@target.klass()).toBe(MyLibrary::GiftCard)
-
-        it 'assigns the attributes to the target', ->
-          @promise2.then =>
-            expect(@target.value).toEqual(5)
-
-        it 'assigns the inverse target', ->
-          @promise2.then =>
-            expect(@target.order()).toBe(@resource)
-
-        describe 'when className is specified', ->
+        describe 'inverseOf singular association', ->
           beforeEach ->
-            class MyLibrary::MyClass extends MyLibrary.Base
-              @className = 'MyClass'
+            MyLibrary::Order.includes('giftCard').find(1)
+            .then window.onSuccess
 
-              @belongsTo 'randomClass', className: 'GiftCard'
+            @promise = moxios.wait =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
 
-            @resource = MyLibrary::MyClass.build()
-            @target = @resource.buildRandomClass(id: 1)
+            @promise2 = @promise.then =>
+              @resource = window.onSuccess.calls.mostRecent().args[0]
+              @target = @resource.buildGiftCard(value: 5)
 
-          it 'builds a resource of className type', ->
-            expect(@target.klass()).toBe(MyLibrary::GiftCard)
+          it 'builds a resource of reflection klass type', ->
+            @promise2.then =>
+              expect(@target.klass()).toBe(MyLibrary::GiftCard)
 
-          it 'builds the resource with foreign key of reflection name', ->
-            expect(@resource.randomClassId).toEqual(1)
+          it 'assigns the attributes to the target', ->
+            @promise2.then =>
+              expect(@target.value).toEqual(5)
+
+          it 'assigns the inverse target', ->
+            @promise2.then =>
+              expect(@target.order()).toBe(@resource)
+
+          describe 'when className is specified', ->
+            beforeEach ->
+              class MyLibrary::MyClass extends MyLibrary.Base
+                @className = 'MyClass'
+
+                @belongsTo 'randomClass', className: 'GiftCard'
+
+              @resource = MyLibrary::MyClass.build()
+              @target = @resource.buildRandomClass(id: 1)
+
+            it 'builds a resource of className type', ->
+              expect(@target.klass()).toBe(MyLibrary::GiftCard)
+
+            it 'builds the resource with foreign key of reflection name', ->
+              expect(@resource.randomClassId).toEqual(1)
+
+        describe 'inverseOf collection association', ->
+          beforeEach ->
+            MyLibrary::Order.find(1)
+            .then window.onSuccess
+
+            @promise = moxios.wait =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.success)
+
+            @promise2 = @promise.then =>
+              @resource = window.onSuccess.calls.mostRecent().args[0]
+              @target = @resource.buildCustomer()
+
+          it 'builds a resource of reflection klass type', ->
+            @promise2.then =>
+              expect(@target.klass()).toBe(MyLibrary::Customer)
+
+          it 'assigns the inverse target', ->
+            @promise2.then =>
+              expect(@target.orders().target().toArray()).toEqual([@resource])
 
       describe 'creating', ->
         beforeEach ->

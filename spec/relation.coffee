@@ -1,6 +1,6 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    moxios.install()
+    moxios.install(MyLibrary.interface.axios)
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')

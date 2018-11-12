@@ -82,7 +82,10 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
       camelized[s.camelize(k)] =
         if _.isArray(v)
           _.map v, (i) =>
-            this.toCamelCase(i)
+            if _.isObject(i)
+              this.toCamelCase(i)
+            else
+              i
         else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection)
           this.toCamelCase(v)
         else
@@ -234,7 +237,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
 
       target = resource.association(reflection.name).target
 
-      return if (reflection.collection() && target.empty()) || !target?
+      return if !onlyChanged && ((reflection.collection() && target.empty()) || !target?)
 
       output[s.underscored(reflection.name)] = {
         data: this.buildResourceDocument({
@@ -266,7 +269,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
         documentResource = this.buildResourceIdentifier(resource)
 
         unless onlyResourceIdentifiers
-          attributes = _.omit(resource.attributes(), resource.klass().primaryKey)
+          attributes = _.omit(resource.attributes({ readWrite: true }), resource.klass().primaryKey)
           relationships = _.keys(resource.klass().reflections())
 
           if parentReflection
@@ -286,7 +289,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     if _.isArray(resourceData) || (_.isObject(resourceData) && resourceData.isA?(ActiveResource::Collection))
       data.toArray()
     else
-      data.first()
+      data.first() || null
 
   #---------------------------------------------------------------------------
   #---------------------------------------------------------------------------
@@ -309,16 +312,17 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   buildResource: (data, includes, { existingResource, parentRelationship }) ->
     resource = existingResource || @resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build()
 
-    attributes = data['attributes']
+    attributes = data['attributes'] || {}
 
     if data[resource.klass().primaryKey]
       attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString()
 
     attributes = _.extend(attributes, parentRelationship) if parentRelationship?
 
-    attributes = @addRelationshipsToAttributes(attributes, data['relationships'], includes, resource)
+    attributes = @addRelationshipsToFields(attributes, data['relationships'], includes, resource)
+    attributes = this.toCamelCase(attributes)
 
-    resource.__assignFields(this.toCamelCase(attributes))
+    resource.__assignFields(attributes)
 
     resource.__links = _.extend(resource.links(), data['links'])
     resource.klass().reflectOnAllAssociations().each (reflection) ->
@@ -391,27 +395,27 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Array] includes the array of includes to search for relationship resources in
   # @param [ActiveResource::Base] resource the resource to get the primary key of
   # @return [Object] the attributes with all relationships built into it
-  addRelationshipsToAttributes: (attributes, relationships, includes, resource) ->
+  addRelationshipsToFields: (attributes, relationships, includes, resource) ->
     _.each relationships, (relationship, relationshipName) =>
       if(reflection = resource.klass().reflectOnAssociation(s.camelize(relationshipName)))
-        parentReflection = reflection.inverseOf()
-
         if reflection.collection()
           relationshipItems =
             ActiveResource::Collection.build(relationship['data'])
-            .map((relationshipMember) =>
-              @findIncludeFromRelationship(relationshipMember, includes, resource, parentReflection)
+            .map((relationshipMember, index) =>
+              @findResourceForRelationship(relationshipMember, includes, resource, reflection, index)
             ).compact()
 
           attributes[relationshipName] = relationshipItems unless relationshipItems.empty?()
         else if relationship['data']?
-          include = @findIncludeFromRelationship(relationship['data'], includes, resource, parentReflection)
+          include = @findResourceForRelationship(relationship['data'], includes, resource, reflection)
           attributes[relationshipName] = include if include?
 
     attributes
 
   # Finds a resource in the 'included' collection of the response, based on relationship data taken from another
   #   resource, and builds it into an ActiveResource
+  # @note If an include is not found, but relationship data is present, the resource identifiers are matched to
+  #   resources already on the existing relationship so that these resources will be moved into __fields
   #
   # @example
   #   relationshipData = { id: '1202', type: 'products' }
@@ -421,30 +425,43 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Object] relationshipData the data defining the relationship to match an include to
   # @param [Array] includes the array of includes to search for relationships in
   # @param [ActiveResource::Base] resource the resource to get the primary key of
+  # @param [Reflection] reflection the reflection for the relationship
+  # @param [Integer] index the index of the relationship data (only in collection relationships)
   # @return [ActiveResource::Base] the include built into an ActiveResource::Base
-  #
-  # 1. Build a resource identnfier from the relationship data type and primary key
-  # 2. Find the include in `includes` using the resource identifier
-  # 3. Build the include into an ActiveResource if it exists
-  # 4. Return the built include or null
-  findIncludeFromRelationship: (relationshipData, includes, resource, parentReflection) ->
-    findConditions = { type: relationshipData.type }
-    findConditions[resource.klass().primaryKey] = relationshipData[resource.klass().primaryKey]
+  findResourceForRelationship: (relationshipData, includes, resource, reflection, index) ->
+    primaryKey = resource.klass().primaryKey
 
-    parentRelationship = {}
-    parentRelationship[parentReflection.name] = resource if parentReflection?
-    if(include = _.findWhere(includes, findConditions))?
-      include = @buildResource(include, includes, parentRelationship: parentRelationship)
-    include
+    findConditions = { type: relationshipData.type }
+    findConditions[primaryKey] = relationshipData[primaryKey]
+
+    buildResourceOptions = {}
+    if(parentReflection = reflection.inverseOf())?
+      buildResourceOptions.parentRelationship = {}
+      buildResourceOptions.parentRelationship[parentReflection.name] = resource
+
+    include = _.findWhere(includes, findConditions)
+
+    if reflection.collection()
+      target =
+        resource.association(reflection.name).target.detect((t) => t[primaryKey] == findConditions[primaryKey]) ||
+          resource.association(reflection.name).target.get(index)
+
+    else if(potentialTarget = resource.association(reflection.name).target)?
+      if !reflection.polymorphic() || potentialTarget.klass().queryName == findConditions['type']
+        target = potentialTarget
+
+    if target?
+      buildResourceOptions.existingResource = target
+
+    if target? || include?
+      @buildResource(include || {}, includes, buildResourceOptions)
+
 
   # Merges the changes made from a POST/PUT/PATCH call into the resource that called it
   #
   # @param [Object] response The response to pull persisted changes from
   # @param [ActiveResource::Base] the resource to merge persisted changes into
   # @return [ActiveResource::Base] the resource, now persisted, with updated changes
-  #
-  # 1. Use buildResource to build the changed attributes, relationships, and links into the existing resource
-  # 2. Return the built resource
   mergePersistedChanges: (response, resource) ->
     @buildResource(response['data'], response['included'], existingResource: resource)
 
@@ -475,17 +492,20 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [ActiveResource::Base] the resource to add errors onto
   # @return [ActiveResource::Base] the unpersisted resource, now with errors
   resourceErrors: (resource, errors) ->
-    _.each errors, (error) ->
+    errorCollection =
+      ActiveResource.Collection.build(errors).map((error) ->
+        field = []
+        if error['source']['pointer'] == '/data'
+          field.push 'base'
+        else
+          _.each error['source']['pointer'].split('/data'), (i) ->
+            if(m = i.match(/\/(attributes|relationships|)\/(\w+)/))?
+              field.push s.camelize(m[2])
 
-      attribute = []
-      if error['source']['pointer'] == '/data'
-        attribute.push 'base'
-      else
-        _.each error['source']['pointer'].split('/data'), (i) ->
-          if(m = i.match(/\/(attributes|relationships|)\/(\w+)/))?
-            attribute.push s.camelize(m[2])
+        resource.errors().__buildError(field.join('.'), s.camelize(error['code']), error['detail'])
+      )
 
-      resource.errors().add(attribute.join('.'), s.camelize(error['code']), error['detail'])
+    resource.errors().propagate(errorCollection)
     resource
 
   # De-serializes errors from the error response to GET and DELETE requests,
@@ -506,7 +526,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @return [Collection] the collection of errors
   parameterErrors: (errors) ->
     ActiveResource::Collection.build(errors).map((error) ->
-      out = { details: error['detail'] }
+      out = { detail: error['detail'], message: error['detail'] }
       out['parameter'] = s.camelize(error['source']['parameter']) if error['source']?['parameter']?
       out['code'] = s.camelize(error['code'])
       out

@@ -104,6 +104,7 @@ module.exports = function(grunt) {
           'build/associations.js',
           'build/attributes.js',
           'build/callbacks.js',
+          'build/cloning.js',
           'build/collection.js',
           'build/collection_response.js',
           'build/errors.js',
@@ -127,7 +128,12 @@ module.exports = function(grunt) {
           'build/associations/builder/has_many.js',
           'build/associations/builder/singular_association.js',
           'build/associations/builder/belongs_to.js',
-          'build/associations/builder/has_one.js'
+          'build/associations/builder/has_one.js',
+          'build/immutable.js',
+          'build/immutable/attributes.js',
+          'build/immutable/errors.js',
+          'build/immutable/persistence.js',
+          'build/immutable/base.js',
         ],
         dest: 'build/active-resource.js'
       }

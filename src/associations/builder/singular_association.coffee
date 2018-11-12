@@ -13,10 +13,10 @@ class ActiveResource::Associations::Builder::SingularAssociation extends ActiveR
   # @param [String] name the name of the association
   @defineWriters: (mixin, name) ->
     mixin::["assign#{s.capitalize(name)}"] = (value) ->
-      @association(name).writer(value, false)
+      @association(name).writer(value, false, true)
 
     mixin::["update#{s.capitalize(name)}"] = (value) ->
-      @association(name).writer(value)
+      @association(name).writer(value, true, true)
 
   # Defines builder methods on the model for the association
   #

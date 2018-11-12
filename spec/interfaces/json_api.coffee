@@ -1,6 +1,6 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    moxios.install()
+    moxios.install(MyLibrary.interface.axios)
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
@@ -13,6 +13,53 @@ describe 'ActiveResource', ->
     beforeEach ->
       @lib = window.MyLibrary
       @interface = @lib.interface
+
+    describe '#toCamelCase()', ->
+      describe 'values', ->
+        beforeEach ->
+          @camelCase = @interface.toCamelCase({
+            first_attribute: 'value',
+            second_attribute: 'value'
+          })
+
+        it 'transforms keys to camelCase', ->
+          expect(@camelCase).toEqual({
+            firstAttribute: 'value',
+            secondAttribute: 'value'
+          })
+
+      describe 'array', ->
+        describe 'of objects', ->
+          beforeEach ->
+            @camelCase = @interface.toCamelCase({
+              first_attribute: [
+                {
+                  other_attribute: 'value',
+                  another_attribute: 'value'
+                }
+              ]
+            })
+
+          it 'transforms arrays objects keys to camelCase', ->
+            expect(@camelCase).toEqual({
+              firstAttribute: [
+                {
+                  otherAttribute: 'value',
+                  anotherAttribute: 'value'
+                }
+              ]
+            })
+
+        describe 'of values', ->
+          beforeEach ->
+            @camelCase = @interface.toCamelCase({
+              first_attribute: ['value1', 'value2']
+            })
+
+          it 'transforms arrays objects keys to camelCase', ->
+            expect(@camelCase).toEqual({
+              firstAttribute: ['value1', 'value2']
+            })
 
     describe '#get()', ->
       describe 'getting resources', ->
@@ -28,6 +75,25 @@ describe 'ActiveResource', ->
         it 'uses JSONAPI content type', ->
           @promise.then =>
             expect(moxios.requests.mostRecent().headers['Content-Type']).toEqual('application/vnd.api+json')
+
+        describe 'on timeout', ->
+          beforeEach ->
+            @promise2 = @promise.then =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.timeout)
+              .catch =>
+                Promise.reject(@errors = window.onFailure.calls.mostRecent().args[0])
+
+          it 'returns errors Collection', ->
+            @promise2.catch =>
+              expect(@errors.isA?(ActiveResource::Collection)).toBeTruthy()
+
+          it 'returns error with detail', ->
+            @promise2.catch =>
+              expect(@errors.first()).toEqual({
+                code: 'timeout',
+                message: "Timeout occurred while loading https://example.com/api/v1/products/",
+                detail: "Timeout occurred while loading https://example.com/api/v1/products/",
+              })
 
         describe 'on success', ->
           beforeEach ->
@@ -323,3 +389,149 @@ describe 'ActiveResource', ->
         it 'sends no data', ->
           @promise.then =>
             expect(moxios.requests.mostRecent().data).toEqual(JSON.stringify({}))
+
+    describe '#findResourceForRelationship', ->
+      beforeEach ->
+        @resource = @lib::Order.build()
+
+        @response = getJSONFixture('orders/includes.json');
+
+      describe 'when relationship not found in included', ->
+        beforeEach ->
+          @result =
+            @interface.findResourceForRelationship(
+              @response.data.relationships.order_items.data[0],
+              [],
+              @resource,
+              @resource.klass().reflectOnAssociation('orderItems')
+            )
+
+        it 'returns undefined', ->
+          expect(@result).toBeUndefined()
+
+      describe 'when included is not on relationship target', ->
+        describe 'when relationship collection', ->
+          beforeEach ->
+            @result =
+              @interface.findResourceForRelationship(
+                @response.data.relationships.order_items.data[0],
+                @response.included,
+                @resource,
+                @resource.klass().reflectOnAssociation('orderItems'),
+                0
+              )
+
+          it 'returns resource built from include id', ->
+            expect(@result.id).toEqual(@response.data.relationships.order_items.data[0].id)
+
+          it 'returns resource built from include type', ->
+            expect(@result.klass()).toBe(@lib::OrderItem)
+
+        describe 'when relationship singular', ->
+          beforeEach ->
+            @result =
+              @interface.findResourceForRelationship(
+                @response.data.relationships.customer.data,
+                @response.included,
+                @resource,
+                @resource.klass().reflectOnAssociation('customer')
+              )
+
+          it 'returns resource built from include id', ->
+            expect(@result.id).toEqual(@response.data.relationships.customer.data.id)
+
+          it 'returns resource built from include type', ->
+            expect(@result.klass()).toBe(@lib::Customer)
+
+      describe 'when included is on relationship target', ->
+        describe 'when relationship target persisted', ->
+          describe 'when relationship collection', ->
+            beforeEach ->
+              @relationshipResource = @lib::OrderItem.build(id: "5")
+              @resource.assignAttributes(orderItems: [
+                @relationshipResource
+              ])
+
+              @result =
+                @interface.findResourceForRelationship(
+                  @response.data.relationships.order_items.data[0],
+                  @response.included,
+                  @resource,
+                  @resource.klass().reflectOnAssociation('orderItems')
+                  0
+                )
+
+            it 'returns resource from target', ->
+              expect(@result).toBe(@relationshipResource)
+
+            it 'merges include fields into resource', ->
+              expect(@result.amount).toBeDefined()
+
+          describe 'when relationship singular', ->
+            beforeEach ->
+              @relationshipResource = @lib::Customer.build(id: "1")
+              @resource.assignAttributes(customer: @relationshipResource)
+
+              @result =
+                @interface.findResourceForRelationship(
+                  @response.data.relationships.customer.data,
+                  @response.included,
+                  @resource,
+                  @resource.klass().reflectOnAssociation('customer')
+                )
+
+            it 'returns resource from target', ->
+              expect(@result).toBe(@relationshipResource)
+
+            it 'merges include fields into resource', ->
+              expect(@result.firstName).toBeDefined()
+
+        describe 'when relationship target unpersisted', ->
+          describe 'when relationship collection', ->
+            beforeEach ->
+              @relationshipResource0 = @lib::OrderItem.build()
+              @relationshipResource1 = @lib::OrderItem.build()
+              @resource.assignAttributes(orderItems: [
+                @relationshipResource0
+                @relationshipResource1
+              ])
+
+              @result =
+                @interface.findResourceForRelationship(
+                  @response.data.relationships.order_items.data[1],
+                  @response.included,
+                  @resource,
+                  @resource.klass().reflectOnAssociation('orderItems')
+                  1
+                )
+
+            it 'returns resource from target at index', ->
+              expect(@result).toBe(@relationshipResource1)
+
+            it 'merges include fields into resource', ->
+              expect(@result.amount).toBeDefined()
+
+            it 'persists resource', ->
+              expect(@result.persisted()).toBeTruthy()
+
+          describe 'when relationship singular', ->
+            beforeEach ->
+              @relationshipResource = @lib::Customer.build()
+              @resource.assignAttributes(customer: @relationshipResource)
+
+              @result =
+                @interface.findResourceForRelationship(
+                  @response.data.relationships.customer.data,
+                  @response.included,
+                  @resource,
+                  @resource.klass().reflectOnAssociation('customer')
+                )
+
+            it 'returns resource from target', ->
+              expect(@result).toBe(@relationshipResource)
+
+            it 'merges include fields into resource', ->
+              expect(@result.firstName).toBeDefined()
+
+            it 'persists resource', ->
+              expect(@result.persisted()).toBeTruthy()

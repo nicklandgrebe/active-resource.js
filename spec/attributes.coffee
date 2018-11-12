@@ -1,6 +1,6 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    moxios.install()
+    moxios.install(MyLibrary.interface.axios)
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
@@ -17,6 +17,19 @@ describe 'ActiveResource', ->
     moxios.uninstall()
 
   describe '::Attributes', ->
+    describe '.attributes()', ->
+      beforeAll ->
+        MyLibrary::Product.attributes('var1', 'var2', { readOnly: true })
+
+      it 'returns result.readWrite as Collection with read-write attributes', ->
+        expect(MyLibrary::Product.attributes().readWrite.toArray()).toEqual(['title']);
+
+      it 'returns result.read as Collection with readOnly attributes', ->
+        expect(MyLibrary::Product.attributes().read.toArray()).toEqual(['var1', 'var2']);
+
+      it 'returns result.all as Collection with all attributes', ->
+        expect(MyLibrary::Product.attributes().all.toArray()).toEqual(['title', 'var1', 'var2']);
+
     describe '#hasAttribute()', ->
       describe 'if resource has attribute', ->
         beforeEach ->
@@ -88,7 +101,9 @@ describe 'ActiveResource', ->
           @promise2 = @promise.then =>
             @resource.assignAttributes(
               title: 'New title',
-              anotherAttribute: 'string'
+              anotherAttribute: 'string',
+              var1: 'val1',
+              var2: 'val2',
             )
 
         afterEach ->
@@ -96,7 +111,26 @@ describe 'ActiveResource', ->
 
         it 'returns only attributes defined in klass.attributes', ->
           @promise2.then =>
-            expect(@resource.attributes()).toEqual({ title: 'New title' })
+            expect(@resource.attributes()).toEqual({
+              title: 'New title',
+              var1: 'val1',
+              var2: 'val2',
+            })
+
+        describe 'readOnly arg', ->
+          it 'returns readOnly args', ->
+            @promise2.then =>
+              expect(_.keys(@resource.attributes({ readOnly: true }))).toEqual([
+                'var1',
+                'var2',
+              ])
+
+        describe 'readWrite arg', ->
+          it 'returns readWrite args', ->
+            @promise2.then =>
+              expect(_.keys(@resource.attributes({ readWrite: true }))).toEqual([
+                'title',
+              ])
 
     describe '#reload()', ->
       describe 'when resource is persisted', ->

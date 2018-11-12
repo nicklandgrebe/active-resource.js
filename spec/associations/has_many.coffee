@@ -1,6 +1,6 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    moxios.install()
+    moxios.install(MyLibrary.interface.axios)
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
@@ -315,6 +315,7 @@ describe 'ActiveResource', ->
           beforeEach ->
             class MyLibrary::HasManyClass extends MyLibrary.Base
               this.className = 'HasManyClass'
+              this.queryName = 'has_many_classes'
 
               @hasMany 'orders', foreignKey: 'hasManyClassToken'
 
@@ -331,6 +332,7 @@ describe 'ActiveResource', ->
           beforeEach ->
             class MyLibrary::HasManyClass extends MyLibrary.Base
               this.className = 'HasManyClass'
+              this.queryName = 'has_many_classes'
 
               @hasMany 'orders', primaryKey: 'token', foreignKey: 'hasManyClassToken'
 
@@ -347,11 +349,13 @@ describe 'ActiveResource', ->
           beforeEach ->
             class MyLibrary::HasManyClass extends MyLibrary.Base
               this.className = 'HasManyClass'
+              this.queryName = 'has_many_classes'
 
               @hasMany 'belongsToPolymorphics', as: 'hasManyAlias'
 
             class MyLibrary::BelongsToPolymorphic extends MyLibrary.Base
               this.className = 'BelongsToPolymorphic'
+              this.queryName = 'belongs_to_polymorphics'
 
               @belongsTo 'hasManyAlias', polymorphic: true
 

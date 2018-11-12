@@ -1,6 +1,6 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    moxios.install()
+    moxios.install(MyLibrary.interface.axios)
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
@@ -66,7 +66,7 @@ describe 'ActiveResource', ->
 
     describe '.clone()', ->
       beforeEach ->
-        MyLibrary::Order.find(1)
+        MyLibrary::Order.includes('giftCard', 'orderItems').select('price').find(1)
         .then window.onSuccess
 
         @promise = moxios.wait =>
@@ -88,7 +88,7 @@ describe 'ActiveResource', ->
 
       it 'clones attributes', ->
         @promise.then =>
-          expect(@clone.attributes()).toEqual(@resource.attributes())
+          expect(_.omit(@clone.attributes(), 'productId', 'customerId')).toEqual(@resource.attributes())
 
       it 'clones links', ->
         @promise.then =>
@@ -98,18 +98,26 @@ describe 'ActiveResource', ->
         @promise.then =>
           expect(@clone.errors().size()).toEqual(1)
 
-      it 'clones relationship resources', ->
+      it 'clones queryParams', ->
+        @promise.then =>
+          expect(@clone.queryParams()).toEqual({
+            fields: { orders: ['price'] },
+            include: ['giftCard', 'orderItems']
+          })
+
+      it 'sets relationships to clone', ->
         @promise.then =>
           @clone.klass().reflectOnAllAssociations().each (reflection) =>
             name = reflection.name
 
-            if reflection.collection()
-              i = 0
-              @clone.association(name).target.each (t) =>
-                expect(t).not.toBe(@resource.association(name).target.get(i))
-                i += 1
-            else if @resource.association(name).target?
-              expect(@clone.association(name).target).not.toBe(@resource.association(name).target)
+            expect(@clone.association(name).target).toEqual(@resource.association(name).target)
+
+      it 'sets loaded relationships to loaded', ->
+        @promise.then =>
+          @clone.klass().reflectOnAllAssociations().each (reflection) =>
+            name = reflection.name
+
+            expect(@clone.association(name).loaded()).toEqual(@resource.association(name).loaded())
 
       it 'clones relationship resources attributes', ->
         @promise.then =>

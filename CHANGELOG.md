@@ -70,3 +70,14 @@ changes to each resource
 
 * Allow resources to be provided as values in `where` statements, transforming their primaryKey as value
 * Fix bug that left `Relation#select` field classes camelCased in requests
+* Use a single instance of `axios` in interfaces, so that `resourceLibrary.interface.axios.request` can be easily stubbed
+* Fix bug in Interfaces.JsonApi#toCamelCase that mishandles attributes with arrays of strings as the value
+* Add pop and shift to Collection
+* Fix JSON API interface sending invalid relationship data format when relationship assigned to null
+* Add readOnly and readWrite attributes and only send readWrite attributes to server via JsonApi interface
+* Add default error message for timeouts to requests
+* Add immutable mode that makes all resources immutable and all behavior conform to this
+* Reserve `__super__` attribute from being used publicly
+* Add pretty print for `Base.toString()`
+* Add `ResourceLibrary#createResource` that takes in class and composes it with `Base` class, calling static `define`
+  on it to define fields directly in the class

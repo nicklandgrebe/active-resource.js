@@ -1,6 +1,6 @@
 describe 'ActiveResource', ->
   beforeEach ->
-    moxios.install()
+    moxios.install(MyLibrary.interface.axios)
 
     window.onSuccess = jasmine.createSpy('onSuccess')
     window.onFailure = jasmine.createSpy('onFailure')
@@ -236,7 +236,7 @@ describe 'ActiveResource', ->
 
           it 'sends a blank document', ->
             @promise2.then =>
-              expect(moxios.requests.mostRecent().data).toEqual(JSON.stringify({}))
+              expect(moxios.requests.mostRecent().data).toEqual(JSON.stringify({ data: null }))
 
           describe 'when update succeeds', ->
             beforeEach ->

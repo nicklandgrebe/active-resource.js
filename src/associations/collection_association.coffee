@@ -18,64 +18,87 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
   # @param [Collection,Array] resources the resources to assign to the association
   # @param [Boolean] save whether or not to persist the assignment on the server before
   #   continuing with the local assignment
+  # @param [Boolean] checkImmutable if true, check if immutable when applying changes
   # @return [Promise] a promise that indicates that the assignment was successful **or** errors
-  writer: (resources, save = true) ->
-    resources = ActiveResource::Collection.build(resources)
+  writer: (resources, save = true, checkImmutable = false) ->
+    @__executeOnCloneIfImmutable(checkImmutable, resources, (resources) ->
+      resources = ActiveResource::Collection.build(resources)
+      resources.each (r) => @__raiseOnTypeMismatch(r)
 
-    resources.each (r) => @__raiseOnTypeMismatch(r)
+      persistedResources = resources.select((r) -> r.persisted?())
 
-    persistedResources = resources.select((r) -> r.persisted?())
+      localAssignment = =>
+        this.loaded(true) if save
+        this.replace(resources)
+        resources
 
-    _this = this
-    localAssignment = ->
-      _this.loaded(true) if save
-      _this.replace(resources)
-      resources
+      if save && !@owner.newResource?() && (resources.empty() || !persistedResources.empty())
+        @__persistAssignment(persistedResources.toArray())
+          .then localAssignment
+      else
+        localAssignment()
+    )
 
-    if save && !@owner.newResource?() && (resources.empty() || !persistedResources.empty())
-      @__persistAssignment(persistedResources.toArray())
-      .then localAssignment
-    else
-      localAssignment()
+  # Builds resource(s) for the association
+  #
+  # @param [Object,Array<Object>] attributes the attributes to build into the resource
+  # @return [ActiveResource::Base] the built resource(s) for the association, with attributes
+  build: (attributes = {}) ->
+    @__executeOnCloneIfImmutable(true, [], () ->
+      if _.isArray(attributes)
+        ActiveResource::Collection.build(attributes).map (attr) => @build(attr)
+      else
+        @__concatResources(ActiveResource::Collection.build(@__buildResource(attributes))).first()
+    )
+
+  # Creates resource for the association
+  #
+  # @todo Add support for multiple resource creation when JSON API supports it
+  #
+  # @param [Object] attributes the attributes to build into the resource
+  # @param [Object] queryParams the options to add to the query, like `fields` and `include`
+  # @param [Function] callback the function to pass the built resource into after calling create
+  #   @note May not be persisted, in which case `resource.errors().empty? == false`
+  # @return [ActiveResource::Base] a promise to return the persisted resource **or** errors
+  create: (attributes = {}, queryParams = {}, callback = _.noop()) ->
+    @__executeOnCloneIfImmutable(true, [], () ->
+      @__createResource(attributes, queryParams, callback)
+    )
 
   # Pushes resources onto the target
   #
   # @param [Collection,Array] resources the resources to push onto the association
   # @return [Promise] a promise that indicates that the concat was successful **or** errors
   concat: (resources) ->
-    resources = ActiveResource::Collection.build(resources)
-    resources.each (r) => @__raiseOnTypeMismatch(r)
+    @__executeOnCloneIfImmutable(true, resources, () ->
+      resources = ActiveResource::Collection.build(resources)
+      resources.each (r) => @__raiseOnTypeMismatch(r)
 
-    persistConcat =
       if !@owner.newResource?() && (persistedResources = resources.select((r) -> r.persisted?())).size()
         # TODO: Do something better with unpersisted resources, like saving them
         @__persistConcat(persistedResources.toArray())
+        .then =>
+          @__concatResources(resources)
       else
-        $.when(resources)
-
-    _this = this
-    persistConcat
-    .then ->
-      _this.__concatResources(resources)
+        @__concatResources(resources)
+    )
 
   # Deletes resources from the target
   #
   # @param [Collection,Array] resources the resources to delete from the association
   # @return [Promise] a promise that indicates that the delete was successful **or** errors
   delete: (resources) ->
-    resources = ActiveResource::Collection.build(resources)
-    resources.each (r) => @__raiseOnTypeMismatch(r)
+    @__executeOnCloneIfImmutable(true, resources, () ->
+      resources = ActiveResource::Collection.build(resources)
+      resources.each (r) => @__raiseOnTypeMismatch(r)
 
-    persistDelete =
       if !@owner.newResource?() && (persistedResources = resources.select((r) -> r.persisted?())).size()
         @__persistDelete(persistedResources.toArray())
+        .then =>
+          @__removeResources(resources)
       else
-        $.when(resources)
-
-    _this = this
-    persistDelete
-    .then ->
-      _this.__removeResources(resources)
+        @__removeResources(resources)
+    )
 
   reset: ->
     super
@@ -92,7 +115,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     index = null if index < 0
     @replaceOnTarget(resource, index)
 
-  # Pushs the resource onto the target or replaces it if there is an index
+  # Pushes the resource onto the target or replaces it if there is an index
   #
   # @param [ActiveResource::Base] resource the resource to add to/replace on the target
   # @param [Integer] index the index of the existing resource to replace
@@ -114,28 +137,6 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
   # @return [Boolean] whether or not the target is empty
   empty: ->
     @target.empty()
-
-  # Builds resource(s) for the association
-  #
-  # @param [Object,Array<Object>] attributes the attributes to build into the resource
-  # @return [ActiveResource::Base] the built resource(s) for the association, with attributes
-  build: (attributes = {}) ->
-    if _.isArray(attributes)
-      ActiveResource::Collection.build(attributes).map (attr) => @build(attr)
-    else
-      @__concatResources(ActiveResource::Collection.build(@__buildResource(attributes))).first()
-
-  # Creates resource for the association
-  #
-  # @todo Add support for multiple resource creation when JSON API supports it
-  #
-  # @param [Object] attributes the attributes to build into the resource
-  # @param [Object] queryParams the options to add to the query, like `fields` and `include`
-  # @param [Function] callback the function to pass the built resource into after calling create
-  #   @note May not be persisted, in which case `resource.errors().empty? == false`
-  # @return [ActiveResource::Base] a promise to return the persisted resource **or** errors
-  create: (attributes = {}, queryParams = {}, callback = _.noop()) ->
-    @__createResource(attributes, queryParams, callback)
 
   # private
 

@@ -1,10 +1,10 @@
 # Wraps a Javascript array with some useful functions native to Ruby Arrays
-class ActiveResource::Collection
+ActiveResource.Collection = class ActiveResource::Collection
   ActiveResource.include(@, ActiveResource::Typing)
 
   # Builds a new ActiveResource::Collection
   #
-  # @param [Array,Collection,Object] array the array/object to wrap in a collection
+  # @param [Array,Collection,Value] array the array/value to wrap in a collection
   # @return [Collection] the built Collection
   @build: (array = []) ->
     if array.isA?(this)
@@ -31,24 +31,42 @@ class ActiveResource::Collection
 
   # Check whether or not the specified item is in the collection
   #
-  # @param [Object] item the item to check for in the collection
+  # @param [Value] item the item to check for in the collection
   # @return [Boolean] whether or not the item is in the collection
   include: (item) ->
-    _.indexOf(@__collection, item) >= 0
+    @indexOf(item) >= 0
+
+  # Get the index of the specified item in the collection
+  #
+  # @param [Value] item the item to get the index for in the collection
+  # @return [Integer] the index of the item in the collection, or -1 if it is not in the collection
+  indexOf: (item) ->
+    _.indexOf(@__collection, item)
 
   # Gets the item at the index of the collection
   #
   # @param [Integer] index the index to get
-  # @return [Object] the item at the index
+  # @return [Value] the item at the index
   get: (index) ->
     @__collection[index] unless index >= @size()
 
   # Sets the index of the collection to the item
   #
   # @param [Integer] index the index to set
-  # @param [Object] item the item to set on the index
+  # @param [Value] item the item to set on the index
   set: (index, item) ->
     @__collection[index] = item unless index >= @size()
+
+  # Finds original in the collection and if found, replaces it with next
+  #
+  # @param [Value] original the original item to replace in the collection
+  # @param [Value] next the next value to replace the item
+  # @return [
+  replace: (original, next) ->
+    if(index = @indexOf(original)) > -1
+      @set(index, next)
+
+    next
 
   # @return [Array] all the resources loaded in this collection as an array
   toArray: ->
@@ -122,17 +140,33 @@ class ActiveResource::Collection
   flatten: ->
     this.constructor.build(_.flatten(@__collection))
 
-  # Push objects onto the end of this collection
+  # Push items onto the end of this collection
   #
-  # @param objs [Array] a list of objects to push onto the collection
-  push: (objs...) ->
-    @__collection.push(objs...)
+  # @param [Array] items a list of items to push onto the collection
+  push: (items...) ->
+    @__collection.push(items...)
 
-  # TODO: Add pop, shift, and unshift with specs
+  # Unshifts items onto the beginning of this collection
+  #
+  # @param [Array] items a list of items to unshift onto the collection
+  unshift: (items...) ->
+    @__collection.unshift(items...)
+
+  # Pops items off the end of this collection
+  #
+  # @return [Item] the last item popped off the collection
+  pop: ->
+    @__collection.pop()
+
+  # Shifts items off the beginning of this collection
+  #
+  # @return [Item] the first item shifted off the collection
+  shift: ->
+    @__collection.shift()
 
   # Deletes an item from the collection and returns it
   #
-  # @param [Array<Object>] items the items to delete from the collection
+  # @param [Array<Value>] items the items to delete from the collection
   # @return [Array] an array of items deleted from the collection
   delete: (items...) ->
     deleted = _.intersection(@__collection, items)
@@ -154,7 +188,7 @@ class ActiveResource::Collection
   # Get the first item that returns true from the predicate
   #
   # @param [Function] predicate the function to evaluate each resource in the collection with
-  # @return [Object] the first resource that returned true in the predicate
+  # @return [Value] the first resource that returned true in the predicate
   detect: (predicate) ->
     _.detect(@__collection, predicate)
 

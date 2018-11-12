@@ -8,29 +8,33 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
   # @param [ActiveResource::Base] resources the resource to assign to the association
   # @param [Boolean] save whether or not to persist the assignment on the server before
   #   continuing with the local assignment
+  # @param [Boolean] checkImmutable if true, check if immutable when applying changes
   # @return [Promise] a promise that indicates that the assignment was successful **or** errors
-  writer: (resource, save = true) ->
-    @__raiseOnTypeMismatch(resource) if resource?
+  writer: (resource, save = true, checkImmutable = false) ->
+    @__executeOnCloneIfImmutable(checkImmutable, resource, (resource) ->
+      @__raiseOnTypeMismatch(resource) if resource?
 
-    _this = this
-    localAssignment = ->
-      _this.loaded(true) if save
-      _this.replace(resource)
+      localAssignment = =>
+        this.loaded(true) if save
+        this.replace(resource)
 
-    if save && !@owner.newResource?()
-      @__persistAssignment(resource)
-      .then localAssignment
-    else
-      localAssignment()
+      if save && !@owner.newResource?()
+        @__persistAssignment(resource)
+          .then localAssignment
+      else
+        localAssignment()
+    )
 
   # Builds a resource for the association
   #
   # @param [Object] attributes the attributes to build into the resource
   # @return [ActiveResource::Base] the built resource for the association, with attributes
   build: (attributes = {}) ->
-    resource = @__buildResource(attributes)
-    @replace(resource)
-    resource
+    @__executeOnCloneIfImmutable(true, [], () ->
+      resource = @__buildResource(attributes)
+      @replace(resource)
+      resource
+    )
 
   # Creates a resource for the association
   #
@@ -40,7 +44,9 @@ class ActiveResource::Associations::SingularAssociation extends ActiveResource::
   #   @note May not be persisted, in which case `resource.errors().empty? == false`
   # @return [ActiveResource::Base] a promise to return the persisted resource **or** errors
   create: (attributes = {}, queryParams = {}, callback) ->
-    @__createResource(attributes, queryParams, callback)
+    @__executeOnCloneIfImmutable(true, [], () ->
+      @__createResource(attributes, queryParams, callback)
+    )
 
   # private
 
