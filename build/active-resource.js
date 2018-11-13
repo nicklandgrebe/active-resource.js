@@ -16,7 +16,7 @@
 
 var ActiveResource = function(){};
 
-window.Promise = es6Promise.Promise;
+if(typeof window != "undefined") window.Promise = es6Promise.Promise;
 
 (function() {
   ActiveResource.extend = function(klass, mixin) {
