@@ -14,6 +14,10 @@ describe 'ActiveResource', ->
       it 'creates a new Relation', ->
         expect(MyLibrary::Product.where(token: 'jshf8e').klass()).toEqual(ActiveResource::Relation)
 
+    describe 'when calling custom method of Base on Relation', ->
+      it 'calls method', ->
+        expect(MyLibrary::Product.where(token: 'jshf8e').customFind()).toEqual('found');
+
     describe '#links()', ->
       it 'returns the correct links', ->
         expect(MyLibrary::Product.where(token: 'jshf8e').links()).toEqual({ related: 'https://example.com/api/v1/products/' })

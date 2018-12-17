@@ -58,6 +58,9 @@ class MyLibrary::Product extends MyLibrary.Base
   this.hasMany 'orders'
   this.hasMany 'timeSlots'
 
+  this.customFind = () =>
+    'found'
+
 class MyLibrary::Merchant extends MyLibrary.Base
   this.className = 'Merchant'
   this.queryName = 'merchants'

@@ -2060,9 +2060,21 @@ window.Promise = es6Promise.Promise;
     ActiveResource.include(Relation, ActiveResource.prototype.Typing);
 
     function Relation(base, __queryParams) {
+      var INTERNAL_METHODS, classMethods, customClassMethods, mixin,
+        _this = this;
       this.base = base;
       this.__queryParams = __queryParams;
       this.queryName = this.base.queryName;
+      if (this.base.isA(Function)) {
+        INTERNAL_METHODS = ['__super__', 'resourceLibrary', 'className', 'queryName', '__attributes', '__reflections', '__queryParams'];
+        classMethods = _.difference(_.keys(this.base), _.keys(ActiveResource.prototype.Base));
+        customClassMethods = _.difference(classMethods, INTERNAL_METHODS);
+        mixin = ActiveResource.Collection.build(customClassMethods).inject({}, function(obj, method) {
+          obj[method] = _this.base[method];
+          return obj;
+        });
+        ActiveResource.extend(this, mixin);
+      }
     }
 
     Relation.prototype.links = function() {
