@@ -82,3 +82,4 @@ changes to each resource
 * Add `ResourceLibrary#createResource` that takes in class and composes it with `Base` class, calling static `define`
   on it to define fields directly in the class
 * Allow arrays of values/resources to be supplied as `where` values
+* Allow `Relation` to inherit custom class methods from the base class it starts from
