@@ -152,6 +152,17 @@ describe 'ActiveResource', ->
             @paramStr = requestParams(moxios.requests.mostRecent())
             expect(@paramStr).toContain('filter[order]=5')
 
+      describe 'when value is array of resources', ->
+        it 'adds resource primary key as value', ->
+          MyLibrary::OrderItem.where(order: [
+            MyLibrary::Order.build(id: '5'),
+            MyLibrary::Order.build(id: '6')
+          ]).all()
+
+          moxios.wait =>
+            @paramStr = requestParams(moxios.requests.mostRecent())
+            expect(@paramStr).toContain('filter[order]=5,6')
+
     describe '#order()', ->
       it 'adds sort params to a query', ->
         MyLibrary::Product.order(createdAt: 'asc').all()
