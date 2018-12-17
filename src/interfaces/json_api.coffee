@@ -110,10 +110,16 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   buildFilters: (filters) ->
     this.toUnderscored(
       _.mapObject filters, (value) ->
-        if value.isA?(ActiveResource::Base)
-          value[value.klass().primaryKey]
+        transformValue = (v) ->
+          if v.isA?(ActiveResource::Base)
+            v[v.klass().primaryKey]
+          else
+            v
+
+        if _.isArray(value) || value.isA?(ActiveResource.Collection)
+          ActiveResource.Collection.build(value).map((v) => transformValue(v)).join()
         else
-          value
+          transformValue(value)
     )
 
   # Takes in an object of modelName/fieldArray pairs and joins the fieldArray into a string

@@ -301,10 +301,21 @@ window.Promise = es6Promise.Promise;
 
     JsonApi.prototype.buildFilters = function(filters) {
       return this.toUnderscored(_.mapObject(filters, function(value) {
-        if (typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Base) : void 0) {
-          return value[value.klass().primaryKey];
+        var transformValue,
+          _this = this;
+        transformValue = function(v) {
+          if (typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) {
+            return v[v.klass().primaryKey];
+          } else {
+            return v;
+          }
+        };
+        if (_.isArray(value) || (typeof value.isA === "function" ? value.isA(ActiveResource.Collection) : void 0)) {
+          return ActiveResource.Collection.build(value).map(function(v) {
+            return transformValue(v);
+          }).join();
         } else {
-          return value;
+          return transformValue(value);
         }
       }));
     };
