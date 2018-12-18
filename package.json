@@ -1,7 +1,7 @@
 {
   "name": "active-resource",
   "description": "Persistable object relational mapping in Javascript",
-  "main": "dist/active-resource.js",
+  "main": "build/active-resource.js",
   "author": "Nick Landgrebe",
   "version": "1.0.0-alpha.2",
   "homepage": "https://github.com/nicklandgrebe/activeresource.js",
