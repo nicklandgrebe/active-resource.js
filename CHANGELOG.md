@@ -66,7 +66,7 @@ changes to each resource
 
 * Add source map for dist release
 
-### Master
+## 1.0.0-alpha.2
 
 * Allow resources to be provided as values in `where` statements, transforming their primaryKey as value
 * Fix bug that left `Relation#select` field classes camelCased in requests
@@ -81,5 +81,8 @@ changes to each resource
 * Add pretty print for `Base.toString()`
 * Add `ResourceLibrary#createResource` that takes in class and composes it with `Base` class, calling static `define`
   on it to define fields directly in the class
+  
+### Master
+
 * Allow arrays of values/resources to be supplied as `where` values
 * Allow `Relation` to inherit custom class methods from the base class it starts from
