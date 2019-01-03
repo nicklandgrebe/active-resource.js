@@ -1,30 +1,24 @@
 # ActiveResource.js - Object-relational mapping in Javascript
-Welcome to ActiveResource.js, an object relational mapping library for Javascript. ActiveResource.js is designed to make
-interacting with resources stored on a RESTful server more straightforward and holistic than simpler solutions like
+Welcome to ActiveResource.js, an API resource relational mapping library for JavaScript.
+
+ActiveResource.js is designed to make
+interacting with resources stored on a RESTful server more free-flowing and holistic than simpler solutions like
 `ngResource`. ActiveResource.js constructs and executes requests and formats responses into
 meaningful resource representations on the client side, allowing you to perform CRUD operations, as well
-as interact with and modify the various relationships (often known as associations) of resources effortlessly.
+as interact with and modify the various relationships of resources effortlessly.
 
 ActiveResource.js is inspired heavily by [Active Record](https://github.com/rails/rails/tree/master/activerecord), the well known
 ORM for Ruby on Rails. In the same way that Active Record makes interacting with relational databases trivial in most of the
-use cases that might be required of a server side application, ActiveResource.js hopes to make interacting with
+use cases that might be required of a server side application, ActiveResource.js aims to make interacting with
 RESTful servers trivial in most of the use cases that might be required of a client side application.
 
 The library provides a base class that, when subclassed, sets up a mapping between the new class
-and an existing resource scope on the server. In the context of an application, these classes are commonly referred to as
-models. Models can also be connected to other models in two ways: through client side interaction (whose behavior is defined
+and an existing resource on the server. Resources can be connected to other resources in two ways: through client side interaction (whose behavior is defined
 by associations), and by making requests to persist the association on the server.
 
 ActiveResource.js relies heavily on naming in that it uses class and association names to establish mappings between
-respective resource endpoints, subresource endpoints, and foreign key properties. Although these mappings can be defined
+respective resource endpoints, and nested/related resource endpoints. Although these mappings can be defined
 explicitly, it's recommended to follow naming conventions, especially when getting started with the library.
-
-* * *
-
-WARNING: ActiveResource.js currently only works in browsers. A new release will soon allow it to work in Node, plus change some design decisions
-to use more universal idioms.
-
-* * *
 
 ## Installation
 

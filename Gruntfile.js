@@ -186,6 +186,6 @@ module.exports = function(grunt) {
   grunt.registerTask(
     'release',
     'Creates a new release of the library in the dist folder',
-    [ 'clean:dist', 'compile', 'concat:release' ]
+    [ 'clean:dist', 'build', 'concat:release' ]
   );
 };
