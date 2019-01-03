@@ -14,6 +14,10 @@ describe 'ActiveResource', ->
       it 'creates a new Relation', ->
         expect(MyLibrary::Product.where(token: 'jshf8e').klass()).toEqual(ActiveResource::Relation)
 
+    describe 'when calling custom method of Base on Relation', ->
+      it 'calls method', ->
+        expect(MyLibrary::Product.where(token: 'jshf8e').customFind()).toEqual('found');
+
     describe '#links()', ->
       it 'returns the correct links', ->
         expect(MyLibrary::Product.where(token: 'jshf8e').links()).toEqual({ related: 'https://example.com/api/v1/products/' })
@@ -151,6 +155,17 @@ describe 'ActiveResource', ->
           moxios.wait =>
             @paramStr = requestParams(moxios.requests.mostRecent())
             expect(@paramStr).toContain('filter[order]=5')
+
+      describe 'when value is array of resources', ->
+        it 'adds resource primary key as value', ->
+          MyLibrary::OrderItem.where(order: [
+            MyLibrary::Order.build(id: '5'),
+            MyLibrary::Order.build(id: '6')
+          ]).all()
+
+          moxios.wait =>
+            @paramStr = requestParams(moxios.requests.mostRecent())
+            expect(@paramStr).toContain('filter[order]=5,6')
 
     describe '#order()', ->
       it 'adds sort params to a query', ->

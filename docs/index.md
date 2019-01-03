@@ -1,5 +1,33 @@
-## Welcome to ActiveResource.js
+---
+# Page settings
+layout: homepage
+keywords:
 
-### A Javascript ORM for consuming your API backend with ease
-
-ActiveResource.js is designed to make interacting with resources stored on a RESTful server more straightforward and holistic than simpler solutions like ngResource. ActiveResource.js constructs and executes requests and formats responses into meaningful resource representations on the client side, allowing you to perform CRUD operations, as well as interact with and modify the various relationships (often known as associations) of resources effortlessly.
+# Hero section
+title: ActiveResource.js
+description: An API resource relational mapping library in JavaScript. Instead of creating endless custom API requests that pass around flat packets of JSON data, spend your time writing meaningful code that impacts your business logic.
+  Use ActiveResource classes that allow you to CRUD the resources and relationships you need with ease.
+buttons:
+    - icon: arrow-right
+      content: Download
+      url: https://www.npmjs.com/package/active-resource
+      external_url: true
+    - icon: github
+      content: View on Github
+      url: https://github.com/nicklandgrebe/active-resource.js
+      external_url: true
+      
+# Author box
+author:
+    title:
+    title_url: '#'
+    external_url: true
+    description: ''
+    
+# Grid navigation
+grid_navigation:
+    - title: API Documentation (coming soon)
+      excerpt: Comprehensive coverage for all properties and methods. For now, check out the README.
+      cta: README
+      url: https://github.com/nicklandgrebe/active-resource.js/blob/master/README.md
+---

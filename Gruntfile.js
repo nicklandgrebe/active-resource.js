@@ -174,7 +174,7 @@ module.exports = function(grunt) {
   grunt.registerTask(
     'build',
     'Compiles and runs the Javascript spec files for ActiveResource.js source code.',
-    [ 'coffee:build', 'exec:bili', 'spec' ]
+    [ 'coffee:build', 'exec:bili', 'uglify:build', 'spec' ]
   );
 
   grunt.registerTask(

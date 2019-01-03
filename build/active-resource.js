@@ -585,10 +585,22 @@
           key: "buildFilters",
           value: function buildFilters(filters) {
             return this.toUnderscored(_.mapObject(filters, function (value) {
-              if (typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Base) : void 0) {
-                return value[value.klass().primaryKey];
+              var transformValue;
+
+              transformValue = function transformValue(v) {
+                if (typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) {
+                  return v[v.klass().primaryKey];
+                } else {
+                  return v;
+                }
+              };
+
+              if (_.isArray(value) || (typeof value.isA === "function" ? value.isA(ActiveResource.Collection) : void 0)) {
+                return ActiveResource.Collection.build(value).map(function (v) {
+                  return transformValue(v);
+                }).join();
               } else {
-                return value;
+                return transformValue(value);
               }
             }));
           } // Takes in an object of modelName/fieldArray pairs and joins the fieldArray into a string
@@ -3480,11 +3492,25 @@
         // @param [Object] __queryParams the __queryParams already built by previous links in
         //   the Relation chain
         function Relation(base, __queryParams) {
+          var _this17 = this;
+
           _classCallCheck(this, Relation);
 
+          var INTERNAL_METHODS, classMethods, customClassMethods, mixin;
           this.base = base;
           this.__queryParams = __queryParams;
           this.queryName = this.base.queryName;
+
+          if (this.base.isA(Function)) {
+            INTERNAL_METHODS = ['arguments', 'caller', 'length', 'name', 'prototype', '__super__', 'className', 'queryName', 'resourceLibrary', '__attributes', '__callbacks', '__links', '__reflections', '__queryParams'];
+            classMethods = _.difference(Object.getOwnPropertyNames(this.base), _.keys(ActiveResource.prototype.Base));
+            customClassMethods = _.difference(classMethods, INTERNAL_METHODS);
+            mixin = ActiveResource.Collection.build(customClassMethods).inject({}, function (obj, method) {
+              obj[method] = _this17.base[method];
+              return obj;
+            });
+            ActiveResource.extend(this, mixin);
+          }
         } // Returns links to the server for the resource that this relation is for
         // This will always be { related: baseUrl + '/[@base.queryName]' }
         // @return [Object] string URLs for the resource
@@ -3555,7 +3581,7 @@
         }, {
           key: "select",
           value: function select() {
-            var _this17 = this;
+            var _this18 = this;
 
             var queryParams;
             queryParams = _.clone(this.queryParams());
@@ -3583,8 +3609,8 @@
               }
             }).flatten().each(function (arg) {
               var modelName;
-              modelName = _.isObject(arg) ? _.keys(arg)[0] : _this17.queryName;
-              return queryParams['fields'] = _this17.__extendArrayParam(modelName, _.isObject(arg) ? [_.values(arg)[0]] : [arg], queryParams['fields']);
+              modelName = _.isObject(arg) ? _.keys(arg)[0] : _this18.queryName;
+              return queryParams['fields'] = _this18.__extendArrayParam(modelName, _.isObject(arg) ? [_.values(arg)[0]] : [arg], queryParams['fields']);
             });
             return this.__newRelation(queryParams);
           } // Defines the page number of the query
@@ -3993,17 +4019,17 @@
         }, {
           key: "loadTarget",
           value: function loadTarget() {
-            var _this18 = this;
+            var _this19 = this;
 
             if (this.__canFindTarget()) {
               return this.__findTarget().then(function (loadedTarget) {
-                _this18.target = loadedTarget;
+                _this19.target = loadedTarget;
 
-                _this18.loaded(true);
+                _this19.loaded(true);
 
                 return loadedTarget;
               }).catch(function () {
-                return _this18.reset();
+                return _this19.reset();
               });
             } else {
               this.reset();
@@ -4087,7 +4113,7 @@
         }, {
           key: "__executeOnCloneIfImmutable",
           value: function __executeOnCloneIfImmutable(checkImmutable, value, fn) {
-            var _this19 = this;
+            var _this20 = this;
 
             var clone, newValue, result;
 
@@ -4095,7 +4121,7 @@
               clone = this.owner.clone();
               newValue = ActiveResource.Collection.build(value).map(function (val) {
                 return (val != null ? val.__createClone({
-                  cloner: _this19.owner,
+                  cloner: _this20.owner,
                   newCloner: clone
                 }) : void 0) || null;
               });
@@ -4198,15 +4224,15 @@
 
 
       function CollectionAssociation(owner, reflection) {
-        var _this20;
+        var _this21;
 
         _classCallCheck(this, CollectionAssociation);
 
-        _this20 = _possibleConstructorReturn(this, _getPrototypeOf(CollectionAssociation).apply(this, arguments));
-        _this20.owner = owner;
-        _this20.reflection = reflection;
-        _this20.queryName = _this20.klass().queryName;
-        return _this20;
+        _this21 = _possibleConstructorReturn(this, _getPrototypeOf(CollectionAssociation).apply(this, arguments));
+        _this21.owner = owner;
+        _this21.reflection = reflection;
+        _this21.queryName = _this21.klass().queryName;
+        return _this21;
       } // Getter for the proxy to the target
 
 
@@ -4227,12 +4253,12 @@
           var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
           var checkImmutable = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
           return this.__executeOnCloneIfImmutable(checkImmutable, resources, function (resources) {
-            var _this21 = this;
+            var _this22 = this;
 
             var base, localAssignment, persistedResources;
             resources = ActiveResource.prototype.Collection.build(resources);
             resources.each(function (r) {
-              return _this21.__raiseOnTypeMismatch(r);
+              return _this22.__raiseOnTypeMismatch(r);
             });
             persistedResources = resources.select(function (r) {
               return typeof r.persisted === "function" ? r.persisted() : void 0;
@@ -4240,10 +4266,10 @@
 
             localAssignment = function localAssignment() {
               if (save) {
-                _this21.loaded(true);
+                _this22.loaded(true);
               }
 
-              _this21.replace(resources);
+              _this22.replace(resources);
 
               return resources;
             };
@@ -4263,11 +4289,11 @@
         value: function build() {
           var attributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
           return this.__executeOnCloneIfImmutable(true, [], function () {
-            var _this22 = this;
+            var _this23 = this;
 
             if (_.isArray(attributes)) {
               return ActiveResource.prototype.Collection.build(attributes).map(function (attr) {
-                return _this22.build(attr);
+                return _this23.build(attr);
               });
             } else {
               return this.__concatResources(ActiveResource.prototype.Collection.build(this.__buildResource(attributes))).first();
@@ -4298,12 +4324,12 @@
         key: "concat",
         value: function concat(resources) {
           return this.__executeOnCloneIfImmutable(true, resources, function () {
-            var _this23 = this;
+            var _this24 = this;
 
             var base, persistedResources;
             resources = ActiveResource.prototype.Collection.build(resources);
             resources.each(function (r) {
-              return _this23.__raiseOnTypeMismatch(r);
+              return _this24.__raiseOnTypeMismatch(r);
             });
 
             if (!(typeof (base = this.owner).newResource === "function" ? base.newResource() : void 0) && (persistedResources = resources.select(function (r) {
@@ -4311,7 +4337,7 @@
             })).size()) {
               // TODO: Do something better with unpersisted resources, like saving them
               return this.__persistConcat(persistedResources.toArray()).then(function () {
-                return _this23.__concatResources(resources);
+                return _this24.__concatResources(resources);
               });
             } else {
               return this.__concatResources(resources);
@@ -4325,19 +4351,19 @@
         key: "delete",
         value: function _delete(resources) {
           return this.__executeOnCloneIfImmutable(true, resources, function () {
-            var _this24 = this;
+            var _this25 = this;
 
             var base, persistedResources;
             resources = ActiveResource.prototype.Collection.build(resources);
             resources.each(function (r) {
-              return _this24.__raiseOnTypeMismatch(r);
+              return _this25.__raiseOnTypeMismatch(r);
             });
 
             if (!(typeof (base = this.owner).newResource === "function" ? base.newResource() : void 0) && (persistedResources = resources.select(function (r) {
               return typeof r.persisted === "function" ? r.persisted() : void 0;
             })).size()) {
               return this.__persistDelete(persistedResources.toArray()).then(function () {
-                return _this24.__removeResources(resources);
+                return _this25.__removeResources(resources);
               });
             } else {
               return this.__removeResources(resources);
@@ -4420,12 +4446,12 @@
       }, {
         key: "__concatResources",
         value: function __concatResources(resources) {
-          var _this25 = this;
+          var _this26 = this;
 
           resources.each(function (resource) {
-            _this25.addToTarget(resource);
+            _this26.addToTarget(resource);
 
-            return _this25.insertResource(resource);
+            return _this26.insertResource(resource);
           });
           return resources;
         } // Removes the resources from the target
@@ -4532,17 +4558,17 @@
         }, {
           key: "queryParams",
           value: function queryParams() {
-            var _this26 = this;
+            var _this27 = this;
 
             return this.__queryParams || (this.__queryParams = function () {
               var base, klassQueryParams, queryParams;
-              queryParams = _.clone(_this26.base.owner.queryParamsForReflection(_this26.base.reflection));
+              queryParams = _.clone(_this27.base.owner.queryParamsForReflection(_this27.base.reflection));
 
-              if (!(typeof (base = _this26.base.reflection).polymorphic === "function" ? base.polymorphic() : void 0)) {
-                klassQueryParams = _.clone(_this26.base.klass().queryParams());
+              if (!(typeof (base = _this27.base.reflection).polymorphic === "function" ? base.polymorphic() : void 0)) {
+                klassQueryParams = _.clone(_this27.base.klass().queryParams());
 
                 if (klassQueryParams['include'] != null) {
-                  queryParams = _this26.__extendArrayParam('include', klassQueryParams['include'], queryParams);
+                  queryParams = _this27.__extendArrayParam('include', klassQueryParams['include'], queryParams);
                 }
 
                 if (klassQueryParams['fields'] != null) {
@@ -4590,10 +4616,10 @@
         }, {
           key: "load",
           value: function load() {
-            var _this27 = this;
+            var _this28 = this;
 
             return this.all().then(function (collection) {
-              return _this27.base.writer(collection, false, true);
+              return _this28.base.writer(collection, false, true);
             });
           } // Gets the cached association collection and returns it as an array
           // @return [Array<ActiveResource::Base>] the array of cached collection association items
@@ -4649,16 +4675,16 @@
         }, {
           key: "build",
           value: function build() {
-            var _this28 = this;
+            var _this29 = this;
 
             var attributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
             var resources;
             attributes = _.isArray(attributes) ? _.map(attributes, function (attr) {
-              return _.extend(attr, _this28.queryParams()['filter']);
+              return _.extend(attr, _this29.queryParams()['filter']);
             }) : _.extend(attributes, this.queryParams()['filter']);
             resources = ActiveResource.prototype.Collection.build(this.base.build(attributes));
             resources.each(function (r) {
-              return r.assignResourceRelatedQueryParams(_this28.queryParams());
+              return r.assignResourceRelatedQueryParams(_this29.queryParams());
             });
 
             if (resources.size() > 1) {
@@ -4740,15 +4766,15 @@
       }, {
         key: "__deleteResources",
         value: function __deleteResources(resources) {
-          var _this29 = this;
+          var _this30 = this;
 
           resources.each(function (resource) {
             var inverse;
 
-            if ((inverse = _this29.reflection.inverseOf()) != null) {
+            if ((inverse = _this30.reflection.inverseOf()) != null) {
               return resource.association(inverse.name).replace(null);
             } else {
-              return resource[_this29.reflection.foreignKey()] = null;
+              return resource[_this30.reflection.foreignKey()] = null;
             }
           });
           return this.target = ActiveResource.prototype.Collection.build(_.difference(this.target.toArray(), resources.toArray()));
@@ -4788,7 +4814,7 @@
           var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
           var checkImmutable = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
           return this.__executeOnCloneIfImmutable(checkImmutable, resource, function (resource) {
-            var _this30 = this;
+            var _this31 = this;
 
             var base, localAssignment;
 
@@ -4798,10 +4824,10 @@
 
             localAssignment = function localAssignment() {
               if (save) {
-                _this30.loaded(true);
+                _this31.loaded(true);
               }
 
-              return _this30.replace(resource);
+              return _this31.replace(resource);
             };
 
             if (save && !(typeof (base = this.owner).newResource === "function" ? base.newResource() : void 0)) {
@@ -5383,7 +5409,7 @@
       }, {
         key: "propagate",
         value: function propagate(errors) {
-          var _this31 = this;
+          var _this32 = this;
 
           var errorsByTarget;
           errorsByTarget = errors.inject({}, function (targetObject, error) {
@@ -5394,7 +5420,7 @@
 
             if (targetObject[field] == null) {
               try {
-                association = _this31.base.association(field);
+                association = _this32.base.association(field);
               } catch (error1) {
                 association = null;
               }
@@ -5427,14 +5453,14 @@
                   return errorsForTarget.errors.delete(e);
                 });
                 baseErrors.each(function (e) {
-                  return _this31.push(e);
+                  return _this32.push(e);
                 });
                 relationshipResource = association.target.first();
 
                 if (clone = relationshipResource != null ? relationshipResource.__createClone({
-                  cloner: _this31.base
+                  cloner: _this32.base
                 }) : void 0) {
-                  _this31.base.__fields[association.reflection.name].replace(relationshipResource, clone);
+                  _this32.base.__fields[association.reflection.name].replace(relationshipResource, clone);
 
                   association.target.replace(relationshipResource, clone);
                   clone.errors().clear();
@@ -5442,7 +5468,7 @@
                 }
               } else {
                 if (clone = (ref = association.target) != null ? ref.__createClone({
-                  cloner: _this31.base
+                  cloner: _this32.base
                 }) : void 0) {
                   clone.errors().clear();
                   return clone.errors().propagate(errorsForTarget.errors);
@@ -5450,7 +5476,7 @@
               }
             } else {
               return errorsForTarget.errors.each(function (e) {
-                return _this31.push(e);
+                return _this32.push(e);
               });
             }
           });

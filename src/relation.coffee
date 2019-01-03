@@ -31,6 +31,22 @@ ActiveResource.Relation = class ActiveResource::Relation
   constructor: (@base, @__queryParams) ->
     @queryName = @base.queryName
 
+    if @base.isA(Function)
+      INTERNAL_METHODS = [
+        'arguments','caller','length','name',
+        'prototype','__super__',
+        'className','queryName','resourceLibrary',
+        '__attributes','__callbacks','__links','__reflections','__queryParams'
+      ];
+
+      classMethods = _.difference(Object.getOwnPropertyNames(@base), _.keys(ActiveResource::Base))
+      customClassMethods = _.difference(classMethods, INTERNAL_METHODS)
+      mixin = ActiveResource.Collection.build(customClassMethods).inject({}, (obj, method) =>
+        obj[method] = @base[method]
+        obj
+      )
+      ActiveResource.extend(@, mixin)
+
   # Returns links to the server for the resource that this relation is for
   #
   # This will always be { related: baseUrl + '/[@base.queryName]' }

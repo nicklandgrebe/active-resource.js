@@ -1,1 +1,36 @@
-theme: jekyll-theme-tactile
+# Theme settings
+doks:
+    baseurl:
+    color_theme: green
+    header:
+        logo:
+            text: ActiveResource.js
+            image:
+        nav:
+            - item_name: Item 1
+              item_url: '#'
+            - item_name: Item 2
+              item_url: '#'
+            - item_name: Item 3
+              item_url: '#'
+    footer:
+        content:
+            logo:
+                text: ActiveResource.js
+                image:
+            copyright: Copyright &copy; 2018. - Nick Landgrebe & Peak Labs, LLC DBA Occasion App <br>All rights reserved.
+    google_analytics:
+        tracking_code: # Add your Google Analytics tracking code to activate Google Analytics
+    comments:
+        disqus_forum_shortname: # Add your disqus forum shortname to activate comments
+
+# SASS settings
+sass:
+    sass_dir: ./doks-theme/_sass
+    style: :compressed
+
+# Jekyll settings
+layouts_dir: ./doks-theme/_layouts
+includes_dir: ./doks-theme/_includes
+exclude: [ 'README.md', 'CHANGELOG.md' ]
+permalink: /:title/
