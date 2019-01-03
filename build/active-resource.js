@@ -10,6 +10,20 @@
   _ = _ && _.hasOwnProperty('default') ? _['default'] : _;
   s = s && s.hasOwnProperty('default') ? s['default'] : s;
 
+  function _typeof(obj) {
+    if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") {
+      _typeof = function (obj) {
+        return typeof obj;
+      };
+    } else {
+      _typeof = function (obj) {
+        return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+      };
+    }
+
+    return _typeof(obj);
+  }
+
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
       throw new TypeError("Cannot call a class as a function");
@@ -131,7 +145,7 @@
 
   var ActiveResource;
 
-  if (typeof window !== "undefined") {
+  if (!((typeof exports === "undefined" ? "undefined" : _typeof(exports)) === 'object' && typeof module !== 'undefined')) {
     window.Promise = es6Promise.Promise;
   }
 

@@ -5,6 +5,6 @@ import _ from 'underscore'
 import s from 'underscore.string'
 import 'underscore.inflection'
 
-window.Promise = es6Promise.Promise if typeof window != "undefined"
+window.Promise = es6Promise.Promise unless typeof exports == 'object' && typeof module != 'undefined'
 
 export default class ActiveResource
