@@ -2,4 +2,6 @@ spec/spec.js
 _SpecRunner.html
 
 node_modules
+.idea
 .grunt
+require.js
