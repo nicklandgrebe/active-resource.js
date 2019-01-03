@@ -80,7 +80,7 @@ describe 'ActiveResource', ->
     describe '#createResource', ->
       beforeEach ->
         @Order = @MyLibrary.createResource(
-          class Order
+          class Order extends @MyLibrary.Base
             @define: ->
               @attributes('price')
 
@@ -106,7 +106,7 @@ describe 'ActiveResource', ->
       describe 'custom className', ->
         beforeEach ->
           @Comment = @MyLibrary.createResource(
-            class Comment
+            class Comment extends @MyLibrary.Base
               @className = 'NotComment'
           )
 
@@ -124,7 +124,7 @@ describe 'ActiveResource', ->
           )
 
           @GiftCard = @MyLibrary.createResource(
-            class GiftCard
+            class GiftCard extends @MyLibrary.Base
           )
 
         it 'adds klass to constantizeScope', ->

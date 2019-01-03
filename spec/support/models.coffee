@@ -3,11 +3,15 @@ _.singular('Class', 'Class');
 
 window.MyLibrary = ActiveResource.createResourceLibrary('https://example.com/api/v1')
 
-class MyLibrary::Comment extends MyLibrary.Base
-  this.className = 'Comment'
-  this.queryName = 'comments'
-
-  this.belongsTo 'resource', polymorphic: true, inverseOf: 'comments'
+`
+MyLibrary.createResource(
+  class Comment extends MyLibrary.Base {
+    static define() {
+      this.belongsTo('resource', { polymorphic: true, inverseOf: 'comments' })
+    }
+  }
+)
+`
 
 class MyLibrary::Customer extends MyLibrary.Base
   this.className = 'Customer'

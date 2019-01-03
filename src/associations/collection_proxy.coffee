@@ -55,7 +55,7 @@ class ActiveResource::Associations::CollectionProxy extends ActiveResource::Rela
     if options['cached']
       @target()
     else
-      super
+      super()
 
   # Loads into the target the result of `all` (which does not write its
   # result to target)

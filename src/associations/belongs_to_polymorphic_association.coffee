@@ -8,7 +8,7 @@ class ActiveResource::Associations::BelongsToPolymorphicAssociation extends Acti
       undefined
 
   links: ->
-    if @klass() then super else {}
+    if @klass() then super() else {}
 
   # private
 
@@ -16,14 +16,14 @@ class ActiveResource::Associations::BelongsToPolymorphicAssociation extends Acti
   #
   # @see BelongsToAssociation#__replaceKeys
   __replaceKeys: (resource) ->
-    super
+    super(resource)
     @owner[@reflection.foreignType()] = resource.klass().className
 
   # Removes the foreignKey && foreignType of the owner
   #
   # @see BelongsToAssociation#__removeKeys
   __removeKeys: ->
-    super
+    super()
     @owner[@reflection.foreignType()] = null
 
   # Gets the inverse reflection of the polymorphic reflection

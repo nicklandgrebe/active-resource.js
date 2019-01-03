@@ -61,19 +61,6 @@ ActiveResource.createResourceLibrary = (baseUrl, options = {}) ->
     # @param [Class] klass the klass to create into an ActiveResource::Base class in the library
     # @return [Class] the klass now inheriting from ActiveResource::Base
     @createResource: (klass) ->
-      extend = `
-        function(child, parent) {
-          for (var key in parent) { if (parent.hasOwnProperty(key)) child[key] = parent[key]; }
-          function ctor() { this.constructor = child; }
-          ctor.prototype = parent.prototype;
-          child.prototype = new ctor();
-          child.__super__ = parent.prototype;
-          return child;
-        }
-      `
-
-      klass = extend(klass, @Base)
-
       klass.className ||= klass.name
       klass.queryName ||= _.pluralize(s.underscored(klass.className))
 

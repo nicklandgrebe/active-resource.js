@@ -7,9 +7,9 @@ ActiveResource.Collection = class ActiveResource::Collection
   # @param [Array,Collection,Value] array the array/value to wrap in a collection
   # @return [Collection] the built Collection
   @build: (array = []) ->
-    if array.isA?(this)
+    if array?.isA?(this)
       array.clone()
-    else if array.length?
+    else if array?.length?
       new this(array)
     else
       new this([array])

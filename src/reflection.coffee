@@ -256,7 +256,7 @@ ActiveResource.Reflection = class ActiveResource::Reflection
     # @param [Reflection,Boolean] inverseReflection the inverse reflection to check the validity of
     # @return [Boolean] whether or not the inverse reflection is valid
     validInverseReflection = (reflection, inverseReflection) ->
-      inverseReflection? &&
+      inverseReflection &&
         reflection.klass().className == inverseReflection.activeResource.className &&
         canFindInverseOfAutomatically(inverseReflection)
 
