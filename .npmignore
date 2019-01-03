@@ -1,8 +1,11 @@
+.babelrc
 CNAME
+bili.config.js
 docs
 .grunt
 Gruntfile.js
 .idea
+_SpecRunner.html
 src
 require.js
-travis.yml
+.travis.yml
