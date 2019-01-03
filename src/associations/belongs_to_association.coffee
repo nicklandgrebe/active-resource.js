@@ -1,6 +1,6 @@
 class ActiveResource::Associations::BelongsToAssociation extends ActiveResource::Associations::SingularAssociation
   reset: ->
-    super
+    super()
     @updated = false
 
   # private
@@ -21,7 +21,7 @@ class ActiveResource::Associations::BelongsToAssociation extends ActiveResource:
   __getResource: ->
     unless @owner.newResource()
       # @example Uses @links()['related'] == '/orders/1/product'
-      super
+      super()
     else
       # @example Uses @links()['related'] == '/products/:product_id'
       @interface().get(

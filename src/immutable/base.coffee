@@ -1,7 +1,7 @@
 class ActiveResource::Immutable::Base extends ActiveResource::Base
-  ActiveResource.include(@, ActiveResource::Immutable::Attributes)
-  ActiveResource.include(@, ActiveResource::Immutable::Errors)
-  ActiveResource.include(@, ActiveResource::Immutable::Persistence)
+  ActiveResource.include(@, ActiveResource::Immutable::Attributes, true)
+  ActiveResource.include(@, ActiveResource::Immutable::Errors, true)
+  ActiveResource.include(@, ActiveResource::Immutable::Persistence, true)
 
   constructor: ->
-    super
+    super()

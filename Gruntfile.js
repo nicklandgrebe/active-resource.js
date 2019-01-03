@@ -1,3 +1,5 @@
+var babel = require('rollup-plugin-babel');
+
 module.exports = function(grunt) {
 
   // configure the tasks
@@ -7,62 +9,85 @@ module.exports = function(grunt) {
       dist: {
         src: [ 'dist' ]
       },
-      build: {
-        src: [
-          'build/**/*.js', '!build/init.js',
-          '!build/active-resource.js', '!build/active-resource.min.js'
-        ]
-      },
       specs: {
         src: 'spec/spec.js'
       }
     },
     coffee: {
       build: {
-        expand: true,
-        cwd: 'src',
-        src: [ '**/*.coffee' ],
-        dest: 'build',
-        ext: '.js'
+        files: {
+          'build/active-resource.js': [
+            'src/active-resource.coffee',
+            'src/modulizing.coffee',
+            'src/typing.coffee',
+            'src/resource_library.coffee',
+            'src/interfaces/base.coffee',
+            'src/interfaces/json_api.coffee',
+            'src/associations.coffee',
+            'src/attributes.coffee',
+            'src/callbacks.coffee',
+            'src/cloning.coffee',
+            'src/collection.coffee',
+            'src/collection_response.coffee',
+            'src/errors.coffee',
+            'src/fields.coffee',
+            'src/links.coffee',
+            'src/persistence.coffee',
+            'src/query_params.coffee',
+            'src/reflection.coffee',
+            'src/relation.coffee',
+            'src/core.coffee',
+            'src/base.coffee',
+            'src/associations/association.coffee',
+            'src/associations/collection_association.coffee',
+            'src/associations/collection_proxy.coffee',
+            'src/associations/has_many_association.coffee',
+            'src/associations/singular_association.coffee',
+            'src/associations/has_one_association.coffee',
+            'src/associations/belongs_to_association.coffee',
+            'src/associations/belongs_to_polymorphic_association.coffee',
+            'src/associations/builder/association.coffee',
+            'src/associations/builder/collection_association.coffee',
+            'src/associations/builder/has_many.coffee',
+            'src/associations/builder/singular_association.coffee',
+            'src/associations/builder/belongs_to.coffee',
+            'src/associations/builder/has_one.coffee',
+            'src/immutable.coffee',
+            'src/immutable/attributes.coffee',
+            'src/immutable/errors.coffee',
+            'src/immutable/persistence.coffee',
+            'src/immutable/base.coffee',
+          ]
+        }
       },
       specs: {
         files: {
-          'spec/spec.js': [ 'spec/support/*.coffee', 'spec/**/*.coffee' ]
+          'spec/spec.js': [ 'spec/support/init.coffee', 'spec/support/*.coffee', 'spec/**/*.coffee' ]
         }
       }
     },
-    umd: {
-      build: {
-        options: {
-          src: 'build/active-resource.js',
-          objectToExport: 'ActiveResource',
-          deps: {
-            'default': [
-              'axios',
-              { 'es6-promise': 'es6Promise' },
-              { 'underscore': '_' },
-              { 'underscore.string': 's' },
-              { 'qs': 'Qs' },
-              { 'underscore.inflection': null }
-            ]
-          }
-        }
+    exec: {
+      bili: {
+        cmd: 'bili'
+      }
+    },
+    rollup: {
+      options: {
+        plugins: [
+          babel({
+            exclude: './node_modules/**'
+          })
+        ]
       },
       specs: {
         options: {
+          format: 'umd',
+          name: 'ActiveResourceSpecs',
+        },
+        files: [{
+          dest: 'spec/spec.js',
           src: 'spec/spec.js',
-          deps: {
-            'default': [
-              { 'active-resource': 'ActiveResource' },
-              'axios',
-              'moxios',
-              { 'jquery': '$' },
-              { 'jasmine-jquery': null },
-              { 'jasmine-ajax': null },
-              { 'jasmine-promises': null }
-            ]
-          }
-        }
+        }],
       }
     },
     uglify: {
@@ -93,56 +118,6 @@ module.exports = function(grunt) {
           'dist/active-resource.min.js.map': ['build/active-resource.min.js.map']
         }
       },
-      build: {
-        src: [
-          'build/init.js',
-          'build/modulizing.js',
-          'build/typing.js',
-          'build/resource_library.js',
-          'build/interfaces/base.js',
-          'build/interfaces/json_api.js',
-          'build/associations.js',
-          'build/attributes.js',
-          'build/callbacks.js',
-          'build/cloning.js',
-          'build/collection.js',
-          'build/collection_response.js',
-          'build/errors.js',
-          'build/fields.js',
-          'build/links.js',
-          'build/persistence.js',
-          'build/query_params.js',
-          'build/reflection.js',
-          'build/relation.js',
-          'build/base.js',
-          'build/associations/association.js',
-          'build/associations/collection_association.js',
-          'build/associations/collection_proxy.js',
-          'build/associations/has_many_association.js',
-          'build/associations/singular_association.js',
-          'build/associations/has_one_association.js',
-          'build/associations/belongs_to_association.js',
-          'build/associations/belongs_to_polymorphic_association.js',
-          'build/associations/builder/association.js',
-          'build/associations/builder/collection_association.js',
-          'build/associations/builder/has_many.js',
-          'build/associations/builder/singular_association.js',
-          'build/associations/builder/belongs_to.js',
-          'build/associations/builder/has_one.js',
-          'build/immutable.js',
-          'build/immutable/attributes.js',
-          'build/immutable/errors.js',
-          'build/immutable/persistence.js',
-          'build/immutable/base.js',
-        ],
-        dest: 'build/active-resource.js'
-      }
-    },
-    watch: {
-      source: {
-        files: 'src/**/*.coffee',
-        tasks: [ 'build' ]
-      }
     },
     connect: {
       test: {
@@ -190,40 +165,27 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-exec');
   grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-umd');
-  grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
+  grunt.loadNpmTasks('grunt-rollup');
 
-  // define the tasks
   grunt.registerTask(
-    'compile',
-    'Compiles the source files into 1) a raw UMD module file and 2) a minified UMD module file.',
-    [ 'coffee:build', 'concat:build', 'umd:build', 'uglify', 'clean:build' ]
+    'build',
+    'Compiles and runs the Javascript spec files for ActiveResource.js source code.',
+    [ 'coffee:build', 'exec:bili', 'uglify:build', 'spec' ]
   );
 
   grunt.registerTask(
     'spec',
     'Compiles and runs the Javascript spec files for ActiveResource.js source code.',
-    [ 'clean:specs', 'coffee:specs', 'umd:specs', 'connect:test', 'jasmine:activeresource' ]
-  )
-
-  grunt.registerTask(
-    'build',
-    'Creates a temporary build of the library in the build folder, then runs the specs on it.',
-    [ 'clean:build', 'compile', 'spec' ]
+    [ 'clean:specs', 'coffee:specs', 'rollup:specs', 'connect:test', 'jasmine:activeresource' ]
   );
 
   grunt.registerTask(
     'release',
     'Creates a new release of the library in the dist folder',
     [ 'clean:dist', 'compile', 'concat:release' ]
-  );
-
-  grunt.registerTask(
-    'default',
-    'Watches the project for changes, automatically builds them and runs specs.',
-    [ 'build', 'watch' ]
   );
 };

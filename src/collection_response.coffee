@@ -8,7 +8,7 @@ ActiveResource.CollectionResponse = class ActiveResource::CollectionResponse ext
     if array.isA?(ActiveResource::Collection)
       new this(array.toArray())
     else
-      super
+      super(array)
 
   # Retrieves and sets the links that were sent at the top level in the response
   #

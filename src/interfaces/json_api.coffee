@@ -36,7 +36,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [String] method the HTTP verb to use for the request
   # @param [Object] data the data to send to the server
   request: (url, method, data) ->
-    super
+    super(url, method, data)
     .then (response) ->
       throw "Response from #{url} was not in JSON API format" unless response.data?.data? || response.status == 204
       response.data

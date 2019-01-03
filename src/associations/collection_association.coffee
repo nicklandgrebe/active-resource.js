@@ -6,10 +6,10 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
   # @param [ActiveResource::Base] the resource that owners this association
   # @param [ActiveResource::Reflection] reflection the reflection of the association
   constructor: (@owner, @reflection) ->
+    super(...arguments)
     @queryName = @klass().queryName
-    super
 
-  # Getter for the proxy to the target
+# Getter for the proxy to the target
   reader: ->
     @proxy ||= new ActiveResource::Associations::CollectionProxy(this)
 
@@ -101,7 +101,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
     )
 
   reset: ->
-    super
+    super()
     @target = ActiveResource::Collection.build()
 
   # Adds the resource to the target

@@ -32,9 +32,14 @@ ActiveResource.Relation = class ActiveResource::Relation
     @queryName = @base.queryName
 
     if @base.isA(Function)
-      INTERNAL_METHODS = ['__super__','resourceLibrary','className','queryName','__attributes','__reflections','__queryParams'];
+      INTERNAL_METHODS = [
+        'arguments','caller','length','name',
+        'prototype','__super__',
+        'className','queryName','resourceLibrary',
+        '__attributes','__callbacks','__links','__reflections','__queryParams'
+      ];
 
-      classMethods = _.difference(_.keys(@base), _.keys(ActiveResource::Base))
+      classMethods = _.difference(Object.getOwnPropertyNames(@base), _.keys(ActiveResource::Base))
       customClassMethods = _.difference(classMethods, INTERNAL_METHODS)
       mixin = ActiveResource.Collection.build(customClassMethods).inject({}, (obj, method) =>
         obj[method] = @base[method]

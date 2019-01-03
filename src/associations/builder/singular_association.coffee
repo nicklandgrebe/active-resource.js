@@ -4,7 +4,7 @@ class ActiveResource::Associations::Builder::SingularAssociation extends ActiveR
   # @param [Class] model the ActiveResource class to apply the association to
   # @param [Reflection] reflection the reflection of the association to build accessors for
   @defineAccessors: (model, reflection) ->
-    super
+    super(...arguments)
     @defineConstructors(model, reflection.name) if reflection.constructable?()
 
   # Defines setter methods on the model for the association

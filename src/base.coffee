@@ -13,13 +13,13 @@ class ActiveResource::Base
   ActiveResource.extend(@, ActiveResource::Associations)
   ActiveResource.extend(@, ActiveResource::Attributes.prototype)
   ActiveResource.extend(@, ActiveResource::Callbacks.prototype)
+  ActiveResource.extend(@, ActiveResource::Core)
   ActiveResource.extend(@, ActiveResource::Fields.prototype)
+  ActiveResource.extend(@, ActiveResource::Links)
   ActiveResource.extend(@, ActiveResource::Reflection.prototype)
   ActiveResource.extend(@, ActiveResource::Relation.prototype)
-  # Add Links after Relation since Relation also contains a `links` prototype method extended to Base, but it should
-  # only be used for instances of Relation, not static Base itself
-  ActiveResource.extend(@, ActiveResource::Links)
   ActiveResource.include(@, ActiveResource::Associations.prototype)
+  ActiveResource.include(@, ActiveResource::Core.prototype)
   ActiveResource.include(@, ActiveResource::Attributes)
   ActiveResource.include(@, ActiveResource::Callbacks)
   ActiveResource.include(@, ActiveResource::Cloning)
@@ -32,37 +32,3 @@ class ActiveResource::Base
 
   constructor: ->
     @__initializeFields()
-
-  # The name to use when constantizing on the client
-  # @example 'Product'
-  #
-  # @note On a production server where minification occurs, the actual name of classes
-  #   `@constructor.name` will change from `Product` to perhaps `p`. But, since a class
-  #   is added as a variable to its resource library (or its prototype), we can use this
-  #   method to determine the name of the variable in the resource library scope
-  # @className = ''
-
-  # The name to use when querying the server for this resource
-  # @example 'products'
-  # @queryName = ''
-
-  # The primary key by which to index this resource
-  @primaryKey = 'id'
-
-  # The interface to use when querying the server for this class
-  @interface: ->
-    @resourceLibrary.interface
-
-  # The interface to use when querying the server for this resource
-  interface: ->
-    @klass().interface()
-
-  # Creates a new ActiveResource::Relation with the extended queryParams passed in
-  #
-  # @param [Object] queryParams the extended query params for the relation
-  # @return [ActiveResource::Relation] the new Relation for the extended query
-  @__newRelation: (queryParams) ->
-    new ActiveResource::Relation(this, queryParams)
-
-  toString: ->
-    JSON.stringify(@interface().buildResourceDocument(resourceData: this))

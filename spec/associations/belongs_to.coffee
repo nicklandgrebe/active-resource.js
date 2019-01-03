@@ -117,7 +117,7 @@ describe 'ActiveResource', ->
 
         describe 'when polymorphic', ->
           beforeEach ->
-            @resource = MyLibrary::Comment.build()
+            @resource = MyLibrary.Comment.build()
 
             @target = MyLibrary::Order.build(id: 1)
 
