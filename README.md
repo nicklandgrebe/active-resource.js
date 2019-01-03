@@ -1,4 +1,4 @@
-# ActiveResource.js - Object-relational mapping in Javascript
+# ActiveResource.js - API Resource relational mapping in Javascript
 Welcome to ActiveResource.js, an API resource relational mapping library for JavaScript.
 
 ActiveResource.js is designed to make
