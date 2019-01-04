@@ -171,7 +171,7 @@ describe 'ActiveResource', ->
         beforeEach ->
           queryParams =
             fields:
-              product: ['title','updatedAt'],
+              products: ['title','updatedAt'],
               orders: ['price','createdAt']
 
           @interface
@@ -184,7 +184,28 @@ describe 'ActiveResource', ->
 
         it 'builds a field set into the query URL', ->
           @promise.then =>
-            expect(@paramStr).toEqual('fields[product]=title,updated_at&fields[orders]=price,created_at')
+            expect(@paramStr).toEqual('fields[products]=title,updated_at&fields[orders]=price,created_at')
+
+      describe 'using fields queryParam with includes', ->
+        beforeEach ->
+          queryParams =
+            fields:
+              products: ['title'],
+              orders: ['price']
+            include: ['merchant', { orders: { transactions: 'paymentMethod' }, labels: ['author'] }]
+            __root: 'products'
+
+          @interface
+            .get(@lib::Product.links()['related'], queryParams)
+            .then(window.onSuccess)
+            .catch(window.onFailure)
+
+          @promise = moxios.wait =>
+            @paramStr = requestParams(moxios.requests.mostRecent())
+
+        it 'merges includes with field set', ->
+          @promise.then =>
+            expect(@paramStr).toContain('fields[products]=title,merchant&fields[orders]=price,transactions&fields[transactions]=payment_method&fields[labels]=author')
 
       describe 'using include queryParam', ->
         beforeEach ->

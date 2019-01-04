@@ -132,16 +132,53 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # Takes in an object of modelName/fieldArray pairs and joins the fieldArray into a string
   #
   # @note Used in constructing queryParams of GET queries
+  # @note Will merge include queryParams into fields
   #
   # @example
   #   { order: ['id', 'updatedAt'] } # => { order: 'id,updated_at' }
   #
   # @param [Object] fields the object containing field data to be built into a fieldSet
+  # @param [Object] queryParams the object containing include and __root data to be built into a fieldSet
   # @return [Object] the built field set
   #
-  # 1. Go through each key of the object, map its array of fields to underscored fields
-  # 2. Take the mapped array of fields and join them, replacing the value of the key with the joined string
-  buildSparseFieldset: (fields) ->
+  # 1. If queryParams.include, merge those into fields
+  #   1. Iterate over of array of includes from queryParams.includes or array of objects/values from nested includes
+  #   2. If string, add to keyForString, which is either queryParams.__root or the key for the nested include
+  #   3. If object, split into individual keys as objects and add value to appropriate field for key
+  #   4. If value of object is an array or object, split that and iterate over it until a singular value is reached
+  # 2. Then, go through each key of the object, map its array of fields to underscored fields
+  # 3. Take the mapped array of fields and join them, replacing the value of the key with the joined string
+  buildSparseFieldset: (fields, queryParams) ->
+    fields = _.clone(fields)
+    if(queryParams.include)
+      mergeNestedIncludes = (includes, keyForString = queryParams.__root) =>
+        ActiveResource.Collection.build(includes)
+        .each((include) =>
+          if _.isString(include)
+            fields[keyForString] ||= []
+            fields[keyForString] = fields[keyForString].slice(0)
+            fields[keyForString].push(include)
+          else if _.isObject(include)
+            if _.keys(include).length > 1
+              mergeNestedIncludes(_.pick(include, k) for k in _.keys(include))
+            else
+              key = _.keys(include)[0]
+              value = _.values(include)[0]
+
+              if _.isArray(value)
+                mergeNestedIncludes(value, key)
+                return
+              else if _.isObject(value)
+                mergeNestedIncludes(_.pick(value, k) for k in _.keys(value))
+                value = _.keys(value)[0]
+
+              fields[key] ||= []
+              fields[key] = fields[key].slice(0)
+              fields[key].push(value)
+        )
+
+      mergeNestedIncludes(queryParams.include)
+
     this.toUnderscored(
       _.mapObject fields, (fieldArray) ->
         _.map(fieldArray, (f) -> s.underscored(f)).join()
@@ -568,7 +605,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   get: (url, queryParams = {}) ->
     data = {}
     data['filter']  = this.buildFilters(queryParams['filter'])        if queryParams['filter']?
-    data['fields']  = this.buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
+    if queryParams['fields']?
+      data['fields']  = this.buildSparseFieldset(queryParams['fields'], queryParams)
     data['include'] = this.buildIncludeTree(queryParams['include'])   if queryParams['include']?
     data['sort']    = this.buildSortList(queryParams['sort'])         if queryParams['sort']?
 
@@ -605,7 +643,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     unless options['onlyResourceIdentifiers']
       queryParams = resourceData.queryParams()
 
-      data['fields']  = this.buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
+      if queryParams['fields']?
+        data['fields']  = this.buildSparseFieldset(queryParams['fields'], queryParams)
       data['include'] = this.buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
     _this = this
@@ -639,7 +678,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     unless options['onlyResourceIdentifiers']
       queryParams = resourceData.queryParams()
 
-      data['fields']  = this.buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
+      if queryParams['fields']?
+        data['fields']  = this.buildSparseFieldset(queryParams['fields'])
       data['include'] = this.buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
     _this = this
@@ -667,7 +707,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     unless options['onlyResourceIdentifiers']
       queryParams = resourceData.queryParams()
 
-      data['fields']  = this.buildSparseFieldset(queryParams['fields']) if queryParams['fields']?
+      if queryParams['fields']?
+        data['fields']  = this.buildSparseFieldset(queryParams['fields'])
       data['include'] = this.buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
     _this = this

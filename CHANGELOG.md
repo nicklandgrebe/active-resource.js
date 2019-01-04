@@ -93,3 +93,4 @@ changes to each resource
 * Ensure `Errors#propagate` adds full error to root resource instead of just propagating them to nested resources
 * Fix polymorphic relationship construction from server
 * Allow `null` values for where filters
+* Merge `includes` with `fields` in JSON:API interface so includes aren't left out when fields are used

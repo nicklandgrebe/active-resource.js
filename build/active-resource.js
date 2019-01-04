@@ -615,16 +615,87 @@
             }));
           } // Takes in an object of modelName/fieldArray pairs and joins the fieldArray into a string
           // @note Used in constructing queryParams of GET queries
+          // @note Will merge include queryParams into fields
           // @example
           //   { order: ['id', 'updatedAt'] } # => { order: 'id,updated_at' }
           // @param [Object] fields the object containing field data to be built into a fieldSet
+          // @param [Object] queryParams the object containing include and __root data to be built into a fieldSet
           // @return [Object] the built field set
-          // 1. Go through each key of the object, map its array of fields to underscored fields
-          // 2. Take the mapped array of fields and join them, replacing the value of the key with the joined string
+          // 1. If queryParams.include, merge those into fields
+          //   1. Iterate over of array of includes from queryParams.includes or array of objects/values from nested includes
+          //   2. If string, add to keyForString, which is either queryParams.__root or the key for the nested include
+          //   3. If object, split into individual keys as objects and add value to appropriate field for key
+          //   4. If value of object is an array or object, split that and iterate over it until a singular value is reached
+          // 2. Then, go through each key of the object, map its array of fields to underscored fields
+          // 3. Take the mapped array of fields and join them, replacing the value of the key with the joined string
 
         }, {
           key: "buildSparseFieldset",
-          value: function buildSparseFieldset(fields) {
+          value: function buildSparseFieldset(fields, queryParams) {
+            var _mergeNestedIncludes;
+
+            fields = _.clone(fields);
+
+            if (queryParams.include) {
+              _mergeNestedIncludes = function mergeNestedIncludes(includes) {
+                var keyForString = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : queryParams.__root;
+                return ActiveResource.Collection.build(includes).each(function (include) {
+                  var k, key, value;
+
+                  if (_.isString(include)) {
+                    fields[keyForString] || (fields[keyForString] = []);
+                    fields[keyForString] = fields[keyForString].slice(0);
+                    return fields[keyForString].push(include);
+                  } else if (_.isObject(include)) {
+                    if (_.keys(include).length > 1) {
+                      return _mergeNestedIncludes(function () {
+                        var j, len, ref, results;
+                        ref = _.keys(include);
+                        results = [];
+
+                        for (j = 0, len = ref.length; j < len; j++) {
+                          k = ref[j];
+                          results.push(_.pick(include, k));
+                        }
+
+                        return results;
+                      }());
+                    } else {
+                      key = _.keys(include)[0];
+                      value = _.values(include)[0];
+
+                      if (_.isArray(value)) {
+                        _mergeNestedIncludes(value, key);
+
+                        return;
+                      } else if (_.isObject(value)) {
+                        _mergeNestedIncludes(function () {
+                          var j, len, ref, results;
+                          ref = _.keys(value);
+                          results = [];
+
+                          for (j = 0, len = ref.length; j < len; j++) {
+                            k = ref[j];
+                            results.push(_.pick(value, k));
+                          }
+
+                          return results;
+                        }());
+
+                        value = _.keys(value)[0];
+                      }
+
+                      fields[key] || (fields[key] = []);
+                      fields[key] = fields[key].slice(0);
+                      return fields[key].push(value);
+                    }
+                  }
+                });
+              };
+
+              _mergeNestedIncludes(queryParams.include);
+            }
+
             return this.toUnderscored(_.mapObject(fields, function (fieldArray) {
               return _.map(fieldArray, function (f) {
                 return s.underscored(f);
@@ -1123,7 +1194,7 @@
             }
 
             if (queryParams['fields'] != null) {
-              data['fields'] = this.buildSparseFieldset(queryParams['fields']);
+              data['fields'] = this.buildSparseFieldset(queryParams['fields'], queryParams);
             }
 
             if (queryParams['include'] != null) {
@@ -1189,7 +1260,7 @@
               queryParams = resourceData.queryParams();
 
               if (queryParams['fields'] != null) {
-                data['fields'] = this.buildSparseFieldset(queryParams['fields']);
+                data['fields'] = this.buildSparseFieldset(queryParams['fields'], queryParams);
               }
 
               if (queryParams['include'] != null) {
@@ -3586,14 +3657,15 @@
           // @param [Array<String,Object>] args an array of field representations to cull the query by
           // @return [ActiveResource::Relation] the extended relation with added `sort` params
           // 1. Build new queryParams so we don't persist across relation constructions
-          // 2. Flatten the field arguments into an array of strings/objects and iterate over it
-          // 3. Determine the model name for each field
+          // 2. Set queryParams.__root to @queryName so we can use it for future merging of fields/includes in interfaces
+          // 3. Flatten the field arguments into an array of strings/objects and iterate over it
+          // 4. Determine the model name for each field
           //   * If object: model name is the key (Order.select({ transactions: [...] }) # => transactions)
           //   * If string: model name is @base.queryName (Order.select('id') # => orders)
-          // 4. Append the list of fields to the array of fields for that model
+          // 5. Append the list of fields to the array of fields for that model
           //   * If object: first value of arg is array to append (Order.select({ transactions: ['id'] }) => ['id'])
           //   * If string: arg itself is item to append to array (Order.select('id') => ['id'])
-          // 5. Create new relation with the extended queryParams
+          // 6. Create new relation with the extended queryParams
 
         }, {
           key: "select",
@@ -3603,6 +3675,7 @@
             var queryParams;
             queryParams = _.clone(this.queryParams());
             queryParams['fields'] || (queryParams['fields'] = {});
+            queryParams['__root'] || (queryParams['__root'] = this.queryName);
 
             for (var _len5 = arguments.length, args = new Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
               args[_key5] = arguments[_key5];
@@ -3626,7 +3699,7 @@
               }
             }).flatten().each(function (arg) {
               var modelName;
-              modelName = _.isObject(arg) ? _.keys(arg)[0] : _this18.queryName;
+              modelName = _.isObject(arg) ? _.keys(arg)[0] : queryParams.__root;
               return queryParams['fields'] = _this18.__extendArrayParam(modelName, _.isObject(arg) ? [_.values(arg)[0]] : [arg], queryParams['fields']);
             });
             return this.__newRelation(queryParams);

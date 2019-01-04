@@ -111,17 +111,20 @@ ActiveResource.Relation = class ActiveResource::Relation
   # @return [ActiveResource::Relation] the extended relation with added `sort` params
   #
   # 1. Build new queryParams so we don't persist across relation constructions
-  # 2. Flatten the field arguments into an array of strings/objects and iterate over it
-  # 3. Determine the model name for each field
+  # 2. Set queryParams.__root to @queryName so we can use it for future merging of fields/includes in interfaces
+  # 3. Flatten the field arguments into an array of strings/objects and iterate over it
+  # 4. Determine the model name for each field
   #   * If object: model name is the key (Order.select({ transactions: [...] }) # => transactions)
   #   * If string: model name is @base.queryName (Order.select('id') # => orders)
-  # 4. Append the list of fields to the array of fields for that model
+  # 5. Append the list of fields to the array of fields for that model
   #   * If object: first value of arg is array to append (Order.select({ transactions: ['id'] }) => ['id'])
   #   * If string: arg itself is item to append to array (Order.select('id') => ['id'])
-  # 5. Create new relation with the extended queryParams
+  # 6. Create new relation with the extended queryParams
   select: (args...) ->
     queryParams = _.clone(@queryParams())
     queryParams['fields'] ||= {}
+
+    queryParams['__root'] ||= @queryName
 
     ActiveResource::Collection.build(args)
     .map((a) ->
@@ -135,7 +138,7 @@ ActiveResource.Relation = class ActiveResource::Relation
         if _.isObject(arg)
           _.keys(arg)[0]
         else
-          @queryName
+          queryParams.__root
 
       queryParams['fields'] =
         @__extendArrayParam(
