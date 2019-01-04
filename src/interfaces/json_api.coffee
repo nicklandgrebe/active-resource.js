@@ -57,15 +57,19 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @return [Object] the object with attributes in underscore format
   toUnderscored: (object) ->
     underscored = {}
+
+    underscorize = (value) =>
+      if _.isObject(value) && !value.isA?(ActiveResource::Base) && !value.isA?(ActiveResource::Collection) && !_.isDate(value)
+        this.toUnderscored(value)
+      else
+        value
+
     for k, v of object
       underscored[s.underscored(k)] =
         if _.isArray(v)
-          _.map v, (i) =>
-            this.toUnderscored(i)
-        else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection) && !_.isDate(v)
-          this.toUnderscored(v)
+          _.map v, underscorize
         else
-          v
+          underscorize(v)
 
     underscored
 
@@ -78,18 +82,19 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @return [Object] the object with attributes in camelCase format
   toCamelCase: (object) ->
     camelized = {}
+
+    camelize = (value) =>
+      if _.isObject(value) && !value.isA?(ActiveResource::Base) && !value.isA?(ActiveResource::Collection)
+        this.toCamelCase(value)
+      else
+        value
+
     for k, v of object
       camelized[s.camelize(k)] =
         if _.isArray(v)
-          _.map v, (i) =>
-            if _.isObject(i)
-              this.toCamelCase(i)
-            else
-              i
-        else if _.isObject(v) && !v.isA?(ActiveResource::Base) && !v.isA?(ActiveResource::Collection)
-          this.toCamelCase(v)
+          _.map v, camelize
         else
-          v
+          camelize(v)
 
     camelized
 
@@ -440,11 +445,6 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     findConditions = { type: relationshipData.type }
     findConditions[primaryKey] = relationshipData[primaryKey]
 
-    buildResourceOptions = {}
-    if(parentReflection = reflection.inverseOf())?
-      buildResourceOptions.parentRelationship = {}
-      buildResourceOptions.parentRelationship[parentReflection.name] = resource
-
     include = _.findWhere(includes, findConditions)
 
     if reflection.collection()
@@ -455,6 +455,20 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     else if(potentialTarget = resource.association(reflection.name).target)?
       if !reflection.polymorphic() || potentialTarget.klass().queryName == findConditions['type']
         target = potentialTarget
+
+    buildResourceOptions = {}
+    if reflection.polymorphic()
+      parentReflection = reflection.polymorphicInverseOf(this.resourceLibrary.constantize(_.singularize(s.classify(relationshipData['type']))))
+    else
+      parentReflection = reflection.inverseOf()
+
+    if parentReflection?
+      buildResourceOptions.parentRelationship = {}
+      buildResourceOptions.parentRelationship[parentReflection.name] =
+        if parentReflection.collection()
+          [resource]
+        else
+          resource
 
     if target?
       buildResourceOptions.existingResource = target

@@ -33,6 +33,7 @@ class MyLibrary::Order extends MyLibrary.Base
 
   this.belongsTo 'customer', inverseOf: 'orders'
   this.belongsTo 'giftCard'
+  this.belongsTo 'paymentSource', polymorphic: true, inverseOf: 'orders'
   this.belongsTo 'product'
 
   this.hasMany 'comments', as: 'resource', autosave: true, inverseOf: 'resource'
@@ -49,6 +50,7 @@ class MyLibrary::PaymentMethod extends MyLibrary.Base
   this.className = 'PaymentMethod'
   this.queryName = 'payment_methods'
 
+  this.hasMany 'orders', as: 'paymentSource', inverseOf: 'paymentSource'
   this.hasMany 'transactions'
 
 class MyLibrary::Product extends MyLibrary.Base

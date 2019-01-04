@@ -60,6 +60,16 @@
           "self": "https://example.com/api/v1/orders/1/relationships/customer/",
           "related": "https://example.com/api/v1/orders/1/customer/"
         }
+      },
+      "payment_source": {
+        "data": {
+          "id": "1",
+          "type": "payment_methods"
+        },
+        "links": {
+          "self": "https://example.com/api/v1/orders/1/relationships/customer/",
+          "related": "https://example.com/api/v1/orders/1/customer/"
+        }
       }
     },
     "links": {
@@ -95,6 +105,16 @@
       },
       "links": {
         "self": "https://example.com/api/v1/customers/1/"
+      }
+    },
+    {
+      "id": "1",
+      "type": "payment_methods",
+      "attributes": {
+        "value": 10.0
+      },
+      "links": {
+        "self": "https://example.com/api/v1/comments/1/"
       }
     }
   ]

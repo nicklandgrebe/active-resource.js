@@ -89,3 +89,4 @@ changes to each resource
 
 ### Master
 * Ensure `Errors#propagate` adds full error to root resource instead of just propagating them to nested resources
+* Fix polymorphic relationship construction from server

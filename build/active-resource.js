@@ -532,14 +532,20 @@
           value: function toUnderscored(object) {
             var _this2 = this;
 
-            var k, underscored, v;
+            var k, underscored, underscorize, v;
             underscored = {};
+
+            underscorize = function underscorize(value) {
+              if (_.isObject(value) && !(typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Base) : void 0) && !(typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Collection) : void 0) && !_.isDate(value)) {
+                return _this2.toUnderscored(value);
+              } else {
+                return value;
+              }
+            };
 
             for (k in object) {
               v = object[k];
-              underscored[s.underscored(k)] = _.isArray(v) ? _.map(v, function (i) {
-                return _this2.toUnderscored(i);
-              }) : _.isObject(v) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Collection) : void 0) && !_.isDate(v) ? this.toUnderscored(v) : v;
+              underscored[s.underscored(k)] = _.isArray(v) ? _.map(v, underscorize) : underscorize(v);
             }
 
             return underscored;
@@ -554,18 +560,20 @@
           value: function toCamelCase(object) {
             var _this3 = this;
 
-            var camelized, k, v;
+            var camelize, camelized, k, v;
             camelized = {};
+
+            camelize = function camelize(value) {
+              if (_.isObject(value) && !(typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Base) : void 0) && !(typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Collection) : void 0)) {
+                return _this3.toCamelCase(value);
+              } else {
+                return value;
+              }
+            };
 
             for (k in object) {
               v = object[k];
-              camelized[s.camelize(k)] = _.isArray(v) ? _.map(v, function (i) {
-                if (_.isObject(i)) {
-                  return _this3.toCamelCase(i);
-                } else {
-                  return i;
-                }
-              }) : _.isObject(v) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) && !(typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Collection) : void 0) ? this.toCamelCase(v) : v;
+              camelized[s.camelize(k)] = _.isArray(v) ? _.map(v, camelize) : camelize(v);
             }
 
             return camelized;
@@ -965,13 +973,6 @@
               type: relationshipData.type
             };
             findConditions[primaryKey] = relationshipData[primaryKey];
-            buildResourceOptions = {};
-
-            if ((parentReflection = reflection.inverseOf()) != null) {
-              buildResourceOptions.parentRelationship = {};
-              buildResourceOptions.parentRelationship[parentReflection.name] = resource;
-            }
-
             include = _.findWhere(includes, findConditions);
 
             if (reflection.collection()) {
@@ -982,6 +983,19 @@
               if (!reflection.polymorphic() || potentialTarget.klass().queryName === findConditions['type']) {
                 target = potentialTarget;
               }
+            }
+
+            buildResourceOptions = {};
+
+            if (reflection.polymorphic()) {
+              parentReflection = reflection.polymorphicInverseOf(this.resourceLibrary.constantize(_.singularize(s.classify(relationshipData['type']))));
+            } else {
+              parentReflection = reflection.inverseOf();
+            }
+
+            if (parentReflection != null) {
+              buildResourceOptions.parentRelationship = {};
+              buildResourceOptions.parentRelationship[parentReflection.name] = parentReflection.collection() ? [resource] : resource;
             }
 
             if (target != null) {

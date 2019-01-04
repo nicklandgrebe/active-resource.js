@@ -535,3 +535,16 @@ describe 'ActiveResource', ->
 
             it 'persists resource', ->
               expect(@result.persisted()).toBeTruthy()
+
+      describe 'when included is polymorphic relationship target', ->
+        beforeEach ->
+          @result =
+            @interface.findResourceForRelationship(
+              @response.data.relationships.payment_source.data,
+              @response.included,
+              @resource,
+              @resource.klass().reflectOnAssociation('paymentSource')
+            )
+
+        it 'builds polymorphic relationship using inverse', ->
+          expect(@result.orders().target().first()).toBe(@resource)

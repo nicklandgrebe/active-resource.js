@@ -22,7 +22,7 @@ describe 'ActiveResource', ->
       it 'returns fields', ->
         @promise.then =>
           expect(@resource.klass().fields().toArray().sort()).toEqual([
-            'price', 'customer', 'comments', 'giftCard', 'orderItems', 'product', 'transactions'
+            'price', 'customer', 'comments', 'giftCard', 'orderItems', 'paymentSource', 'product', 'transactions'
           ].sort())
 
     describe 'updating changed fields', ->
