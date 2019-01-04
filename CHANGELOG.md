@@ -86,3 +86,6 @@ changes to each resource
 * Allow arrays of values/resources to be supplied as `where` values
 * Allow `Relation` to inherit custom class methods from the base class it starts from
 * Add Node.js support
+
+### Master
+* Ensure `Errors#propagate` adds full error to root resource instead of just propagating them to nested resources

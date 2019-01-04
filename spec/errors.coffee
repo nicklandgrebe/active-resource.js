@@ -37,6 +37,9 @@ describe 'ActiveResource', ->
 
           @resource.errors().propagate(errors)
 
+        it 'adds error to root resource', ->
+          expect(@resource.errors().forField('orders.price').size()).toEqual(1)
+
         it 'propagates errors to nested resource', ->
           expect(@resource.orders().target().first().errors().forField('price').size()).toEqual(1)
 
@@ -53,6 +56,9 @@ describe 'ActiveResource', ->
           ])
 
           @resource.errors().propagate(errors)
+
+        it 'adds error to root resource', ->
+          expect(@resource.errors().forField('merchant.name').size()).toEqual(1)
 
         it 'propagates error to nested resource', ->
           expect(@resource.merchant().errors().forField('name').size()).toEqual(1)

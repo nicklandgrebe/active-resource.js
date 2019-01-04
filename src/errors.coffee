@@ -56,12 +56,15 @@ ActiveResource.Errors = class ActiveResource::Errors
     )
 
   # Propagates errors with nested fields down through relationships to their appropriate resources
+  # TODO: Propagate errors to appropriate collection item instead of just first
   #
   # @param [ActiveResource.Collection<Object>] errors the errors to propagate down the resource
   propagate: (errors) ->
     errors.each((error) =>
       nestedField = error.field.split('.')
       field = nestedField.shift()
+
+      @push(error);
 
       try
         association = @base.association(field)
@@ -75,8 +78,6 @@ ActiveResource.Errors = class ActiveResource::Errors
           association.target.first()?.errors().propagate(nestedErrors)
         else
           association.target?.errors().propagate(nestedErrors)
-      catch
-        @push(error)
     )
 
   # Adds an existing error with field to this errors object

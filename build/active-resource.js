@@ -2326,6 +2326,7 @@
             return _this11.__add.apply(_this11, _toConsumableArray(error));
           });
         } // Propagates errors with nested fields down through relationships to their appropriate resources
+        // TODO: Propagate errors to appropriate collection item instead of just first
         // @param [ActiveResource.Collection<Object>] errors the errors to propagate down the resource
 
       }, {
@@ -2338,6 +2339,8 @@
             nestedField = error.field.split('.');
             field = nestedField.shift();
 
+            _this12.push(error);
+
             try {
               association = _this12.base.association(field);
               nestedError = _.clone(error);
@@ -2349,9 +2352,7 @@
               } else {
                 return (ref1 = association.target) != null ? ref1.errors().propagate(nestedErrors) : void 0;
               }
-            } catch (error1) {
-              return _this12.push(error);
-            }
+            } catch (error1) {}
           });
         } // Adds an existing error with field to this errors object
         // @param [Object] error the error to push onto this errors object
