@@ -596,14 +596,16 @@
               var transformValue;
 
               transformValue = function transformValue(v) {
-                if (typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0) {
+                if (v != null ? typeof v.isA === "function" ? v.isA(ActiveResource.prototype.Base) : void 0 : void 0) {
                   return v[v.klass().primaryKey];
+                } else if (_.isNull(v)) {
+                  return '%00';
                 } else {
                   return v;
                 }
               };
 
-              if (_.isArray(value) || (typeof value.isA === "function" ? value.isA(ActiveResource.Collection) : void 0)) {
+              if (_.isArray(value) || (value != null ? typeof value.isA === "function" ? value.isA(ActiveResource.Collection) : void 0 : void 0)) {
                 return ActiveResource.Collection.build(value).map(function (v) {
                   return transformValue(v);
                 }).join();

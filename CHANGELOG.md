@@ -83,10 +83,13 @@ changes to each resource
   on it to define fields directly in the class
 
 ## 1.0.0-alpha.3
+
 * Allow arrays of values/resources to be supplied as `where` values
 * Allow `Relation` to inherit custom class methods from the base class it starts from
 * Add Node.js support
 
 ### Master
+
 * Ensure `Errors#propagate` adds full error to root resource instead of just propagating them to nested resources
 * Fix polymorphic relationship construction from server
+* Allow `null` values for where filters

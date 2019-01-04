@@ -148,6 +148,14 @@ describe 'ActiveResource', ->
           @paramStr = requestParams(moxios.requests.mostRecent())
           expect(@paramStr).toContain('filter[token]=jshf8e&filter[another]=param')
 
+      describe 'when value is null', ->
+        it 'sets filter to null', ->
+          MyLibrary::OrderItem.where(order: null).all()
+
+          moxios.wait =>
+            @paramStr = requestParams(moxios.requests.mostRecent())
+            expect(@paramStr).toContain('filter[order]=%00')
+
       describe 'when value is resource', ->
         it 'adds resource primary key as value', ->
           MyLibrary::OrderItem.where(order: MyLibrary::Order.build(id: '5')).all()

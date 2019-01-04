@@ -116,12 +116,14 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     this.toUnderscored(
       _.mapObject filters, (value) ->
         transformValue = (v) ->
-          if v.isA?(ActiveResource::Base)
+          if v?.isA?(ActiveResource::Base)
             v[v.klass().primaryKey]
+          else if _.isNull(v)
+            '%00'
           else
             v
 
-        if _.isArray(value) || value.isA?(ActiveResource.Collection)
+        if _.isArray(value) || value?.isA?(ActiveResource.Collection)
           ActiveResource.Collection.build(value).map((v) => transformValue(v)).join()
         else
           transformValue(value)
