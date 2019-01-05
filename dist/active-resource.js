@@ -1,5 +1,5 @@
 /*
-	active-resource 1.0.0-beta.0
+	active-resource 1.0.0-beta.1
 	(c) 2019 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	active-resource may be freely distributed under the MIT license
 	Portions of active-resource were inspired by or borrowed from Rail's ActiveRecord library
@@ -1314,7 +1314,7 @@
               queryParams = resourceData.queryParams();
 
               if (queryParams['fields'] != null) {
-                data['fields'] = this.buildSparseFieldset(queryParams['fields']);
+                data['fields'] = this.buildSparseFieldset(queryParams['fields'], queryParams);
               }
 
               if (queryParams['include'] != null) {
@@ -1360,7 +1360,7 @@
               queryParams = resourceData.queryParams();
 
               if (queryParams['fields'] != null) {
-                data['fields'] = this.buildSparseFieldset(queryParams['fields']);
+                data['fields'] = this.buildSparseFieldset(queryParams['fields'], queryParams);
               }
 
               if (queryParams['include'] != null) {

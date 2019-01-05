@@ -95,3 +95,7 @@ changes to each resource
 * Allow `null` values for where filters
 * Merge `includes` with `fields` in JSON:API interface so includes aren't left out when fields are used
 * Change README to Javascript
+
+## 1.0.0-beta.1
+
+* Fix bug introduced by 28c8f7a
