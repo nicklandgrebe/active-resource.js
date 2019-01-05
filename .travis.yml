@@ -4,7 +4,7 @@ node_js:
 before_script:
   - npm install grunt-cli -g
 
-script: 'grunt spec'
+script: 'grunt travis --verbose'
 
 notifications:
   email: false

@@ -156,6 +156,35 @@ module.exports = function(grunt) {
             }
           }
         }
+      },
+      travis: {
+        options: {
+          keepRunner: true,
+          specs: 'spec/spec.js',
+          vendor: [
+            '/node_modules/jquery/dist/jquery.min.js'
+          ],
+          template: require('grunt-template-jasmine-requirejs'),
+          templateOptions: {
+            requireConfig: {
+              baseUrl: '/',
+              paths: {
+                "axios": '/node_modules/axios/dist/axios',
+                "moxios": '/node_modules/moxios/dist/moxios.min',
+                "es6-promise": '/node_modules/es6-promise/dist/es6-promise',
+                "qs": '/node_modules/qs/dist/qs',
+                "underscore": '/node_modules/underscore/underscore-min',
+                "underscore.string": '/node_modules/underscore.string/dist/underscore.string',
+                "underscore.inflection": '/node_modules/underscore.inflection/lib/underscore.inflection',
+                "active-resource": '/build/active-resource',
+                "jquery": '/node_modules/jquery/dist/jquery.min',
+                "jasmine-jquery": '/node_modules/jasmine-jquery/lib/jasmine-jquery',
+                "jasmine-ajax": '/node_modules/jasmine-ajax/lib/mock-ajax',
+                "jasmine-promises": '/node_modules/jasmine-promises/dist/jasmine-promises',
+              }
+            }
+          }
+        }
       }
     }
 
@@ -181,6 +210,12 @@ module.exports = function(grunt) {
     'spec',
     'Compiles and runs the Javascript spec files for ActiveResource.js source code.',
     [ 'clean:specs', 'coffee:specs', 'rollup:specs', 'connect:test', 'jasmine:activeresource' ]
+  );
+
+  grunt.registerTask(
+    'travis',
+    'Compiles and runs the Javascript spec files for ActiveResource.js source code specifically for Travis CI.',
+    [ 'clean:specs', 'coffee:specs', 'rollup:specs', 'jasmine:travis' ]
   );
 
   grunt.registerTask(
