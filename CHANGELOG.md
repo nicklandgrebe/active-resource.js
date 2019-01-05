@@ -88,9 +88,10 @@ changes to each resource
 * Allow `Relation` to inherit custom class methods from the base class it starts from
 * Add Node.js support
 
-### Master
+## 1.0.0-beta.0
 
 * Ensure `Errors#propagate` adds full error to root resource instead of just propagating them to nested resources
 * Fix polymorphic relationship construction from server
 * Allow `null` values for where filters
 * Merge `includes` with `fields` in JSON:API interface so includes aren't left out when fields are used
+* Change README to Javascript
