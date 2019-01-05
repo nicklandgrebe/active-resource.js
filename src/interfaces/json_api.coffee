@@ -679,7 +679,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
       queryParams = resourceData.queryParams()
 
       if queryParams['fields']?
-        data['fields']  = this.buildSparseFieldset(queryParams['fields'])
+        data['fields']  = this.buildSparseFieldset(queryParams['fields'], queryParams)
       data['include'] = this.buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
     _this = this
@@ -708,7 +708,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
       queryParams = resourceData.queryParams()
 
       if queryParams['fields']?
-        data['fields']  = this.buildSparseFieldset(queryParams['fields'])
+        data['fields']  = this.buildSparseFieldset(queryParams['fields'], queryParams)
       data['include'] = this.buildIncludeTree(queryParams['include'])   if queryParams['include']?
 
     _this = this

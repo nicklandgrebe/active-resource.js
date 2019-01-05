@@ -1307,7 +1307,7 @@
               queryParams = resourceData.queryParams();
 
               if (queryParams['fields'] != null) {
-                data['fields'] = this.buildSparseFieldset(queryParams['fields']);
+                data['fields'] = this.buildSparseFieldset(queryParams['fields'], queryParams);
               }
 
               if (queryParams['include'] != null) {
@@ -1353,7 +1353,7 @@
               queryParams = resourceData.queryParams();
 
               if (queryParams['fields'] != null) {
-                data['fields'] = this.buildSparseFieldset(queryParams['fields']);
+                data['fields'] = this.buildSparseFieldset(queryParams['fields'], queryParams);
               }
 
               if (queryParams['include'] != null) {
