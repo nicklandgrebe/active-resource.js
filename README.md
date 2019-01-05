@@ -1,21 +1,24 @@
 # ActiveResource.js - API Resource relational mapping in Javascript
-Welcome to ActiveResource.js, an API resource relational mapping library for JavaScript.
-
-ActiveResource.js is designed to make
-interacting with resources stored on a RESTful server more free-flowing and holistic than simpler solutions like
-`ngResource`. ActiveResource.js constructs and executes requests and formats responses into
+Welcome to ActiveResource.js, an API resource ORM library for JavaScript.
+<br/>
+<br/>
+ActiveResource.js is designed to make interacting with resources stored on a RESTful server more free-flowing and holistic than simpler solutions like
+`ngResource` or creating your own requests for each CRUD operation in your API. ActiveResource.js constructs and executes requests and formats responses into
 meaningful resource representations on the client side, allowing you to perform CRUD operations, as well
 as interact with and modify the various relationships of resources effortlessly.
-
+<br/>
+<br/>
 ActiveResource.js is inspired heavily by [Active Record](https://github.com/rails/rails/tree/master/activerecord), the well known
-ORM for Ruby on Rails. In the same way that Active Record makes interacting with relational databases trivial in most of the
+ORM for Ruby on Rails. In the same way that Active Record and other libraries like it make interacting with relational databases trivial in most of the
 use cases that might be required of a server side application, ActiveResource.js aims to make interacting with
-RESTful servers trivial in most of the use cases that might be required of a client side application.
-
+RESTful servers trivial in most of the use cases required of a client side application.
+<br/>
+<br/>
 The library provides a base class that, when subclassed, sets up a mapping between the new class
 and an existing resource on the server. Resources can be connected to other resources in two ways: through client side interaction (whose behavior is defined
 by associations), and by making requests to persist the association on the server.
-
+<br/>
+<br/>
 ActiveResource.js relies heavily on naming in that it uses class and association names to establish mappings between
 respective resource endpoints, and nested/related resource endpoints. Although these mappings can be defined
 explicitly, it's recommended to follow naming conventions, especially when getting started with the library.
@@ -30,249 +33,259 @@ yard add active-resource
 
 In order to use ActiveResource, you must first create a resource library to hold configuration data for accessing your resources:
 
-```coffee
-# lib/myLibrary.coffee
+```javascript
+// /resources/APILibrary.js
+import { createResourceLibrary } from 'active-resource';
 
-MyLibrary = ActiveResource.createResourceLibrary(
-  'https://example.com/api/v1/', # base url for your server
-  headers: { Authorization: 'Basic ...' }
-)
+export default createResourceLibrary(
+  'https://example.com/api/v1/', // base url for your server
+  headers: { Authorization: 'Bearer ...' }
+);
 ```
 
-Then, you create a resource class for each resource in your library:
+Then, you create a resource class for each resource in your library using `library.createResource`:
 
-```coffee
+```javascript
+// /resources/Product.js
+import APILibrary from './APILibrary';
 
-# lib/myLibrary/product.coffee
+class Product extends MyLibrary.Base {
+  static define() {
+    /* ... */
+  }
+}
 
-class MyLibrary.Product extends MyLibrary.Base
-  this.className = 'Product'
-  this.queryName = 'products'
-
-# **or**
-
-class MyLibrary::Product extends MyLibrary.Base
-  this.className = 'Product'
-  this.queryName = 'products'
+export default APILibrary.createResource(Product);
 ```
 
-Both `className` and `queryName` are required, and you can see what they do in the [configuration section of this page](#config).
+If you use a minification library that changes the names of classes, it is recommended that you set `this.className` inside `define`. See [configuration section of this page](#config) for more details.
 
-Some of the major features include:
+## Features
 
 * * *
 
-* Automated mapping between classes and endpoints, attributes and relationships
+### Automated mapping between classes and endpoints, attributes and relationships
 
-```coffee
-class MyLibrary.Product extends MyLibrary.Base
-  this.className = 'Product'
-  this.queryName = 'products'
+```javascript
+class Product extends MyLibrary.Base {
+  static define() {
+    /* ... */
+  }
+}
+
+export default APILibrary.createResource(Product);
 ```
 
-The Product class is automatically mapped to the RESTful endpoints for product resources on the server, which would all have the URL:
+The Product class is automatically mapped to the RESTful endpoints for product resources on the server with the URL:
 ```
-http://example.com/api/v1/products/
+https://example.com/api/v1/products/
 ```
+
+Create an index file for all your resources so that `createResource` will be called on all of them at the same time:
+
+```javascript
+// /resources/index.js
+
+import Product from './Product';
+
+export {
+  Product
+}
+```
+
+If you don't call `createResource` on a resource class, your ResourceLibrary will not know it exists, and will fail to create relationships between that resource
+and other resources that have had `createResource` called on them.
 
 * * *
 
-* HTTP requests constructable through simple to use chained method calls (a `Relation`)
+### HTTP requests constructable through simple to use chained relation methods
 
-```coffee
-Product.where(title: 'A product title').includes('orders').order(createdAt: 'desc').all()
-Product.select('title').first(5)
-Product.page(2).perPage(1).all()
+```javascript
+await Product.where({ title: 'A product title' }).includes('orders').order({ createdAt: 'desc' }).all();
+await Product.select('title').first(5);
+await Product.page(2).perPage(1).all();
 
-Product.limit(2).offset(2).all()
+await Product.limit(2).offset(2).all();
 
-Product.find(1)
-Product.findBy(title: 'A product title')
+await Product.find(1);
+await Product.findBy({ title: 'A product title' });
 
-Product.each (p) ->
-  ...
+await Product.each((p) => console.log(p));
 
-Product.includes('orders', merchant: ['currency']).all()
+await Product.includes('orders', { merchant: ['currency'] }).all()
 ```
 
-Method calls like `all()` will return a promise, and the response in the promise will be an `ActiveResource::Collection` (see below). If the response is expected to be a single resource (`find`, `findBy`, `first`) it will just be that resource.
-
-**Note:** Due to the current design of JSON API, if you use both `select` and `includes` in the same `Relation` chain, you should add any `includes` to `select`. For example:
-```coffee
-Product.includes('merchant').select('title').all()
-```
-should be:
-```coffee
-Product.includes('merchant').select('title','merchant').all()
-```
-This is because the JSON API spec defines both attributes and relationships as `fields`, which is what the `select` method constructs. So
-if you want to include a relationship and you also plan on `select`ing fields, make sure that you specify any includes as a field using
-`select`. This does not apply if you only want to use `includes` without `select`.
+Method calls like `all()` will return a promise, and the response to the promise will be an `ActiveResource.Collection` (see [below](#collection)).
+If the response is expected to be a single resource (`find`, `findBy`, `first`) it will just be that resource.
 
 * * *
 
-* Persistence methods that simplify managing of resources
+### Persistence methods that simplify managing of resources
 
-```coffee
-product = Product.build(title: 'A product title')
-product.save ->
-  if product.valid()
-    product.persisted() # == true
-  else
-    product.errors().empty() # == false
+```javascript
+product = Product.build({ title: 'A product title' })
+product.save(() => {
+  if(product.valid()) {
+    product.persisted() // true
+  } else {
+    product.errors().empty() // false 
+  }
+})
 
-Product.create title: 'A product title', (product) ->
-  if product.valid()
-    ...
-  else
-    product.newRecord() # == true
+Product.create({ title: 'A product title' }, (product) => {
+  if(product.valid()) {
+    /* ... */
+  } else {
+    product.newRecord() // true
+  }
+})
 
 Product.first()
-.then (product) ->
-  product.update title: 'A new title'
+.then((product) => {
+  product.update({ title: 'A new title' })
+})
 
 Product.first()
-.then (product) ->
+.then((product) => {
   product.destroy()
+})
 
 Product.first()
-.then (product) ->
+.then((product) => {
   product.reload()
+})
 ```
 
 * * *
 
-* Associations between objects defined by simple class methods
+### Associations between objects defined by simple class methods
 
-```coffee
-class MyLibrary.Product extends MyLibrary.Base
-  @hasMany 'orders'
+```javascript
+class Product extends MyLibrary.Base {
+  static define() {
+    this.hasMany('orders')
+  }
+}
 
-class MyLibrary.Order extends MyLibrary.Base
-  @belongsTo 'product'
+class Order extends MyLibrary.Base {
+  static define() {
+    this.belongsTo('product')
+  }
+}
 ```
 
 This defines a number of methods on each class. For `hasMany`:
-```coffee
+```javascript
 product = Product.build()
-product.orders()             # collection proxy to use for more queries (see below)
-product.orders().toArray()   # read
-product.orders().build()     # local construction
-product.orders().create()    # persisted construction
-product.orders().assign()    # persisted assignment
-product.orders().push()      # persisted concatenation
-product.orders().delete()    # persisted deletion of association (not the resources themselves)
-product.orders().deleteAll()
-product.orders().reload()
-product.orders().empty()     # NOTE: Only indicates if the collection currently loaded is empty
-product.orders().size()      # NOTE: Only gives the size of the collection currently loaded
+product.orders()             // collection proxy to use for more queries (see below)
+product.orders().build()     // local construction
+await product.orders().create()    // persisted construction
+await product.orders().assign()    // persisted assignment
+await product.orders().push()      // persisted concatenation
+await product.orders().delete()    // persisted deletion of association (not the resources themselves)
+await product.orders().deleteAll()
+await product.orders().reload()
+product.orders().target()    // currently loaded collection
+product.orders().toArray()   // currently loaded collection as array
+product.orders().empty()     // Whether or not the current target is empty
+product.orders().size()      // The size of the current target
 ```
 
-In regards to association collection proxies, you can work off them just like you would any other ActiveResource `Relation` class:
-```coffee
-product.orders().where(title: 'A product title').select('title').last(10)
-.then (orders) ->
-  # result will only be orders related to `product`
+In regards to association collection proxies, you can work off them just like you would any other ActiveResource relation:
+```javascript
+product.orders().where({ title: 'A product title' }).select('title').last(10)
+.then((orders) => {
+  // orders related to the product
+})
 
-product.orders().includes('merchant').create title: 'A product title', (order) ->
-  if order.valid()
-    order.merchant() # != null, was included in response
-  else
+product.orders().includes('merchant').create({ title: 'A product title' }, (order) => {
+  if(order.valid()) {
+    order.merchant() // included in response
+  } else {
     order.errors()
+  }
+})
 ```
 
-It is important to note that none of the `hasMany` methods above will assign the actual target of the association to their result,
+None of the `hasMany` methods above will assign the actual `target()` of the association to their result,
 nor will the association be considered "loaded." For example:
-```coffee
-product.orders().where(title: 'A product title').select('title').last(10)
-.then (orders) ->
-  orders # != []
-  product.orders().toArray() # == []
-  product.association('orders').loaded() # == false
+```javascript
+product.orders().where({ title: 'A product title' }).select('title').last(10)
+.then((orders) => {
+  orders // not empty
+  product.orders().target() // empty
+  product.association('orders').loaded() // false
+})
 ```
 
-To accomplish this, one must *load* the association either in the initial query, or at some later point in time:
-```coffee
+To accomplish this, one must `load` the association either in the initial query, or at some later point in time:
+```javascript
 Product.includes('orders').first()
-.then (product) ->
-  product.orders().toArray() # != []
-  product.association('orders').loaded() # == true
+.then((product) => {
+  product.orders().target() // not empty
+  product.association('orders').loaded() // true  
+});
 
 Product.first()
-.then (product) ->
-  product.association('orders').loaded() # == false
+.then((product) => {
+  product.association('orders').loaded() // false
 
-  product.loadOrders()
-  .then ->
-    product.association('orders').loaded() # == true
-
-  product.orders().loadTarget()
-  .then ->
-    product.association('orders').loaded() # == true
-
-  product.orders().reload()
-  .then ->
-    product.association('orders').loaded() # == true
-```
-
-**In general, it is best to include every association you'll need to do your business in the very first query.**
-
-It is also worth noting that most `Relation` methods (and association `Relation` methods here) will return promises, and do not
-hit any sort of cache. If you want to make a synchronous method call that gives you the current target of the association (loaded or not), you have a few options:
-
-```coffee
-Product.includes('orders').first()
-.then (product) ->
-  product.orders().all(cached: true)
-
-  product.orders().toArray()
+  product.orders().load()
+  .then(() => {
+    product.association('orders').loaded() // true
+  });
+});
 ```
 
 There are a number of methods defined for singular associations (`hasOne`, `belongsTo`) as well:
 
-```coffee
+```javascript
 order = Order.build()
-order.product()       # read locally
-order.loadProduct()   # read persisted
-order.assignProduct() # assign locally
-order.updateProduct() # persist assignment
-order.buildProduct()  # local construction
-order.createProduct() # persist construction
+order.product()       // read locally
+await order.loadProduct()   // read persisted
+
+order.assignProduct() // assign locally
+await order.updateProduct() // persist assignment
+
+order.buildProduct()  // local construction
+await order.createProduct() // persist construction
 ```
 
 **You should never make a direct assignment like `product=`, because ActiveResource is not aware when this happens and it may cause unexpected results.**
 
 * * *
 
-* Reflections on associations
+### Reflections on associations
 
-```coffee
-Order.reflectOnAllAssociations().each (reflection) ->
-  reflection.name # == 'product'
-  reflection.macro # == 'belongsTo'
-  reflection.klass() # == Product
+```javascript
+let reflection = Order.reflectOnAssociation('product');
+reflection.name // 'product'
+reflection.macro // 'belongsTo'
+reflection.klass() // Product
 
-Order.reflectOnAssociation('product')
+Order.reflectOnAllAssociations().each((reflection) => { /* ... */ });
 ```
 
 * * *
 
-* Attribute management
+### Attribute management
 
-```coffee
-class MyLibrary.Order extends MyLibrary.Base
-  @attributes('price', 'quantity')
+```javascript
+class Order extends MyLibrary.Base {
+  static define() {
+    this.attributes('price', 'quantity')   
+  }
+}
 
 order = Order.build()
 
-order.assignAttributes(price: 5.0)
-order.attributes() # == { price: 5.0 }
+order.assignAttributes({ price: 5.0 })
+order.attributes() // { price: 5.0 }
 ```
 
 * * *
 
-* Change tracking
-
+### Change tracking
 
 Defining `attributes` on resource classes allows changes to those attributes to be tracked, as will
 relationships defined using `hasMany`, `belongsTo`, etc.
@@ -280,91 +293,82 @@ relationships defined using `hasMany`, `belongsTo`, etc.
 The result is that when saving an existing resource (updating / `PATCH` request), only those
 attributes and relationships that have changed will be submitted to server.
 
-```coffee
+```javascript
 Order.find(1)
-.then (order) =>
-  order.price # == 5.0
-  order.quantity # == 2
+.then((order) => {
+  order.price // 5.0
+  order.quantity // 2
   
-  order.price = 10.0
+  order.price = 10.0;
   
-  order.changedFields().toArray() # => ['price']
+  order.changedFields().toArray() // ['price']
   
-  order.save # only sends change to price to server
+  order.save() // only sends +price+ to server
+});
 ```
 
 * * *
 
-* Better typing, constantizing, module mixins than Javascript alone
+### Typing
 
-```coffee
-Order.build().isA(Order) # == true
-Order.build().isA(Product) # == false
+```javascript
+Order.build().isA(Order) // true
+Order.build().isA(Product) // false
 
-Order.build().klass() # == Order
-```
-
-```coffee
-class MyLibrary.Order extends MyLibrary.Base
-  this.className = 'Order'
-
-MyLibrary.constantize('Order') # == MyLibrary.Order
-```
-
-```coffee
-class MyModule
-  @method1: ->
-
-class Order extends MyLibrary.Base
-  ActiveResource.extend(this, MyModule)
-
-Order.method1 # defined
-
-class Product extends MyLibrary.Base
-  ActiveResource.include(this, MyModule)
-
-Order.build().method1 # defined
+Order.build().klass() // Order
 ```
 
 * * *
 
-* A wrapper class for Array that is similar to Ruby Array functionality
+<a name="collection"></a>
 
-```coffee
-c = ActiveResource::Collection.build([product1, product2])
+### Collections
 
-c.all()
-c.toArray()
-c.size()
-c.empty()
-c.include(item)
-c.first(n)
-c.last(n)
-c.each (i) -> ...
-c.inject {}, (h, i) -> ...
-c.map (i) -> ...
-c.compact()
-c.flatten()
-c.join()
-c.push(items)
-c.delete(items)
-c.clear()
-c.select (i) -> ...
-c.detect (i) -> ...
+```javascript
+let collection = ActiveResource.Collection.build([product1, product2])
+
+collection.all()
+collection.toArray()
+collection.size()
+collection.empty()
+collection.include(item)
+collection.first(n)
+collection.last(n)
+collection.each((i) => /* ... */)
+collection.map((i) => /* ... */)
+collection.inject({}, (memo, iterator) => /* ... */)
+collection.compact()
+collection.flatten()
+collection.join()
+collection.push(items)
+collection.delete(items)
+collection.clear()
+collection.select((i) => /* ... */)
+collection.detect((i) => /* ... */)
 ```
-These make use of Underscore.js. [Learn more](http://docs.ruby-lang.org/en/2.0.0/Array.html)
 
-This is the class that will be returned from `Relation#all()`, etc.
+`Collection` is returned from requests for collections such as `all()` and `hasManyAssociation.target()`.
+
+### Pagination
+
+```javascript
+Order.perPage(10).all()
+.then(async (orders) => {
+  if(orders.hasNextPage()) await orders.nextPage();
+  
+  if(orders.hasPrevPage()) await orders.prevPage();
+})
+```
 
 * * *
 
 <a name="config"></a>
 
-* Customization through properties/options on the library itself, as well as base classes and associations:
+### Configuration
 
 #### `ResourceLibrary.baseUrl`
 
-```coffee
+```javascript
 ActiveResource.createResourceLibrary(
   'http://example.com/api/v1'
 )
@@ -374,10 +378,13 @@ ActiveResource.createResourceLibrary(
 
 #### `ResourceLibrary.headers`
 
-```coffee
+```javascript
 ActiveResource.createResourceLibrary(
-  headers: {
-    'Authorization': 'Basic xxx'
+  'http://example.com/api/v1',
+  {
+    headers: {
+      'Authorization': 'Bearer [TOKEN]'
+    }
   }
 )
 ```
@@ -387,144 +394,154 @@ ActiveResource.createResourceLibrary(
 
 #### `ResourceLibrary.constantizeScope`
 
-```coffee
-MyLibrary = ActiveResource.createResourceLibrary(
-  constantizeScope: window
+```javascript
+let MyLibrary = ActiveResource.createResourceLibrary(
+  'http://example.com/api/v1',
+  {
+    constantizeScope: window
+  }
 )
 
-class window.Product extends MyLibrary.Base
-  this.className = 'Product'
+MyLibrary.createResource(
+  class Product extends MyLibrary.Base {}
+)
 
-MyLibrary.constantize('Product') # == window.Product
+window.Product // defined
 ```
 
-*This property is optional, and defaults to null.* It specifies the object to search properties of when looking up a class name to find a class constant. If null, ActiveResource will search both `MyLibrary` and `MyLibrary::`, if your resource library variable were named `MyLibrary`.
+*This property is optional, and defaults to null.* It specifies the object to assign classes to. If null, classes will be added as properties to your `ResourceLibrary`.
 
 #### `ResourceLibrary.interface`
 
-```coffee
+```javascript
 ActiveResource.createResourceLibrary(
-  interface: MyCustomInterface
+  'http://example.com/api/v1',
+  {
+    interface: MyCustomInterface
+  }
 )
 ```
 
 *This property is optional and defaults to `ActiveResource.Interfaces.JsonApi`.* `Interface`s allow you to define the interface between
 a server and ActiveResource, constructing requests from input data, and constructing objects from response data. Right now, the only
-interface that is supported is `JsonApi`, which is in accordance with the [JSON API specification](http://jsonapi.org/).
+interface that is supported internally is `JsonApi`, which is in accordance with the [JSON API specification](http://jsonapi.org/).
+
+You can create your own custom interface if your API adheres to its own standard by extending `ActiveResource.Interfaces.Base`.
 
 #### `Base.className`
 
-```coffee
-class Product extends MyLibrary.Base
-  this.className = 'Product'
+```javascript
+class Product extends MyLibrary.Base {
+  static define() {
+    this.className = 'Product';
+  }
+}
 ```
 
-**This property is required.** It is so the library will continue to work in minified environments, where a call to `constructor.name` might yield a random result instead of the intended class name.
+**This property is optional.** It is so the library will continue to work in minified environments, where a call to `constructor.name` might yield a random result instead of the intended class name.
 
 #### `Base.queryName`
 
-```coffee
-class Product extends MyLibrary.Base
-  this.queryName = 'products'
+```javascript
+class Product extends MyLibrary.Base {
+  static define() {
+    this.queryName = 'products'
+  }
+}
 ```
 
-**This property is required.** This is the name that will be used in URLs, so a call like `Product.all()` will result in an HTTP request `GET /api/v1/products`
+**This property is optional.** This is the name that will be used in URLs, so a call like `Product.all()` will result in an HTTP request `GET /api/v1/products`. Defaults to the pluralized form of `className` above.
 
 #### `Base.primaryKey`
 
-```coffee
-class Product extends MyLibrary.Base
-  this.primaryKey = 'token'
+```javascript
+class Product extends MyLibrary.Base {
+  static define() {
+    this.primaryKey = 'token'
+  }
+}
 ```
 
-*This property is optional.* It tells ActiveResource which property in a response object is the primaryKey of the resource being returned,
-as well as telling ActiveResource which key to use when making foreign key assignments
+*This property is optional.* It tells ActiveResource which attribute is the primaryKey of the resource.
 
 #### `Association.className`
 
-```coffee
-class Product extends MyLibrary.Base
-  @hasMany 'specialOrders', className: 'Order'
+```javascript
+class Product extends MyLibrary.Base {
+  static define() {
+    this.hasMany('specialOrders', { className: 'Order' })
+  }
+}
 
-class Order extends MyLibrary.Base
-  @belongsTo 'product'
+class Order extends MyLibrary.Base {
+  static define() {
+    this.belongsTo('product')
+  }
+}
 ```
 
-This option allows you to name an association by one name, but have that association refer to an existing class of a different name
+This option allows you to name an association by one name, but have that association refer to an existing class of a different name.
 
 #### `Association.as` && `Association.polymorphic`
 
-```coffee
-class Product extends MyLibrary.Base
-  @hasMany 'orders', as: 'resource'
+```javascript
+class Product extends MyLibrary.Base {
+  static define() {
+    this.hasMany('orders', { as: 'resource', inverseOf: 'resource' })
+  }
+}
 
-class Store extends MyLibrary.Base
-  @hasMany 'orders', as: 'resource'
+class Service extends MyLibrary.Base {
+  static define() {
+    this.hasMany('orders', { as: 'resource', inverseOf: 'resource' })
+  }
+}
 
-class Order extends MyLibrary.Base
-  @belongsTo 'resource', polymorphic: true
+class Order extends MyLibrary.Base {
+  static define() {
+    this.belongsTo('resource', { polymorphic: true, inverseOf: 'orders' })
+  }
+}
 ```
 
-These options work together to allow for polymorphic associations between models.
+These options work together to allow for polymorphic associations between models. See `inverseOf` explanation below.
 
 #### `Association.inverseOf`
 
-```coffee
-class Product extends MyLibrary.Base
-  @hasMany 'orders', inverseOf: 'product'
+```javascript
+class Product extends MyLibrary.Base {
+  static define() {
+    this.hasMany('orders', { inverseOf: 'product' })
+  }
+}
 
-class Order extends MyLibrary.Base
-  @belongsTo 'product', inverseOf: 'orders'
+class Order extends MyLibrary.Base {
+  static define() {
+    this.belongsTo('product', { inverseOf: 'product' })
+  }
+}
 ```
 
 This option allows you to define the inverse of an association on a class. Typically, this is done automatically, but there are cases,
 like polymorphic relationships, where this cannot be done automatically, and it is extremely useful and highly recommended to provide `inverseOf` in those instances.
 
-#### `Association.foreignKey`
-
-```coffee
-class Product extends MyLibrary.Base
-  @hasMany 'orders', foreignKey: 'ownerProductId'
-
-class Order extends MyLibrary.Base
-  @belongsTo 'ownerProduct', className: 'Product'
-
-Product.first()
-.then (product) ->
-  order = product.orders().build() # order.ownerProductId == product.id
-```
-
-This option allows you to define the foreign key that is set on a child association (`belongsTo`) when assignments/constructions are
-made.
-
-#### `Association.primaryKey`
-
-```coffee
-class Product extends MyLibrary.Base
-  @hasMany 'orders', primaryKey: 'token', foreignKey: 'ownerProductId'
-
-class Order extends MyLibrary.Base
-  @belongsTo 'ownerProduct', className: 'Product'
-
-Product.first()
-.then (product) ->
-  order = product.orders().build() # order.ownerProductId == product.token
-```
-
-This option allows you to define the primary key of the parent association that is assigned as the foreign key to the child association
-when assignments/constructions are made.
-
 #### `Association.autosave`
 
-```coffee
-class Order extends MyLibrary.Base
-  @hasMany 'orderItems', autosave: true
+```javascript
+class Order extends MyLibrary.Base {
+  static define() {
+    this.hasMany('orderItems', { autosave: true })
+  }
+}
 
-class OrderItem extends MyLibrary.Base
-  @belongsTo 'order'
+class OrderItem extends MyLibrary.Base {
+  static define() {
+    this.belongsTo('order')
+  }
+}
 
-order = Order.build(orderItems: [OrderItem.build(amount: 5.0)])
-order.save() # sends orderItems attributes to server too
+let order = Order.build({ orderItems: [OrderItem.build({ amount: 5.0 })] });
+await order.save() // sends orderItems attributes to server too
 ```
 
-This option allows you to specify that associated object(s) of a resource should be saved when the resource itself is saved.
+This option allows you to specify that associated resources(s) of a resource should be saved with the resource itself.
