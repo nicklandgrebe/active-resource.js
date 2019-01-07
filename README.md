@@ -22,6 +22,9 @@ by associations), and by making requests to persist the association on the serve
 ActiveResource.js relies heavily on naming in that it uses class and association names to establish mappings between
 respective resource endpoints, and nested/related resource endpoints. Although these mappings can be defined
 explicitly, it's recommended to follow naming conventions, especially when getting started with the library.
+<br/>
+<br/>
+An introduction to ActiveResource.js can be found on the Toptal Engineering Blog at https://www.toptal.com/api-developers/fast-powerful-js-sdks-for-rest-apis .
 
 ## Installation
 
