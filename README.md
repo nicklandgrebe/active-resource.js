@@ -435,9 +435,7 @@ You can create your own custom interface if your API adheres to its own standard
 
 ```javascript
 class Product extends MyLibrary.Base {
-  static define() {
-    this.className = 'Product';
-  }
+  static className = 'Product';
 }
 ```
 
@@ -447,9 +445,7 @@ class Product extends MyLibrary.Base {
 
 ```javascript
 class Product extends MyLibrary.Base {
-  static define() {
-    this.queryName = 'products'
-  }
+  static queryName = 'products';
 }
 ```
 
@@ -459,9 +455,7 @@ class Product extends MyLibrary.Base {
 
 ```javascript
 class Product extends MyLibrary.Base {
-  static define() {
-    this.primaryKey = 'token'
-  }
+  static primaryKey = 'token';
 }
 ```
 
