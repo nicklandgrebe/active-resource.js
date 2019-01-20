@@ -4215,7 +4215,7 @@
                   newCloner: clone
                 }) : void 0) || null;
               });
-              result = _.bind(fn, clone.association(this.reflection.name))(_.isArray(value) && newValue.toArray() || newValue.first());
+              result = _.bind(fn, clone.association(this.reflection.name))(((typeof value.isA === "function" ? value.isA(ActiveResource.Collection) : void 0) || _.isArray(value)) && newValue.toArray() || newValue.first());
 
               if (result.then != null) {
                 return result.then(function () {
