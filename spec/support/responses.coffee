@@ -13,6 +13,10 @@ window.JsonApiResponses =
       success:
         status: 200
         response: getJSONFixture('comments/singular.json')
+    all:
+      success:
+        status: 200
+        response: getJSONFixture('comments/collection.json')
   Customer:
     find:
       includes:

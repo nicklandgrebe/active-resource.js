@@ -1289,6 +1289,28 @@ describe 'ActiveResource', ->
             .then =>
               @relatedResource = window.onSuccess.calls.mostRecent().args[0]
 
+        describe 'load', ->
+          beforeEach ->
+            @resource.comments().load()
+            .then window.onSuccess
+
+            @promise2 = moxios.wait =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.Comment.all.success)
+              .then =>
+                @clone = window.onSuccess.calls.mostRecent().args[0]
+
+          it 'returns owner of relationship', ->
+            @promise2.then =>
+              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+
+          it 'clones resource', ->
+            @promise2.then =>
+              expect(@clone).not.toBe(@resource)
+
+          it 'loads related resources', ->
+            @promise2.then =>
+              expect(@clone.comments().size()).toEqual(2);
+
         describe 'assign', ->
           beforeEach ->
             @promise3 = @promise2.then =>

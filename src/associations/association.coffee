@@ -161,7 +161,7 @@ class ActiveResource::Associations::Association
         .map((val) => val?.__createClone({ cloner: @owner, newCloner: clone }) || null)
 
       result = _.bind(fn, clone.association(this.reflection.name))(
-        _.isArray(value) && newValue.toArray() || newValue.first()
+        (value.isA?(ActiveResource.Collection) || _.isArray(value)) && newValue.toArray() || newValue.first()
       )
 
       if result.then?
