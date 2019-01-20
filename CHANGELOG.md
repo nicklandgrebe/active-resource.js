@@ -99,3 +99,7 @@ changes to each resource
 ## 1.0.0-beta.1
 
 * Fix bug introduced by 28c8f7a
+
+## 1.0.0-beta.2
+
+* Fix bug in `CollectionProxy#load` only loading one item when using immutable mode

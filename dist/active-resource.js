@@ -1,5 +1,5 @@
 /*
-	active-resource 1.0.0-beta.1
+	active-resource 1.0.0-beta.2
 	(c) 2019 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	active-resource may be freely distributed under the MIT license
 	Portions of active-resource were inspired by or borrowed from Rail's ActiveRecord library
@@ -4222,7 +4222,7 @@
                   newCloner: clone
                 }) : void 0) || null;
               });
-              result = _.bind(fn, clone.association(this.reflection.name))(_.isArray(value) && newValue.toArray() || newValue.first());
+              result = _.bind(fn, clone.association(this.reflection.name))(((typeof value.isA === "function" ? value.isA(ActiveResource.Collection) : void 0) || _.isArray(value)) && newValue.toArray() || newValue.first());
 
               if (result.then != null) {
                 return result.then(function () {
