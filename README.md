@@ -29,7 +29,7 @@ An introduction to ActiveResource.js can be found on the Toptal Engineering Blog
 ## Installation
 
 ```
-yard add active-resource
+yarn add active-resource
 ```
 
 ## Getting Started
