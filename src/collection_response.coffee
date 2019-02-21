@@ -37,14 +37,16 @@ ActiveResource.CollectionResponse = class ActiveResource::CollectionResponse ext
   # @return [Promise] a promise to return the previous page of data, or errors
   prevPage: ->
     if this.hasPrevPage()
-      this.first().klass().resourceLibrary.interface.get(this.links()['prev'])
+      this.prevPagePromise ||
+        this.prevPagePromise = this.first().klass().resourceLibrary.interface.get(this.links()['prev'])
 
   # Loads data at links()['next'] if there is a link
   #
   # @return [Promise] a promise to return the next page of data, or errors
   nextPage: ->
     if this.hasNextPage()
-      this.first().klass().resourceLibrary.interface.get(this.links()['next'])
+      this.nextPagePromise ||
+        this.nextPagePromise = this.first().klass().resourceLibrary.interface.get(this.links()['next'])
 
   # Converts this a plain ActiveResource::Collection
   #

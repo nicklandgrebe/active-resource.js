@@ -103,3 +103,7 @@ changes to each resource
 ## 1.0.0-beta.2
 
 * Fix bug in `CollectionProxy#load` only loading one item when using immutable mode
+
+## Master
+
+* Add pagination caching to CollectionResponse
