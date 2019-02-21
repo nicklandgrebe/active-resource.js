@@ -3,7 +3,7 @@ Welcome to ActiveResource.js, an API resource ORM library for JavaScript.
 <br/>
 <br/>
 ActiveResource.js is designed to make interacting with resources stored on a RESTful server more free-flowing and holistic than simpler solutions like
-`ngResource` or creating your own requests for each CRUD operation in your API. ActiveResource.js constructs and executes requests and formats responses into
+`Backbone` and `ngResource` or creating your own requests for each CRUD operation in your API. ActiveResource.js constructs and executes requests and formats responses into
 meaningful resource representations on the client side, allowing you to perform CRUD operations, as well
 as interact with and modify the various relationships of resources effortlessly.
 <br/>
