@@ -2299,7 +2299,7 @@
         key: "prevPage",
         value: function prevPage() {
           if (this.hasPrevPage()) {
-            return this.first().klass().resourceLibrary.interface.get(this.links()['prev']);
+            return this.prevPagePromise || (this.prevPagePromise = this.first().klass().resourceLibrary.interface.get(this.links()['prev']));
           }
         } // Loads data at links()['next'] if there is a link
         // @return [Promise] a promise to return the next page of data, or errors
@@ -2308,7 +2308,7 @@
         key: "nextPage",
         value: function nextPage() {
           if (this.hasNextPage()) {
-            return this.first().klass().resourceLibrary.interface.get(this.links()['next']);
+            return this.nextPagePromise || (this.nextPagePromise = this.first().klass().resourceLibrary.interface.get(this.links()['next']));
           }
         } // Converts this a plain ActiveResource::Collection
         // @return [Collection] the converted collection for this CollectionResponse

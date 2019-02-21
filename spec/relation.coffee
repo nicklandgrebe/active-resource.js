@@ -280,12 +280,28 @@ describe 'ActiveResource', ->
           @promise2.then =>
             expect(@resources.hasNextPage()).toBeTruthy();
 
-        it 'nextPage requests next link', ->
-          @promise2.then =>
-            @resources.nextPage()
+        describe 'requesting nextPage', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @resources.nextPage()
+              .then window.onSuccess
 
-            moxios.wait =>
+              moxios.wait =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.paginated)
+
+          it 'nextPage requests next link', ->
+            @promise3.then =>
               expect(moxios.requests.mostRecent().url).toEqual('https://example.com/api/v1/products?page[number]=3&page[size]=2')
+
+          describe 'requesting same nextPage again', ->
+            beforeEach ->
+              @promise4 = @promise3.then =>
+                @requestCount = moxios.requests.count()
+                @resources.nextPage()
+
+            it 'does not request nextPage again', ->
+              @promise4.then =>
+                expect(@requestCount).toEqual(moxios.requests.count())
 
       describe 'when prev link in response', ->
         beforeEach ->
@@ -298,12 +314,28 @@ describe 'ActiveResource', ->
           @promise2.then =>
             expect(@resources.hasPrevPage()).toBeTruthy();
 
-        it 'prevPage requests next link', ->
-          @promise2.then =>
-            @resources.prevPage()
+        describe 'requesting prevPage', ->
+          beforeEach ->
+            @promise3 = @promise2.then =>
+              @resources.prevPage()
+              .then window.onSuccess
 
-            moxios.wait =>
+              moxios.wait =>
+                moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.paginated)
+
+          it 'prevPage requests prev link', ->
+            @promise3.then =>
               expect(moxios.requests.mostRecent().url).toEqual('https://example.com/api/v1/products?page[number]=1&page[size]=2')
+
+          describe 'requesting same prevPage again', ->
+            beforeEach ->
+              @promise4 = @promise3.then =>
+                @requestCount = moxios.requests.count()
+                @resources.prevPage()
+
+            it 'does not request prevPage again', ->
+              @promise4.then =>
+                expect(@requestCount).toEqual(moxios.requests.count())
 
     describe '#perPage()', ->
       it 'adds a page size to the query', ->
