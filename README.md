@@ -29,7 +29,7 @@ An introduction to ActiveResource.js can be found on the Toptal Engineering Blog
 ## Installation
 
 ```
-yard add active-resource
+yarn add active-resource
 ```
 
 ## Getting Started
@@ -131,7 +131,7 @@ product.save(() => {
   if(product.valid()) {
     product.persisted() // true
   } else {
-    product.errors().empty() // false 
+    product.errors().empty() // false
   }
 })
 
@@ -226,7 +226,7 @@ To accomplish this, one must `load` the association either in the initial query,
 Product.includes('orders').first()
 .then((product) => {
   product.orders().target() // not empty
-  product.association('orders').loaded() // true  
+  product.association('orders').loaded() // true
 });
 
 Product.first()
@@ -276,7 +276,7 @@ Order.reflectOnAllAssociations().each((reflection) => { /* ... */ });
 ```javascript
 class Order extends MyLibrary.Base {
   static define() {
-    this.attributes('price', 'quantity')   
+    this.attributes('price', 'quantity')
   }
 }
 
@@ -301,11 +301,11 @@ Order.find(1)
 .then((order) => {
   order.price // 5.0
   order.quantity // 2
-  
+
   order.price = 10.0;
-  
+
   order.changedFields().toArray() // ['price']
-  
+
   order.save() // only sends +price+ to server
 });
 ```
@@ -358,7 +358,7 @@ collection.detect((i) => /* ... */)
 Order.perPage(10).all()
 .then(async (orders) => {
   if(orders.hasNextPage()) await orders.nextPage();
-  
+
   if(orders.hasPrevPage()) await orders.prevPage();
 })
 ```
