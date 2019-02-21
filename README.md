@@ -3,7 +3,7 @@ Welcome to ActiveResource.js, an API resource ORM library for JavaScript.
 <br/>
 <br/>
 ActiveResource.js is designed to make interacting with resources stored on a RESTful server more free-flowing and holistic than simpler solutions like
-`ngResource` or creating your own requests for each CRUD operation in your API. ActiveResource.js constructs and executes requests and formats responses into
+`Backbone` and `ngResource` or creating your own requests for each CRUD operation in your API. ActiveResource.js constructs and executes requests and formats responses into
 meaningful resource representations on the client side, allowing you to perform CRUD operations, as well
 as interact with and modify the various relationships of resources effortlessly.
 <br/>
@@ -29,7 +29,7 @@ An introduction to ActiveResource.js can be found on the Toptal Engineering Blog
 ## Installation
 
 ```
-yard add active-resource
+yarn add active-resource
 ```
 
 ## Getting Started
@@ -131,7 +131,7 @@ product.save(() => {
   if(product.valid()) {
     product.persisted() // true
   } else {
-    product.errors().empty() // false 
+    product.errors().empty() // false
   }
 })
 
@@ -226,7 +226,7 @@ To accomplish this, one must `load` the association either in the initial query,
 Product.includes('orders').first()
 .then((product) => {
   product.orders().target() // not empty
-  product.association('orders').loaded() // true  
+  product.association('orders').loaded() // true
 });
 
 Product.first()
@@ -276,7 +276,7 @@ Order.reflectOnAllAssociations().each((reflection) => { /* ... */ });
 ```javascript
 class Order extends MyLibrary.Base {
   static define() {
-    this.attributes('price', 'quantity')   
+    this.attributes('price', 'quantity')
   }
 }
 
@@ -301,11 +301,11 @@ Order.find(1)
 .then((order) => {
   order.price // 5.0
   order.quantity // 2
-  
+
   order.price = 10.0;
-  
+
   order.changedFields().toArray() // ['price']
-  
+
   order.save() // only sends +price+ to server
 });
 ```
@@ -358,7 +358,7 @@ collection.detect((i) => /* ... */)
 Order.perPage(10).all()
 .then(async (orders) => {
   if(orders.hasNextPage()) await orders.nextPage();
-  
+
   if(orders.hasPrevPage()) await orders.prevPage();
 })
 ```
@@ -542,3 +542,7 @@ await order.save() // sends orderItems attributes to server too
 ```
 
 This option allows you to specify that associated resources(s) of a resource should be saved with the resource itself.
+
+## Sponsors
+
+[![Occasion](https://www.getoccasion.com/wp-content/uploads/2016/01/Occasion-Logo-Black_Web1.png)](https://www.getoccasion.com)
