@@ -542,3 +542,7 @@ await order.save() // sends orderItems attributes to server too
 ```
 
 This option allows you to specify that associated resources(s) of a resource should be saved with the resource itself.
+
+## Sponsors
+
+[![Occasion](https://www.getoccasion.com/wp-content/uploads/2016/01/Occasion-Logo-Black_Web1.png)](https://www.getoccasion.com)
