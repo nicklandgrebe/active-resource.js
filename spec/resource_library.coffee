@@ -23,8 +23,7 @@ describe 'ActiveResource', ->
 
     it 'adds the headers to the library', ->
       expect(@myLibrary.headers).toEqual({
-        Authorization: 'xxx',
-        'Content-Type': 'application/vnd.api+json'
+        Authorization: 'xxx'
       })
 
     it 'adds the interface to the library', ->
@@ -46,13 +45,17 @@ describe 'ActiveResource', ->
   describe 'ResourceLibrary', ->
     beforeEach ->
       @MyLibrary = ActiveResource.createResourceLibrary(
-        'https://www.example.com',
+        'https://www.example2.com',
         headers: { Authorization: 'xxx' }
       )
+      moxios.install(@MyLibrary.interface.axios)
 
       class @MyLibrary.Product extends @MyLibrary.Base
         @className = 'Product'
         @queryName = 'products'
+
+    afterEach ->
+      moxios.uninstall(@MyLibrary.interface.axios)
 
     describe '#constantize', ->
       it 'returns the correct class', ->
@@ -138,8 +141,29 @@ describe 'ActiveResource', ->
 
       it 'uses the baseUrl', ->
         @promise.then =>
-          expect(moxios.requests.mostRecent().url).toContain('https://www.example.com/')
+          expect(moxios.requests.mostRecent().url).toContain('https://www.example2.com/')
 
       it 'uses the headers', ->
         @promise.then =>
           expect(moxios.requests.mostRecent().headers['Authorization']).toEqual('xxx')
+
+    describe 'when changing headers', ->
+      beforeEach ->
+        @MyLibrary.headers = { Authorization: 'Basic XYZ' }
+        moxios.install(@MyLibrary.interface.axios)
+
+        @MyLibrary.Product.find(1)
+
+        @promise = moxios.wait =>
+          moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.find.success)
+
+      afterEach ->
+        moxios.uninstall(@MyLibrary.interface.axios)
+
+      it 'uses interface content type', ->
+        @promise.then =>
+          expect(moxios.requests.mostRecent().headers['Content-Type']).toEqual('application/vnd.api+json')
+
+      it 'uses the new headers', ->
+        @promise.then =>
+          expect(moxios.requests.mostRecent().headers['Authorization']).toEqual('Basic XYZ')

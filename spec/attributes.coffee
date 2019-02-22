@@ -6,7 +6,7 @@ describe 'ActiveResource', ->
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
 
-    MyLibrary::Product.last().then window.onSuccess
+    MyLibrary.Product.last().then window.onSuccess
 
     @promise = moxios.wait =>
       moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.success)
@@ -19,16 +19,16 @@ describe 'ActiveResource', ->
   describe '::Attributes', ->
     describe '.attributes()', ->
       beforeAll ->
-        MyLibrary::Product.attributes('var1', 'var2', { readOnly: true })
+        MyLibrary.Product.attributes('var1', 'var2', { readOnly: true })
 
       it 'returns result.readWrite as Collection with read-write attributes', ->
-        expect(MyLibrary::Product.attributes().readWrite.toArray()).toEqual(['title']);
+        expect(MyLibrary.Product.attributes().readWrite.toArray()).toEqual(['title']);
 
       it 'returns result.read as Collection with readOnly attributes', ->
-        expect(MyLibrary::Product.attributes().read.toArray()).toEqual(['var1', 'var2']);
+        expect(MyLibrary.Product.attributes().read.toArray()).toEqual(['var1', 'var2']);
 
       it 'returns result.all as Collection with all attributes', ->
-        expect(MyLibrary::Product.attributes().all.toArray()).toEqual(['title', 'var1', 'var2']);
+        expect(MyLibrary.Product.attributes().all.toArray()).toEqual(['title', 'var1', 'var2']);
 
     describe '#hasAttribute()', ->
       describe 'if resource has attribute', ->
@@ -158,7 +158,7 @@ describe 'ActiveResource', ->
 
       describe 'when resource has ID', ->
         beforeEach ->
-          @resource2 = MyLibrary::Product.build(id: 1)
+          @resource2 = MyLibrary.Product.build(id: 1)
 
         it 'makes a call to GET the resource', ->
           @resource2.reload()
@@ -167,7 +167,7 @@ describe 'ActiveResource', ->
 
       describe 'when resource is not persisted nor has ID', ->
         beforeEach ->
-          @resource2 = MyLibrary::Product.build()
+          @resource2 = MyLibrary.Product.build()
 
         it 'throws an error', ->
           expect(-> @resource2.reload()).toThrow()

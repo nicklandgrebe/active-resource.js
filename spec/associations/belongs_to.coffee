@@ -13,7 +13,7 @@ describe 'ActiveResource', ->
     describe '::BelongsToAssociation', ->
       describe 'reading', ->
         beforeEach ->
-          MyLibrary::Order.includes('giftCard').find(1)
+          MyLibrary.Order.includes('giftCard').find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -24,11 +24,11 @@ describe 'ActiveResource', ->
 
         it 'returns the target', ->
           @promise.then =>
-            expect(@resource.giftCard().isA?(MyLibrary::GiftCard)).toBeTruthy()
+            expect(@resource.giftCard().isA?(MyLibrary.GiftCard)).toBeTruthy()
 
       describe 'loading', ->
         beforeEach ->
-          MyLibrary::Order.find(1)
+          MyLibrary.Order.find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -49,11 +49,11 @@ describe 'ActiveResource', ->
         it 'returns the target', ->
           @promise2.then =>
             target = window.onSuccess.calls.mostRecent().args[0]
-            expect(target.isA?(MyLibrary::GiftCard)).toBeTruthy()
+            expect(target.isA?(MyLibrary.GiftCard)).toBeTruthy()
 
       describe 'assigning', ->
         beforeEach ->
-          MyLibrary::Order.find(1)
+          MyLibrary.Order.find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -62,7 +62,7 @@ describe 'ActiveResource', ->
           @promise2 = @promise.then =>
             @resource = window.onSuccess.calls.mostRecent().args[0]
 
-            @target = MyLibrary::GiftCard.build(id: 2)
+            @target = MyLibrary.GiftCard.build(id: 2)
 
             @resource.assignGiftCard(@target)
 
@@ -81,18 +81,18 @@ describe 'ActiveResource', ->
         describe 'when assigning wrong type', ->
           it 'throws an error', ->
             @promise2.then =>
-              expect(=> @resource.assignGiftCard(MyLibrary::OrderItem.build())).toThrow()
+              expect(=> @resource.assignGiftCard(MyLibrary.OrderItem.build())).toThrow()
 
         describe 'when foreignKey defined', ->
           beforeEach ->
-            class MyLibrary::BelongsToClass extends MyLibrary.Base
+            class MyLibrary.BelongsToClass extends MyLibrary.Base
               this.className = 'BelongsToClass'
 
               @belongsTo 'giftCard', foreignKey: 'giftCardToken'
 
-            @resource = MyLibrary::BelongsToClass.build()
+            @resource = MyLibrary.BelongsToClass.build()
 
-            @target = MyLibrary::GiftCard.build(id: 'abc123')
+            @target = MyLibrary.GiftCard.build(id: 'abc123')
 
             @resource.assignGiftCard(@target)
 
@@ -101,14 +101,14 @@ describe 'ActiveResource', ->
 
         describe 'when primaryKey defined', ->
           beforeEach ->
-            class MyLibrary::BelongsToClass extends MyLibrary.Base
+            class MyLibrary.BelongsToClass extends MyLibrary.Base
               this.className = 'BelongsToClass'
 
               @belongsTo 'giftCard', primaryKey: 'token', foreignKey: 'giftCardToken'
 
-            @resource = MyLibrary::BelongsToClass.build()
+            @resource = MyLibrary.BelongsToClass.build()
 
-            @target = MyLibrary::GiftCard.build(token: 'abc123')
+            @target = MyLibrary.GiftCard.build(token: 'abc123')
 
             @resource.assignGiftCard(@target)
 
@@ -119,7 +119,7 @@ describe 'ActiveResource', ->
           beforeEach ->
             @resource = MyLibrary.Comment.build()
 
-            @target = MyLibrary::Order.build(id: 1)
+            @target = MyLibrary.Order.build(id: 1)
 
             @resource.assignResource(@target)
 
@@ -131,7 +131,7 @@ describe 'ActiveResource', ->
 
       describe 'updating', ->
         beforeEach ->
-          MyLibrary::Order.includes('giftCard').find(1)
+          MyLibrary.Order.includes('giftCard').find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -143,7 +143,7 @@ describe 'ActiveResource', ->
         describe 'in general', ->
           beforeEach ->
             @promise3 = @promise2.then =>
-              @target = MyLibrary::GiftCard.build(id: 2)
+              @target = MyLibrary.GiftCard.build(id: 2)
               @resource.updateGiftCard(@target)
               @resource
 
@@ -159,7 +159,7 @@ describe 'ActiveResource', ->
         describe 'when assigning a resource', ->
           beforeEach ->
             @promise3 = @promise2.then =>
-              @target = MyLibrary::GiftCard.build(id: 2)
+              @target = MyLibrary.GiftCard.build(id: 2)
               @resource.updateGiftCard(@target)
               @resource
 
@@ -242,7 +242,7 @@ describe 'ActiveResource', ->
       describe 'building', ->
         describe 'inverseOf singular association', ->
           beforeEach ->
-            MyLibrary::Order.includes('giftCard').find(1)
+            MyLibrary.Order.includes('giftCard').find(1)
             .then window.onSuccess
 
             @promise = moxios.wait =>
@@ -254,7 +254,7 @@ describe 'ActiveResource', ->
 
           it 'builds a resource of reflection klass type', ->
             @promise2.then =>
-              expect(@target.klass()).toBe(MyLibrary::GiftCard)
+              expect(@target.klass()).toBe(MyLibrary.GiftCard)
 
           it 'assigns the attributes to the target', ->
             @promise2.then =>
@@ -266,23 +266,23 @@ describe 'ActiveResource', ->
 
           describe 'when className is specified', ->
             beforeEach ->
-              class MyLibrary::MyClass extends MyLibrary.Base
+              class MyLibrary.MyClass extends MyLibrary.Base
                 @className = 'MyClass'
 
                 @belongsTo 'randomClass', className: 'GiftCard'
 
-              @resource = MyLibrary::MyClass.build()
+              @resource = MyLibrary.MyClass.build()
               @target = @resource.buildRandomClass(id: 1)
 
             it 'builds a resource of className type', ->
-              expect(@target.klass()).toBe(MyLibrary::GiftCard)
+              expect(@target.klass()).toBe(MyLibrary.GiftCard)
 
             it 'builds the resource with foreign key of reflection name', ->
               expect(@resource.randomClassId).toEqual(1)
 
         describe 'inverseOf collection association', ->
           beforeEach ->
-            MyLibrary::Order.find(1)
+            MyLibrary.Order.find(1)
             .then window.onSuccess
 
             @promise = moxios.wait =>
@@ -294,7 +294,7 @@ describe 'ActiveResource', ->
 
           it 'builds a resource of reflection klass type', ->
             @promise2.then =>
-              expect(@target.klass()).toBe(MyLibrary::Customer)
+              expect(@target.klass()).toBe(MyLibrary.Customer)
 
           it 'assigns the inverse target', ->
             @promise2.then =>
@@ -302,7 +302,7 @@ describe 'ActiveResource', ->
 
       describe 'creating', ->
         beforeEach ->
-          MyLibrary::Order.includes('giftCard').find(1)
+          MyLibrary.Order.includes('giftCard').find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -355,7 +355,7 @@ describe 'ActiveResource', ->
 
           it 'builds a resource of reflection klass type', ->
             @promise4.then =>
-              expect(@target.isA(MyLibrary::GiftCard)).toBeTruthy()
+              expect(@target.isA(MyLibrary.GiftCard)).toBeTruthy()
 
           it 'assigns the attributes to the target', ->
             @promise4.then =>

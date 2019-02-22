@@ -1,7 +1,7 @@
 describe 'ActiveResource', ->
   describe '::Errors', ->
     beforeEach ->
-      @resource = MyLibrary::Product.build()
+      @resource = MyLibrary.Product.build()
       @resource.errors().add('title', 'blank', 'Title cannot be blank')
 
     describe '#clear()', ->

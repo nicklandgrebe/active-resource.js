@@ -13,7 +13,7 @@ describe 'ActiveResource', ->
     describe '::HasManyAssociation', ->
       describe 'reading', ->
         beforeEach ->
-          MyLibrary::Product.includes('orders').find(1)
+          MyLibrary.Product.includes('orders').find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -37,7 +37,7 @@ describe 'ActiveResource', ->
 
       describe 'loading', ->
         beforeEach ->
-          MyLibrary::Product.find(1)
+          MyLibrary.Product.find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -73,7 +73,7 @@ describe 'ActiveResource', ->
 
           it 'returns a collection of resources of reflection klass type', ->
             @promise4.then =>
-              expect(@target.first().klass()).toBe(MyLibrary::Order)
+              expect(@target.first().klass()).toBe(MyLibrary.Order)
 
           it 'caches the result on the target', ->
             @promise4.then =>
@@ -97,7 +97,7 @@ describe 'ActiveResource', ->
 
           it 'returns a collection of resources of reflection klass type', ->
             @promise4.then =>
-              expect(@result.first().klass()).toBe(MyLibrary::Order)
+              expect(@result.first().klass()).toBe(MyLibrary.Order)
 
           it 'does not assign the target', ->
             @promise4.then =>
@@ -121,7 +121,7 @@ describe 'ActiveResource', ->
 
           it 'returns a collection of resources of reflection klass type', ->
             @promise4.then =>
-              expect(@result.first().klass()).toBe(MyLibrary::Order)
+              expect(@result.first().klass()).toBe(MyLibrary.Order)
 
           it 'does assign the target', ->
             @promise4.then =>
@@ -149,7 +149,7 @@ describe 'ActiveResource', ->
 
           it 'gets a resource of the relationship', ->
             @promise4.then =>
-              expect(@result.klass()).toBe(MyLibrary::Order)
+              expect(@result.klass()).toBe(MyLibrary.Order)
 
           it 'does not assign the target', ->
             @promise4.then =>
@@ -173,7 +173,7 @@ describe 'ActiveResource', ->
 
           it 'gets a resource of the relationship', ->
             @promise4.then =>
-              expect(@result.klass()).toBe(MyLibrary::Order)
+              expect(@result.klass()).toBe(MyLibrary.Order)
 
           it 'does not assign the target', ->
             @promise4.then =>
@@ -198,7 +198,7 @@ describe 'ActiveResource', ->
 
           it 'gets a resource of the relationship', ->
             @promise4.then =>
-              expect(@result.klass()).toBe(MyLibrary::Order)
+              expect(@result.klass()).toBe(MyLibrary.Order)
 
           it 'does not assign the target', ->
             @promise4.then =>
@@ -222,7 +222,7 @@ describe 'ActiveResource', ->
 
           it 'gets a resource of the relationship', ->
             @promise4.then =>
-              expect(@result.klass()).toBe(MyLibrary::Order)
+              expect(@result.klass()).toBe(MyLibrary.Order)
 
           it 'does not assign the target', ->
             @promise4.then =>
@@ -271,7 +271,7 @@ describe 'ActiveResource', ->
       describe 'reloading', ->
         describe 'when nested associations were included', ->
           beforeEach ->
-            MyLibrary::Product.includes(orders: 'comments').find(1)
+            MyLibrary.Product.includes(orders: 'comments').find(1)
             .then window.onSuccess
 
             @promise = moxios.wait =>
@@ -290,9 +290,9 @@ describe 'ActiveResource', ->
 
       describe 'assigning when owner is unpersisted', ->
         beforeEach ->
-          @resource = MyLibrary::Product.build(id: 2)
+          @resource = MyLibrary.Product.build(id: 2)
 
-          @target = [MyLibrary::Order.build(id: 1), MyLibrary::Order.build(id: 2)]
+          @target = [MyLibrary.Order.build(id: 1), MyLibrary.Order.build(id: 2)]
           @resource.orders().assign(@target)
 
         it 'replaces the target with the resource(s)', ->
@@ -309,19 +309,19 @@ describe 'ActiveResource', ->
 
         describe 'when assigning wrong type', ->
           it 'throws an error', ->
-            expect(=> @resource.orders().assign(MyLibrary::OrderItem.build())).toThrow()
+            expect(=> @resource.orders().assign(MyLibrary.OrderItem.build())).toThrow()
 
         describe 'when foreignKey defined', ->
           beforeEach ->
-            class MyLibrary::HasManyClass extends MyLibrary.Base
+            class MyLibrary.HasManyClass extends MyLibrary.Base
               this.className = 'HasManyClass'
               this.queryName = 'has_many_classes'
 
               @hasMany 'orders', foreignKey: 'hasManyClassToken'
 
-            @resource = MyLibrary::HasManyClass.build(id: 2)
+            @resource = MyLibrary.HasManyClass.build(id: 2)
 
-            @target = MyLibrary::Order.build()
+            @target = MyLibrary.Order.build()
 
             @resource.orders().assign(@target)
 
@@ -330,15 +330,15 @@ describe 'ActiveResource', ->
 
         describe 'when primaryKey defined', ->
           beforeEach ->
-            class MyLibrary::HasManyClass extends MyLibrary.Base
+            class MyLibrary.HasManyClass extends MyLibrary.Base
               this.className = 'HasManyClass'
               this.queryName = 'has_many_classes'
 
               @hasMany 'orders', primaryKey: 'token', foreignKey: 'hasManyClassToken'
 
-            @resource = MyLibrary::HasManyClass.build(token: 'abc123')
+            @resource = MyLibrary.HasManyClass.build(token: 'abc123')
 
-            @target = MyLibrary::Order.build()
+            @target = MyLibrary.Order.build()
 
             @resource.orders().assign(@target)
 
@@ -347,21 +347,21 @@ describe 'ActiveResource', ->
 
         describe 'when target is polymorphic', ->
           beforeEach ->
-            class MyLibrary::HasManyClass extends MyLibrary.Base
+            class MyLibrary.HasManyClass extends MyLibrary.Base
               this.className = 'HasManyClass'
               this.queryName = 'has_many_classes'
 
               @hasMany 'belongsToPolymorphics', as: 'hasManyAlias'
 
-            class MyLibrary::BelongsToPolymorphic extends MyLibrary.Base
+            class MyLibrary.BelongsToPolymorphic extends MyLibrary.Base
               this.className = 'BelongsToPolymorphic'
               this.queryName = 'belongs_to_polymorphics'
 
               @belongsTo 'hasManyAlias', polymorphic: true
 
-            @resource = MyLibrary::HasManyClass.build(id: 1)
+            @resource = MyLibrary.HasManyClass.build(id: 1)
 
-            @target = MyLibrary::BelongsToPolymorphic.build()
+            @target = MyLibrary.BelongsToPolymorphic.build()
 
             @resource.belongsToPolymorphics().assign(@target)
 
@@ -375,7 +375,7 @@ describe 'ActiveResource', ->
 
       describe 'assigning when owner is persisted', ->
         beforeEach ->
-          MyLibrary::Product.find(1)
+          MyLibrary.Product.find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -387,7 +387,7 @@ describe 'ActiveResource', ->
         describe 'in general', ->
           beforeEach ->
             @promise3 = @promise2.then =>
-              MyLibrary::Order.all()
+              MyLibrary.Order.all()
               .then window.onSuccess
 
               moxios.wait =>
@@ -413,7 +413,7 @@ describe 'ActiveResource', ->
         describe 'when assigning collection of resources', ->
           beforeEach ->
             @promise3 = @promise2.then =>
-              MyLibrary::Order.all()
+              MyLibrary.Order.all()
               .then window.onSuccess
 
               moxios.wait =>
@@ -506,7 +506,7 @@ describe 'ActiveResource', ->
         describe 'when assigning with save: false', ->
           beforeEach ->
             @promise3 = @promise2.then =>
-              MyLibrary::Order.all()
+              MyLibrary.Order.all()
               .then window.onSuccess
 
               moxios.wait =>
@@ -532,7 +532,7 @@ describe 'ActiveResource', ->
 
       describe 'building', ->
         beforeEach ->
-          MyLibrary::Product.find(1)
+          MyLibrary.Product.find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -545,7 +545,7 @@ describe 'ActiveResource', ->
         it 'builds resource(s) of reflection klass type', ->
           @promise.then =>
             @target.each (t) =>
-              expect(t.klass()).toBe(MyLibrary::Order)
+              expect(t.klass()).toBe(MyLibrary.Order)
 
         it 'assigns attributes to the resource(s)', ->
           @promise.then =>
@@ -569,7 +569,7 @@ describe 'ActiveResource', ->
 
       describe 'creating', ->
         beforeEach ->
-          MyLibrary::Product.find(1)
+          MyLibrary.Product.find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -619,7 +619,7 @@ describe 'ActiveResource', ->
 
           it 'builds resource(s) of reflection klass type', ->
             @promise3.then =>
-              expect(@target.klass()).toBe(MyLibrary::Order)
+              expect(@target.klass()).toBe(MyLibrary.Order)
 
           it 'assigns attributes to the resource(s)', ->
             @promise3.then =>
@@ -673,18 +673,18 @@ describe 'ActiveResource', ->
         describe 'when autosave association is present', ->
           beforeEach ->
             @promise2 = @promise.then =>
-              MyLibrary::Order.hasMany 'orderItems', autosave: true
+              MyLibrary.Order.hasMany 'orderItems', autosave: true
 
               orderItems = [
-                MyLibrary::OrderItem.build(amount: 1.0),
-                MyLibrary::OrderItem.build(amount: 2.0)
+                MyLibrary.OrderItem.build(amount: 1.0),
+                MyLibrary.OrderItem.build(amount: 2.0)
               ]
               @resource.orders().create({ price: 3, orderItems: orderItems }, window.onCompletion)
               @resource
 
           afterEach ->
-            MyLibrary::Order.hasMany 'orderItems'
-            MyLibrary::Order.resetQueryParams()
+            MyLibrary.Order.hasMany 'orderItems'
+            MyLibrary.Order.resetQueryParams()
 
           it 'adds the association attributes to the resource document', ->
             resourceDocument = {
@@ -738,12 +738,12 @@ describe 'ActiveResource', ->
 
         describe 'when owner is not persisted', ->
           it 'throws exception', ->
-            resource = MyLibrary::Product.build()
+            resource = MyLibrary.Product.build()
             expect(-> resource.orders().create({ price: 5 })).toThrow()
 
       describe 'pushing', ->
         beforeEach ->
-          MyLibrary::Product.find(1)
+          MyLibrary.Product.find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -752,7 +752,7 @@ describe 'ActiveResource', ->
               @resource = window.onSuccess.calls.mostRecent().args[0]
 
           @promise2 = @promise.then =>
-            MyLibrary::Order.all()
+            MyLibrary.Order.all()
             .then window.onSuccess
 
             moxios.wait =>
@@ -825,7 +825,7 @@ describe 'ActiveResource', ->
 
       describe 'deleting', ->
         beforeEach ->
-          MyLibrary::Product.includes('orders').find(1)
+          MyLibrary.Product.includes('orders').find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -923,7 +923,7 @@ describe 'ActiveResource', ->
       describe '#empty()', ->
         describe 'when target is empty', ->
           beforeEach ->
-            MyLibrary::Product.find(1)
+            MyLibrary.Product.find(1)
             .then window.onSuccess
 
             @promise = moxios.wait =>
@@ -937,7 +937,7 @@ describe 'ActiveResource', ->
 
         describe 'when target is not empty', ->
           beforeEach ->
-            MyLibrary::Product.includes('orders').find(1)
+            MyLibrary.Product.includes('orders').find(1)
             .then window.onSuccess
 
             @promise = moxios.wait =>

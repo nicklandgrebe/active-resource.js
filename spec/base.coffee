@@ -12,11 +12,11 @@ describe 'ActiveResource', ->
   describe '::Base', ->
     describe '.links()', ->
       it 'returns the correct links', ->
-        expect(MyLibrary::Product.links()).toEqual({ related: 'https://example.com/api/v1/products/' })
+        expect(MyLibrary.Product.links()).toEqual({ related: 'https://example.com/api/v1/products/' })
 
     describe 'with a different primaryKey', ->
       beforeEach ->
-        class MyLibrary::Venue extends MyLibrary.Base
+        class MyLibrary.Venue extends MyLibrary.Base
           this.className = 'Venue'
           this.queryName = 'venues'
 
@@ -24,19 +24,19 @@ describe 'ActiveResource', ->
 
           @hasOne 'owner'
 
-        class MyLibrary::Owner extends MyLibrary.Base
+        class MyLibrary.Owner extends MyLibrary.Base
           this.className = 'Owner'
           this.queryName = 'owners'
 
           @belongsTo 'venue'
 
       it 'constructs relationships with the primaryKey', ->
-        @resource = MyLibrary::Venue.build(token: 'abc123')
+        @resource = MyLibrary.Venue.build(token: 'abc123')
         expect(@resource.buildOwner().venueId).toEqual('abc123')
 
       describe 'when interfacing', ->
         beforeEach ->
-          MyLibrary::Venue.find(1)
+          MyLibrary.Venue.find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -66,7 +66,7 @@ describe 'ActiveResource', ->
 
     describe '.clone()', ->
       beforeEach ->
-        MyLibrary::Order.includes('giftCard', 'orderItems').select('price').find(1)
+        MyLibrary.Order.includes('giftCard', 'orderItems').select('price').find(1)
         .then window.onSuccess
 
         @promise = moxios.wait =>

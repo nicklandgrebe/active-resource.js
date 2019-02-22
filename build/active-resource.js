@@ -247,97 +247,111 @@
     // @return [ResourceLibrary] the created resource library
     ActiveResource.createResourceLibrary = function (baseUrl) {
       var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      var ResourceLibrary;
-      return ResourceLibrary = function () {
-        var Base, base, resourceLibrary;
 
-        var ResourceLibrary =
-        /*#__PURE__*/
-        function () {
-          function ResourceLibrary() {
-            _classCallCheck(this, ResourceLibrary);
-          }
+      var ResourceLibrary, _interface, library;
 
-          _createClass(ResourceLibrary, null, [{
-            key: "constantize",
-            // Constantizes a className string into an actual ActiveResource::Base class
-            // @note If constantizeScope is null, checks the property on the resource library,
-            //   then on its prototype
-            // @note Throws exception if klass cannot be found
-            // @param [String] className the class name to look for a constant with
-            // @return [Class] the class constant corresponding to the name provided
-            value: function constantize(className) {
-              var i, klass, len, scope, v;
-              klass = null;
+      _interface = options.interface || ActiveResource.Interfaces.JsonApi;
 
-              if (!_.isUndefined(className) && !_.isNull(className)) {
-                scope = this.constantizeScope && _.values(this.constantizeScope) || _.flatten([_.values(this), _.values(this.prototype)]);
+      library = ResourceLibrary =
+      /*#__PURE__*/
+      function () {
+        function ResourceLibrary() {
+          var _this2 = this;
 
-                for (i = 0, len = scope.length; i < len; i++) {
-                  v = scope[i];
+          _classCallCheck(this, ResourceLibrary);
 
-                  if (_.isObject(v) && v.className === className) {
-                    klass = v;
-                  }
+          var Base, base, resourceLibrary;
+          Object.defineProperties(this, {
+            headers: {
+              get: function get$$1() {
+                return _this2._headers;
+              },
+              set: function set(value) {
+                _this2._headers = value;
+                return _this2.interface = new _interface(_this2);
+              }
+            }
+          });
+          this.baseUrl = baseUrl.charAt(baseUrl.length - 1) === '/' ? baseUrl : "".concat(baseUrl, "/");
+          this._headers = options.headers;
+          this.interface = new _interface(this);
+          this.constantizeScope = options['constantizeScope'];
+          this.immutable = options.immutable;
+          this.includePolymorphicRepeats = options.includePolymorphicRepeats;
+          this.strictAttributes = options.strictAttributes;
+          base = this.immutable ? ActiveResource.prototype.Immutable.prototype.Base : ActiveResource.prototype.Base;
+          resourceLibrary = this;
+
+          this.Base = Base = function () {
+            var Base =
+            /*#__PURE__*/
+            function (_base) {
+              _inherits(Base, _base);
+
+              function Base() {
+                _classCallCheck(this, Base);
+
+                return _possibleConstructorReturn(this, _getPrototypeOf(Base).apply(this, arguments));
+              }
+
+              return Base;
+            }(base);
+            Base.resourceLibrary = resourceLibrary;
+            return Base;
+          }.call(this);
+        } // Constantizes a className string into an actual ActiveResource::Base class
+        // @note If constantizeScope is null, checks the property on the resource library
+        // @note Throws exception if klass cannot be found
+        // @param [String] className the class name to look for a constant with
+        // @return [Class] the class constant corresponding to the name provided
+
+
+        _createClass(ResourceLibrary, [{
+          key: "constantize",
+          value: function constantize(className) {
+            var i, klass, len, scope, v;
+            klass = null;
+
+            if (!_.isUndefined(className) && !_.isNull(className)) {
+              scope = this.constantizeScope && _.values(this.constantizeScope) || _.values(this);
+
+              for (i = 0, len = scope.length; i < len; i++) {
+                v = scope[i];
+
+                if (_.isObject(v) && v.className === className) {
+                  klass = v;
                 }
               }
-
-              if (klass == null) {
-                throw "NameError: klass ".concat(className, " does not exist");
-              }
-
-              return klass;
-            } // Creates an ActiveResource::Base class from klass provided
-            // @param [Class] klass the klass to create into an ActiveResource::Base class in the library
-            // @return [Class] the klass now inheriting from ActiveResource::Base
-
-          }, {
-            key: "createResource",
-            value: function createResource(klass) {
-              klass.className || (klass.className = klass.name);
-              klass.queryName || (klass.queryName = _.pluralize(s.underscored(klass.className)));
-
-              if (typeof klass.define === "function") {
-                klass.define();
-              }
-
-              (this.constantizeScope || this)[klass.className] = klass;
-              return klass;
-            }
-          }]);
-
-          return ResourceLibrary;
-        }();
-        ResourceLibrary.baseUrl = baseUrl.charAt(baseUrl.length - 1) === '/' ? baseUrl : "".concat(baseUrl, "/");
-        ResourceLibrary.headers = options.headers;
-        ResourceLibrary.interface = new (options.interface || ActiveResource.Interfaces.JsonApi)(ResourceLibrary);
-        ResourceLibrary.constantizeScope = options['constantizeScope'];
-        ResourceLibrary.immutable = options.immutable;
-        ResourceLibrary.includePolymorphicRepeats = options.includePolymorphicRepeats;
-        ResourceLibrary.strictAttributes = options.strictAttributes;
-        base = ResourceLibrary.immutable ? ActiveResource.prototype.Immutable.prototype.Base : ActiveResource.prototype.Base;
-        resourceLibrary = ResourceLibrary;
-
-        ResourceLibrary.Base = Base = function () {
-          var Base =
-          /*#__PURE__*/
-          function (_base) {
-            _inherits(Base, _base);
-
-            function Base() {
-              _classCallCheck(this, Base);
-
-              return _possibleConstructorReturn(this, _getPrototypeOf(Base).apply(this, arguments));
             }
 
-            return Base;
-          }(base);
-          Base.resourceLibrary = resourceLibrary;
-          return Base;
-        }.call(this);
+            if (klass == null) {
+              throw "NameError: klass ".concat(className, " does not exist");
+            }
+
+            return klass;
+          } // Creates an ActiveResource::Base class from klass provided
+          // @param [Class] klass the klass to create into an ActiveResource::Base class in the library
+          // @return [Class] the klass now inheriting from ActiveResource::Base
+
+        }, {
+          key: "createResource",
+          value: function createResource(klass) {
+            klass.className || (klass.className = klass.name);
+            klass.queryName || (klass.queryName = _.pluralize(s.underscored(klass.className)));
+
+            if (typeof klass.define === "function") {
+              klass.define();
+            }
+
+            (this.constantizeScope || this)[klass.className] = klass;
+            return klass;
+          }
+        }]);
 
         return ResourceLibrary;
-      }.call(this);
+      }();
+
+      return new library();
     };
   }).call(undefined);
   (function () {
@@ -357,7 +371,7 @@
 
             this.resourceLibrary = resourceLibrary;
             this.axios = axios.create({
-              headers: _.extend(this.resourceLibrary.headers || {}, {
+              headers: _.extend(_.clone(this.resourceLibrary.headers || {}), {
                 'Content-Type': this.constructor.contentType
               })
             });
@@ -530,14 +544,14 @@
         }, {
           key: "toUnderscored",
           value: function toUnderscored(object) {
-            var _this2 = this;
+            var _this3 = this;
 
             var k, underscored, underscorize, v;
             underscored = {};
 
             underscorize = function underscorize(value) {
               if (_.isObject(value) && !(typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Base) : void 0) && !(typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Collection) : void 0) && !_.isDate(value)) {
-                return _this2.toUnderscored(value);
+                return _this3.toUnderscored(value);
               } else {
                 return value;
               }
@@ -558,14 +572,14 @@
         }, {
           key: "toCamelCase",
           value: function toCamelCase(object) {
-            var _this3 = this;
+            var _this4 = this;
 
             var camelize, camelized, k, v;
             camelized = {};
 
             camelize = function camelize(value) {
               if (_.isObject(value) && !(typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Base) : void 0) && !(typeof value.isA === "function" ? value.isA(ActiveResource.prototype.Collection) : void 0)) {
-                return _this3.toCamelCase(value);
+                return _this4.toCamelCase(value);
               } else {
                 return value;
               }
@@ -814,7 +828,7 @@
         }, {
           key: "buildResourceRelationships",
           value: function buildResourceRelationships(resource, relationships) {
-            var _this4 = this;
+            var _this5 = this;
 
             var onlyChanged = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
             var output;
@@ -830,7 +844,7 @@
               }
 
               return output[s.underscored(reflection.name)] = {
-                data: _this4.buildResourceDocument({
+                data: _this5.buildResourceDocument({
                   resourceData: target,
                   onlyResourceIdentifiers: !reflection.autosave(),
                   onlyChanged: onlyChanged,
@@ -849,7 +863,7 @@
         }, {
           key: "buildResourceDocument",
           value: function buildResourceDocument(_ref) {
-            var _this5 = this;
+            var _this6 = this;
 
             var resourceData = _ref.resourceData,
                 onlyResourceIdentifiers = _ref.onlyResourceIdentifiers,
@@ -860,7 +874,7 @@
             onlyChanged = onlyChanged || false;
             data = ActiveResource.prototype.Collection.build(resourceData).compact().map(function (resource) {
               var attributes, changedFields, documentResource, relationships;
-              documentResource = _this5.buildResourceIdentifier(resource);
+              documentResource = _this6.buildResourceIdentifier(resource);
 
               if (!onlyResourceIdentifiers) {
                 attributes = _.omit(resource.attributes({
@@ -869,7 +883,7 @@
                 relationships = _.keys(resource.klass().reflections());
 
                 if (parentReflection) {
-                  if (!(parentReflection.polymorphic() && _this5.resourceLibrary.includePolymorphicRepeats)) {
+                  if (!(parentReflection.polymorphic() && _this6.resourceLibrary.includePolymorphicRepeats)) {
                     relationships = _.without(relationships, parentReflection.name);
                   }
                 }
@@ -880,8 +894,8 @@
                   relationships = _.intersection(relationships, changedFields);
                 }
 
-                documentResource['attributes'] = _this5.toUnderscored(attributes);
-                documentResource['relationships'] = _this5.buildResourceRelationships(resource, relationships, onlyChanged);
+                documentResource['attributes'] = _this6.toUnderscored(attributes);
+                documentResource['relationships'] = _this6.buildResourceRelationships(resource, relationships, onlyChanged);
               }
 
               return documentResource;
@@ -997,7 +1011,7 @@
         }, {
           key: "addRelationshipsToFields",
           value: function addRelationshipsToFields(attributes, relationships, includes, resource) {
-            var _this6 = this;
+            var _this7 = this;
 
             _.each(relationships, function (relationship, relationshipName) {
               var include, reflection, relationshipItems;
@@ -1005,14 +1019,14 @@
               if (reflection = resource.klass().reflectOnAssociation(s.camelize(relationshipName))) {
                 if (reflection.collection()) {
                   relationshipItems = ActiveResource.prototype.Collection.build(relationship['data']).map(function (relationshipMember, index) {
-                    return _this6.findResourceForRelationship(relationshipMember, includes, resource, reflection, index);
+                    return _this7.findResourceForRelationship(relationshipMember, includes, resource, reflection, index);
                   }).compact();
 
                   if (!(typeof relationshipItems.empty === "function" ? relationshipItems.empty() : void 0)) {
                     return attributes[relationshipName] = relationshipItems;
                   }
                 } else if (relationship['data'] != null) {
-                  include = _this6.findResourceForRelationship(relationship['data'], includes, resource, reflection);
+                  include = _this7.findResourceForRelationship(relationship['data'], includes, resource, reflection);
 
                   if (include != null) {
                     return attributes[relationshipName] = include;
@@ -1718,10 +1732,10 @@
       }], [{
         key: "__executeCallbacks",
         value: function __executeCallbacks(type) {
-          var _this7 = this;
+          var _this8 = this;
 
           return this.klass().callbacks()[type].each(function (callback) {
-            return _.bind(callback, _this7)();
+            return _.bind(callback, _this8)();
           });
         }
       }]);
@@ -1765,7 +1779,7 @@
       }, {
         key: "__createClone",
         value: function __createClone(_ref3) {
-          var _this8 = this;
+          var _this9 = this;
 
           var cloner = _ref3.cloner,
               newCloner = _ref3.newCloner;
@@ -1783,10 +1797,10 @@
 
           this.klass().fields().each(function (f) {
             var newAssociation, oldAssociation, ref, ref1, ref2, ref3, reflection, target;
-            clone.__fields[f] = ((ref = _this8.__fields[f]) != null ? ref.toArray : void 0) != null ? _this8.__fields[f].clone() : _this8.__fields[f];
+            clone.__fields[f] = ((ref = _this9.__fields[f]) != null ? ref.toArray : void 0) != null ? _this9.__fields[f].clone() : _this9.__fields[f];
 
             try {
-              oldAssociation = _this8.association(f);
+              oldAssociation = _this9.association(f);
               newAssociation = clone.association(f);
               newAssociation.__links = _.clone(oldAssociation.links());
 
@@ -1795,20 +1809,20 @@
               }
 
               reflection = oldAssociation.reflection;
-              target = reflection.collection() ? reflection.autosave() && oldAssociation.target.include(cloner) ? _this8.__createCollectionAutosaveAssociationClone(oldAssociation, {
+              target = reflection.collection() ? reflection.autosave() && oldAssociation.target.include(cloner) ? _this9.__createCollectionAutosaveAssociationClone(oldAssociation, {
                 parentClone: clone,
                 cloner: cloner,
                 newCloner: newCloner
-              }) : ((ref1 = reflection.inverseOf()) != null ? ref1.autosave() : void 0) ? _this8.__createCollectionInverseAutosaveAssociationClone(oldAssociation, {
+              }) : ((ref1 = reflection.inverseOf()) != null ? ref1.autosave() : void 0) ? _this9.__createCollectionInverseAutosaveAssociationClone(oldAssociation, {
                 parentClone: clone,
                 cloner: cloner
-              }) : oldAssociation.target : reflection.autosave() && oldAssociation.target === cloner ? _this8.__createSingularAutosaveAssociationClone(oldAssociation, {
+              }) : oldAssociation.target : reflection.autosave() && oldAssociation.target === cloner ? _this9.__createSingularAutosaveAssociationClone(oldAssociation, {
                 parentClone: clone,
                 newCloner: newCloner
-              }) : ((ref2 = reflection.inverseOf()) != null ? ref2.autosave() : void 0) && oldAssociation.target != null ? _this8.__createSingularInverseAutosaveAssociationClone(oldAssociation, {
+              }) : ((ref2 = reflection.inverseOf()) != null ? ref2.autosave() : void 0) && oldAssociation.target != null ? _this9.__createSingularInverseAutosaveAssociationClone(oldAssociation, {
                 parentClone: clone,
                 cloner: cloner
-              }) : (((ref3 = reflection.inverseOf()) != null ? ref3.collection() : void 0) ? _this8.__replaceSingularInverseCollectionAssociationClone(oldAssociation, {
+              }) : (((ref3 = reflection.inverseOf()) != null ? ref3.collection() : void 0) ? _this9.__replaceSingularInverseCollectionAssociationClone(oldAssociation, {
                 parentClone: clone
               }) : void 0, oldAssociation.target);
               return newAssociation.writer(target, false);
@@ -1837,7 +1851,7 @@
       }, {
         key: "__createCollectionAutosaveAssociationClone",
         value: function __createCollectionAutosaveAssociationClone(association, _ref4) {
-          var _this9 = this;
+          var _this10 = this;
 
           var parentClone = _ref4.parentClone,
               cloner = _ref4.cloner,
@@ -1850,7 +1864,7 @@
 
           if ((inverse = association.reflection.inverseOf()) != null) {
             clone.each(function (t) {
-              if (t.__fields[inverse.name] === _this9) {
+              if (t.__fields[inverse.name] === _this10) {
                 t.__fields[inverse.name] = parentClone;
               }
 
@@ -1878,7 +1892,7 @@
       }, {
         key: "__createCollectionInverseAutosaveAssociationClone",
         value: function __createCollectionInverseAutosaveAssociationClone(association, _ref5) {
-          var _this10 = this;
+          var _this11 = this;
 
           var parentClone = _ref5.parentClone,
               cloner = _ref5.cloner;
@@ -1889,7 +1903,7 @@
               return cloner;
             } else {
               clone = t.__createClone({
-                cloner: _this10,
+                cloner: _this11,
                 newCloner: parentClone
               });
 
@@ -2403,14 +2417,14 @@
       }, {
         key: "addAll",
         value: function addAll() {
-          var _this11 = this;
+          var _this12 = this;
 
           for (var _len3 = arguments.length, errors = new Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
             errors[_key3] = arguments[_key3];
           }
 
           return _.map(errors, function (error) {
-            return _this11.__add.apply(_this11, _toConsumableArray(error));
+            return _this12.__add.apply(_this12, _toConsumableArray(error));
           });
         } // Propagates errors with nested fields down through relationships to their appropriate resources
         // TODO: Propagate errors to appropriate collection item instead of just first
@@ -2419,17 +2433,17 @@
       }, {
         key: "propagate",
         value: function propagate(errors) {
-          var _this12 = this;
+          var _this13 = this;
 
           return errors.each(function (error) {
             var association, field, nestedError, nestedErrors, nestedField, ref, ref1;
             nestedField = error.field.split('.');
             field = nestedField.shift();
 
-            _this12.push(error);
+            _this13.push(error);
 
             try {
-              association = _this12.base.association(field);
+              association = _this13.base.association(field);
               nestedError = _.clone(error);
               nestedError.field = nestedField.length === 0 && 'base' || nestedField.join('.');
               nestedErrors = ActiveResource.Collection.build([nestedError]);
@@ -2523,12 +2537,12 @@
       }, {
         key: "forField",
         value: function forField(field) {
-          var _this13 = this;
+          var _this14 = this;
 
           return ActiveResource.prototype.Collection.build(_.keys(this.__errors)).select(function (k) {
             return s.startsWith(k, field);
           }).map(function (k) {
-            return _this13.__errors[k];
+            return _this14.__errors[k];
           }).flatten();
         } // Returns the error object for an field
         // @param [String] field the field to get errors for
@@ -2644,16 +2658,16 @@
       }], [{
         key: "__initializeFields",
         value: function __initializeFields() {
-          var _this14 = this;
+          var _this15 = this;
 
           this.__fields = {};
           return this.klass().fields().each(function (field) {
             var ref;
 
-            if ((ref = _this14.klass().reflectOnAssociation(field)) != null ? ref.collection() : void 0) {
-              return _this14.__fields[field] = ActiveResource.prototype.Collection.build();
+            if ((ref = _this15.klass().reflectOnAssociation(field)) != null ? ref.collection() : void 0) {
+              return _this15.__fields[field] = ActiveResource.prototype.Collection.build();
             } else {
-              return _this14.__fields[field] = null;
+              return _this15.__fields[field] = null;
             }
           });
         } // Called after requests, used to assign the values for fields according to the server's response and
@@ -2665,21 +2679,21 @@
       }, {
         key: "__assignFields",
         value: function __assignFields(fields) {
-          var _this15 = this;
+          var _this16 = this;
 
           _.each(fields, function (v, k) {
-            if (!_.has(_this15.__fields, k)) {
+            if (!_.has(_this16.__fields, k)) {
               return;
             }
 
             try {
-              if (_this15.association(k).reflection.collection()) {
-                return _this15.__fields[k] = ActiveResource.prototype.Collection.build(v);
+              if (_this16.association(k).reflection.collection()) {
+                return _this16.__fields[k] = ActiveResource.prototype.Collection.build(v);
               } else {
-                return _this15.__fields[k] = v;
+                return _this16.__fields[k] = v;
               }
             } catch (error) {
-              return _this15.__fields[k] = v;
+              return _this16.__fields[k] = v;
             }
           });
 
@@ -2697,17 +2711,17 @@
       }, {
         key: "changedFields",
         value: function changedFields() {
-          var _this16 = this;
+          var _this17 = this;
 
           return this.klass().fields().select(function (field) {
             var association, newField, newTargets, oldField;
-            oldField = _this16.__fields[field];
-            newField = _this16[field];
+            oldField = _this17.__fields[field];
+            newField = _this17[field];
 
             try {
               // Relationship field if association found
-              association = _this16.association(field);
-              newField = _this16[field]();
+              association = _this17.association(field);
+              newField = _this17[field]();
 
               if (association.reflection.collection()) {
                 if (oldField.size() !== newField.size()) {
@@ -3580,7 +3594,7 @@
         // @param [Object] __queryParams the __queryParams already built by previous links in
         //   the Relation chain
         function Relation(base, __queryParams) {
-          var _this17 = this;
+          var _this18 = this;
 
           _classCallCheck(this, Relation);
 
@@ -3594,7 +3608,7 @@
             classMethods = _.difference(Object.getOwnPropertyNames(this.base), _.keys(ActiveResource.prototype.Base));
             customClassMethods = _.difference(classMethods, INTERNAL_METHODS);
             mixin = ActiveResource.Collection.build(customClassMethods).inject({}, function (obj, method) {
-              obj[method] = _this17.base[method];
+              obj[method] = _this18.base[method];
               return obj;
             });
             ActiveResource.extend(this, mixin);
@@ -3670,7 +3684,7 @@
         }, {
           key: "select",
           value: function select() {
-            var _this18 = this;
+            var _this19 = this;
 
             var queryParams;
             queryParams = _.clone(this.queryParams());
@@ -3700,7 +3714,7 @@
             }).flatten().each(function (arg) {
               var modelName;
               modelName = _.isObject(arg) ? _.keys(arg)[0] : queryParams.__root;
-              return queryParams['fields'] = _this18.__extendArrayParam(modelName, _.isObject(arg) ? [_.values(arg)[0]] : [arg], queryParams['fields']);
+              return queryParams['fields'] = _this19.__extendArrayParam(modelName, _.isObject(arg) ? [_.values(arg)[0]] : [arg], queryParams['fields']);
             });
             return this.__newRelation(queryParams);
           } // Defines the page number of the query
@@ -4109,17 +4123,17 @@
         }, {
           key: "loadTarget",
           value: function loadTarget() {
-            var _this19 = this;
+            var _this20 = this;
 
             if (this.__canFindTarget()) {
               return this.__findTarget().then(function (loadedTarget) {
-                _this19.target = loadedTarget;
+                _this20.target = loadedTarget;
 
-                _this19.loaded(true);
+                _this20.loaded(true);
 
                 return loadedTarget;
               }).catch(function () {
-                return _this19.reset();
+                return _this20.reset();
               });
             } else {
               this.reset();
@@ -4203,7 +4217,7 @@
         }, {
           key: "__executeOnCloneIfImmutable",
           value: function __executeOnCloneIfImmutable(checkImmutable, value, fn) {
-            var _this20 = this;
+            var _this21 = this;
 
             var clone, newValue, result;
 
@@ -4211,7 +4225,7 @@
               clone = this.owner.clone();
               newValue = ActiveResource.Collection.build(value).map(function (val) {
                 return (val != null ? val.__createClone({
-                  cloner: _this20.owner,
+                  cloner: _this21.owner,
                   newCloner: clone
                 }) : void 0) || null;
               });
@@ -4314,15 +4328,15 @@
 
 
       function CollectionAssociation(owner, reflection) {
-        var _this21;
+        var _this22;
 
         _classCallCheck(this, CollectionAssociation);
 
-        _this21 = _possibleConstructorReturn(this, _getPrototypeOf(CollectionAssociation).apply(this, arguments));
-        _this21.owner = owner;
-        _this21.reflection = reflection;
-        _this21.queryName = _this21.klass().queryName;
-        return _this21;
+        _this22 = _possibleConstructorReturn(this, _getPrototypeOf(CollectionAssociation).apply(this, arguments));
+        _this22.owner = owner;
+        _this22.reflection = reflection;
+        _this22.queryName = _this22.klass().queryName;
+        return _this22;
       } // Getter for the proxy to the target
 
 
@@ -4343,12 +4357,12 @@
           var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
           var checkImmutable = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
           return this.__executeOnCloneIfImmutable(checkImmutable, resources, function (resources) {
-            var _this22 = this;
+            var _this23 = this;
 
             var base, localAssignment, persistedResources;
             resources = ActiveResource.prototype.Collection.build(resources);
             resources.each(function (r) {
-              return _this22.__raiseOnTypeMismatch(r);
+              return _this23.__raiseOnTypeMismatch(r);
             });
             persistedResources = resources.select(function (r) {
               return typeof r.persisted === "function" ? r.persisted() : void 0;
@@ -4356,10 +4370,10 @@
 
             localAssignment = function localAssignment() {
               if (save) {
-                _this22.loaded(true);
+                _this23.loaded(true);
               }
 
-              _this22.replace(resources);
+              _this23.replace(resources);
 
               return resources;
             };
@@ -4379,11 +4393,11 @@
         value: function build() {
           var attributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
           return this.__executeOnCloneIfImmutable(true, [], function () {
-            var _this23 = this;
+            var _this24 = this;
 
             if (_.isArray(attributes)) {
               return ActiveResource.prototype.Collection.build(attributes).map(function (attr) {
-                return _this23.build(attr);
+                return _this24.build(attr);
               });
             } else {
               return this.__concatResources(ActiveResource.prototype.Collection.build(this.__buildResource(attributes))).first();
@@ -4414,12 +4428,12 @@
         key: "concat",
         value: function concat(resources) {
           return this.__executeOnCloneIfImmutable(true, resources, function () {
-            var _this24 = this;
+            var _this25 = this;
 
             var base, persistedResources;
             resources = ActiveResource.prototype.Collection.build(resources);
             resources.each(function (r) {
-              return _this24.__raiseOnTypeMismatch(r);
+              return _this25.__raiseOnTypeMismatch(r);
             });
 
             if (!(typeof (base = this.owner).newResource === "function" ? base.newResource() : void 0) && (persistedResources = resources.select(function (r) {
@@ -4427,7 +4441,7 @@
             })).size()) {
               // TODO: Do something better with unpersisted resources, like saving them
               return this.__persistConcat(persistedResources.toArray()).then(function () {
-                return _this24.__concatResources(resources);
+                return _this25.__concatResources(resources);
               });
             } else {
               return this.__concatResources(resources);
@@ -4441,19 +4455,19 @@
         key: "delete",
         value: function _delete(resources) {
           return this.__executeOnCloneIfImmutable(true, resources, function () {
-            var _this25 = this;
+            var _this26 = this;
 
             var base, persistedResources;
             resources = ActiveResource.prototype.Collection.build(resources);
             resources.each(function (r) {
-              return _this25.__raiseOnTypeMismatch(r);
+              return _this26.__raiseOnTypeMismatch(r);
             });
 
             if (!(typeof (base = this.owner).newResource === "function" ? base.newResource() : void 0) && (persistedResources = resources.select(function (r) {
               return typeof r.persisted === "function" ? r.persisted() : void 0;
             })).size()) {
               return this.__persistDelete(persistedResources.toArray()).then(function () {
-                return _this25.__removeResources(resources);
+                return _this26.__removeResources(resources);
               });
             } else {
               return this.__removeResources(resources);
@@ -4536,12 +4550,12 @@
       }, {
         key: "__concatResources",
         value: function __concatResources(resources) {
-          var _this26 = this;
+          var _this27 = this;
 
           resources.each(function (resource) {
-            _this26.addToTarget(resource);
+            _this27.addToTarget(resource);
 
-            return _this26.insertResource(resource);
+            return _this27.insertResource(resource);
           });
           return resources;
         } // Removes the resources from the target
@@ -4648,17 +4662,17 @@
         }, {
           key: "queryParams",
           value: function queryParams() {
-            var _this27 = this;
+            var _this28 = this;
 
             return this.__queryParams || (this.__queryParams = function () {
               var base, klassQueryParams, queryParams;
-              queryParams = _.clone(_this27.base.owner.queryParamsForReflection(_this27.base.reflection));
+              queryParams = _.clone(_this28.base.owner.queryParamsForReflection(_this28.base.reflection));
 
-              if (!(typeof (base = _this27.base.reflection).polymorphic === "function" ? base.polymorphic() : void 0)) {
-                klassQueryParams = _.clone(_this27.base.klass().queryParams());
+              if (!(typeof (base = _this28.base.reflection).polymorphic === "function" ? base.polymorphic() : void 0)) {
+                klassQueryParams = _.clone(_this28.base.klass().queryParams());
 
                 if (klassQueryParams['include'] != null) {
-                  queryParams = _this27.__extendArrayParam('include', klassQueryParams['include'], queryParams);
+                  queryParams = _this28.__extendArrayParam('include', klassQueryParams['include'], queryParams);
                 }
 
                 if (klassQueryParams['fields'] != null) {
@@ -4706,10 +4720,10 @@
         }, {
           key: "load",
           value: function load() {
-            var _this28 = this;
+            var _this29 = this;
 
             return this.all().then(function (collection) {
-              return _this28.base.writer(collection, false, true);
+              return _this29.base.writer(collection, false, true);
             });
           } // Gets the cached association collection and returns it as an array
           // @return [Array<ActiveResource::Base>] the array of cached collection association items
@@ -4765,16 +4779,16 @@
         }, {
           key: "build",
           value: function build() {
-            var _this29 = this;
+            var _this30 = this;
 
             var attributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
             var resources;
             attributes = _.isArray(attributes) ? _.map(attributes, function (attr) {
-              return _.extend(attr, _this29.queryParams()['filter']);
+              return _.extend(attr, _this30.queryParams()['filter']);
             }) : _.extend(attributes, this.queryParams()['filter']);
             resources = ActiveResource.prototype.Collection.build(this.base.build(attributes));
             resources.each(function (r) {
-              return r.assignResourceRelatedQueryParams(_this29.queryParams());
+              return r.assignResourceRelatedQueryParams(_this30.queryParams());
             });
 
             if (resources.size() > 1) {
@@ -4856,15 +4870,15 @@
       }, {
         key: "__deleteResources",
         value: function __deleteResources(resources) {
-          var _this30 = this;
+          var _this31 = this;
 
           resources.each(function (resource) {
             var inverse;
 
-            if ((inverse = _this30.reflection.inverseOf()) != null) {
+            if ((inverse = _this31.reflection.inverseOf()) != null) {
               return resource.association(inverse.name).replace(null);
             } else {
-              return resource[_this30.reflection.foreignKey()] = null;
+              return resource[_this31.reflection.foreignKey()] = null;
             }
           });
           return this.target = ActiveResource.prototype.Collection.build(_.difference(this.target.toArray(), resources.toArray()));
@@ -4904,7 +4918,7 @@
           var save = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
           var checkImmutable = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
           return this.__executeOnCloneIfImmutable(checkImmutable, resource, function (resource) {
-            var _this31 = this;
+            var _this32 = this;
 
             var base, localAssignment;
 
@@ -4914,10 +4928,10 @@
 
             localAssignment = function localAssignment() {
               if (save) {
-                _this31.loaded(true);
+                _this32.loaded(true);
               }
 
-              return _this31.replace(resource);
+              return _this32.replace(resource);
             };
 
             if (save && !(typeof (base = this.owner).newResource === "function" ? base.newResource() : void 0)) {
@@ -5499,7 +5513,7 @@
       }, {
         key: "propagate",
         value: function propagate(errors) {
-          var _this32 = this;
+          var _this33 = this;
 
           var errorsByTarget;
           errorsByTarget = errors.inject({}, function (targetObject, error) {
@@ -5510,7 +5524,7 @@
 
             if (targetObject[field] == null) {
               try {
-                association = _this32.base.association(field);
+                association = _this33.base.association(field);
               } catch (error1) {
                 association = null;
               }
@@ -5543,14 +5557,14 @@
                   return errorsForTarget.errors.delete(e);
                 });
                 baseErrors.each(function (e) {
-                  return _this32.push(e);
+                  return _this33.push(e);
                 });
                 relationshipResource = association.target.first();
 
                 if (clone = relationshipResource != null ? relationshipResource.__createClone({
-                  cloner: _this32.base
+                  cloner: _this33.base
                 }) : void 0) {
-                  _this32.base.__fields[association.reflection.name].replace(relationshipResource, clone);
+                  _this33.base.__fields[association.reflection.name].replace(relationshipResource, clone);
 
                   association.target.replace(relationshipResource, clone);
                   clone.errors().clear();
@@ -5558,7 +5572,7 @@
                 }
               } else {
                 if (clone = (ref = association.target) != null ? ref.__createClone({
-                  cloner: _this32.base
+                  cloner: _this33.base
                 }) : void 0) {
                   clone.errors().clear();
                   return clone.errors().propagate(errorsForTarget.errors);
@@ -5566,7 +5580,7 @@
               }
             } else {
               return errorsForTarget.errors.each(function (e) {
-                return _this32.push(e);
+                return _this33.push(e);
               });
             }
           });

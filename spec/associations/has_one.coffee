@@ -13,7 +13,7 @@ describe 'ActiveResource', ->
     describe '::HasOneAssociation', ->
       describe 'reading', ->
         beforeEach ->
-          MyLibrary::GiftCard.includes('order').find(1)
+          MyLibrary.GiftCard.includes('order').find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -23,7 +23,7 @@ describe 'ActiveResource', ->
 
         it 'returns the target', ->
           @promise.then =>
-            expect(@resource.order().isA?(MyLibrary::Order)).toBeTruthy()
+            expect(@resource.order().isA?(MyLibrary.Order)).toBeTruthy()
 
         it 'appends / to relationship links', ->
           @promise.then =>
@@ -34,7 +34,7 @@ describe 'ActiveResource', ->
 
       describe 'loading', ->
         beforeEach ->
-          MyLibrary::GiftCard.find(1)
+          MyLibrary.GiftCard.find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -56,11 +56,11 @@ describe 'ActiveResource', ->
         it 'returns the target', ->
           @promise2.then =>
             @target = window.onSuccess.calls.mostRecent().args[0]
-            expect(@target.isA?(MyLibrary::Order)).toBeTruthy()
+            expect(@target.isA?(MyLibrary.Order)).toBeTruthy()
 
       describe 'assigning', ->
         beforeEach ->
-          MyLibrary::GiftCard.find(1)
+          MyLibrary.GiftCard.find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -69,7 +69,7 @@ describe 'ActiveResource', ->
           @promise2 = @promise.then =>
             @resource = window.onSuccess.calls.mostRecent().args[0]
 
-            @target = MyLibrary::Order.build()
+            @target = MyLibrary.Order.build()
 
             @resource.assignOrder(@target)
             @resource
@@ -88,16 +88,16 @@ describe 'ActiveResource', ->
 
         describe 'when assigning wrong type', ->
           it 'throws an error', ->
-            expect(=> @resource.assignOrder(MyLibrary::OrderItem.build())).toThrow()
+            expect(=> @resource.assignOrder(MyLibrary.OrderItem.build())).toThrow()
 
         describe 'when foreignKey defined', ->
           beforeEach ->
-            class MyLibrary::HasOneClass extends MyLibrary.Base
+            class MyLibrary.HasOneClass extends MyLibrary.Base
               @hasOne 'order', foreignKey: 'hasOneClassToken'
 
-            @resource2 = MyLibrary::HasOneClass.build(id: 2)
+            @resource2 = MyLibrary.HasOneClass.build(id: 2)
 
-            @target2 = MyLibrary::Order.build()
+            @target2 = MyLibrary.Order.build()
 
             @resource2.assignOrder(@target2)
 
@@ -106,14 +106,14 @@ describe 'ActiveResource', ->
 
         describe 'when primaryKey defined', ->
           beforeEach ->
-            class MyLibrary::HasOneClass extends MyLibrary.Base
+            class MyLibrary.HasOneClass extends MyLibrary.Base
               this.className = 'HasOneClass'
 
               @hasOne 'order', primaryKey: 'token'
 
-            @resource2 = MyLibrary::HasOneClass.build(token: 'abc123')
+            @resource2 = MyLibrary.HasOneClass.build(token: 'abc123')
 
-            @target2 = MyLibrary::Order.build()
+            @target2 = MyLibrary.Order.build()
 
             @resource2.assignOrder(@target2)
 
@@ -122,19 +122,19 @@ describe 'ActiveResource', ->
 
         describe 'when target is polymorphic', ->
           beforeEach ->
-            class MyLibrary::HasOneClass extends MyLibrary.Base
+            class MyLibrary.HasOneClass extends MyLibrary.Base
               this.className = 'HasOneClass'
 
               @hasOne 'belongsToPolymorphicClass', as: 'hasOneAlias'
 
-            class MyLibrary::BelongsToPolymorphicClass extends MyLibrary.Base
+            class MyLibrary.BelongsToPolymorphicClass extends MyLibrary.Base
               this.className = 'BelongsToPolymorphicClass'
 
               @belongsTo 'hasOneAlias', polymorphic: true
 
-            @resource2 = MyLibrary::HasOneClass.build(id: 1)
+            @resource2 = MyLibrary.HasOneClass.build(id: 1)
 
-            @target2 = MyLibrary::BelongsToPolymorphicClass.build()
+            @target2 = MyLibrary.BelongsToPolymorphicClass.build()
 
             @resource2.assignBelongsToPolymorphicClass(@target2)
 
@@ -148,7 +148,7 @@ describe 'ActiveResource', ->
 
       describe 'updating', ->
         beforeEach ->
-          MyLibrary::GiftCard.includes('order').find(1)
+          MyLibrary.GiftCard.includes('order').find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -159,7 +159,7 @@ describe 'ActiveResource', ->
         describe 'in general', ->
           beforeEach ->
             @promise2 = @promise.then =>
-              @target = MyLibrary::Order.build(id: 2)
+              @target = MyLibrary.Order.build(id: 2)
 
               @resource.updateOrder(@target)
               @resource
@@ -176,7 +176,7 @@ describe 'ActiveResource', ->
         describe 'when assigning a resource', ->
           beforeEach ->
             @promise2 = @promise.then =>
-              @target = MyLibrary::Order.build(id: 2)
+              @target = MyLibrary.Order.build(id: 2)
 
               @resource.updateOrder(@target)
               @resource
@@ -258,7 +258,7 @@ describe 'ActiveResource', ->
 
       describe 'building', ->
         beforeEach ->
-          MyLibrary::GiftCard.includes('order').find(1)
+          MyLibrary.GiftCard.includes('order').find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -269,7 +269,7 @@ describe 'ActiveResource', ->
 
         it 'builds a resource of reflection klass type', ->
           @promise.then =>
-            expect(@target.klass()).toBe(MyLibrary::Order)
+            expect(@target.klass()).toBe(MyLibrary.Order)
 
         it 'assigns the attributes to the target', ->
           @promise.then =>
@@ -285,18 +285,18 @@ describe 'ActiveResource', ->
 
         describe 'when className is specified', ->
           beforeEach ->
-            class MyLibrary::MyClass extends MyLibrary.Base
+            class MyLibrary.MyClass extends MyLibrary.Base
               @hasOne 'randomClass', className: 'GiftCard'
 
-            @resource2 = MyLibrary::MyClass.build()
+            @resource2 = MyLibrary.MyClass.build()
             @target2 = @resource2.buildRandomClass()
 
           it 'builds a resource of className type', ->
-            expect(@target2.klass()).toBe(MyLibrary::GiftCard)
+            expect(@target2.klass()).toBe(MyLibrary.GiftCard)
 
       describe 'creating', ->
         beforeEach ->
-          MyLibrary::GiftCard.includes('order').find(1)
+          MyLibrary.GiftCard.includes('order').find(1)
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -345,7 +345,7 @@ describe 'ActiveResource', ->
 
           it 'builds a resource of reflection klass type', ->
             @promise2.then =>
-              expect(@target.klass()).toBe(MyLibrary::Order)
+              expect(@target.klass()).toBe(MyLibrary.Order)
 
           it 'assigns the attributes to the target', ->
             @promise2.then =>

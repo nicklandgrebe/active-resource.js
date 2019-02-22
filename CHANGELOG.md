@@ -107,3 +107,8 @@ changes to each resource
 ## 1.0.0-beta.3
 
 * Add pagination caching to CollectionResponse
+
+## Master
+
+* BREAKING: Remove support for adding classes to resource library `prototype` instead of as direct object property
+* FIX: Allow resource library headers to be set after initialization

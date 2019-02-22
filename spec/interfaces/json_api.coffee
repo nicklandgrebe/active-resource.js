@@ -65,7 +65,7 @@ describe 'ActiveResource', ->
       describe 'getting resources', ->
         beforeEach ->
           @interface
-          .get(@lib::Product.links()['related'])
+          .get(@lib.Product.links()['related'])
           .then(window.onSuccess)
           .catch(window.onFailure)
 
@@ -108,7 +108,7 @@ describe 'ActiveResource', ->
 
           it 'returns a collection of resources of the queried type', ->
             @promise2.then =>
-              expect(@collection.last().isA?(@lib::Product)).toBeTruthy()
+              expect(@collection.last().isA?(@lib.Product)).toBeTruthy()
 
           it 'returns a collection of resources with links', ->
             @promise2.then =>
@@ -117,7 +117,7 @@ describe 'ActiveResource', ->
       describe 'getting a resource', ->
         beforeEach ->
           @interface
-          .get(@lib::Product.links()['related'] + '1')
+          .get(@lib.Product.links()['related'] + '1')
           .then(window.onSuccess)
           .catch(window.onFailure)
 
@@ -132,7 +132,7 @@ describe 'ActiveResource', ->
 
           it 'returns a resource of the queried type', ->
             @promise2.then =>
-              expect(@resource.isA?(@lib::Product)).toBeTruthy()
+              expect(@resource.isA?(@lib.Product)).toBeTruthy()
 
           it 'returns a resource with a link', ->
             @promise2.then =>
@@ -175,7 +175,7 @@ describe 'ActiveResource', ->
               orders: ['price','createdAt']
 
           @interface
-          .get(@lib::Product.links()['related'], queryParams)
+          .get(@lib.Product.links()['related'], queryParams)
           .then(window.onSuccess)
           .catch(window.onFailure)
 
@@ -196,7 +196,7 @@ describe 'ActiveResource', ->
             __root: 'products'
 
           @interface
-            .get(@lib::Product.links()['related'], queryParams)
+            .get(@lib.Product.links()['related'], queryParams)
             .then(window.onSuccess)
             .catch(window.onFailure)
 
@@ -213,7 +213,7 @@ describe 'ActiveResource', ->
             include: ['merchant', 'attributeValues', { orders: 'transactions' }]
 
           @interface
-          .get(@lib::Product.links()['related'], queryParams)
+          .get(@lib.Product.links()['related'], queryParams)
           .then(window.onSuccess)
           .catch(window.onFailure)
 
@@ -230,7 +230,7 @@ describe 'ActiveResource', ->
             sort: { updatedAt: 'asc', createdAt: 'desc' }
 
           @interface
-          .get(@lib::Product.links()['related'], queryParams)
+          .get(@lib.Product.links()['related'], queryParams)
           .then(window.onSuccess)
           .catch(window.onFailure)
 
@@ -244,12 +244,12 @@ describe 'ActiveResource', ->
     describe '#post', ->
       describe 'persisting resource data', ->
         beforeEach ->
-          @order = @lib::Order.build(price: 1.0)
+          @order = @lib.Order.build(price: 1.0)
           @order.transactions().assign(
             [
-              @lib::Transaction.build(
+              @lib.Transaction.build(
                 amount: 1.0,
-                paymentMethod: @lib::PaymentMethod.build(id: 100)
+                paymentMethod: @lib.PaymentMethod.build(id: 100)
               )
             ]
           )
@@ -257,7 +257,7 @@ describe 'ActiveResource', ->
           @order.timestamp = new Date()
 
           @interface
-          .post(@lib::Order.links()['related'], @order)
+          .post(@lib.Order.links()['related'], @order)
           .then(window.onSuccess)
           .catch(window.onFailure)
 
@@ -338,11 +338,11 @@ describe 'ActiveResource', ->
 
       describe 'persisting changes involving resource identifiers', ->
         beforeEach ->
-          @product = @lib::Product.build(id: 1, title: 'A product title')
-          @product2 = @lib::Product.build(id: 2, title: 'Another title')
+          @product = @lib.Product.build(id: 1, title: 'A product title')
+          @product2 = @lib.Product.build(id: 2, title: 'Another title')
 
           @interface
-          .post(@lib::Product.links()['related'], [@product, @product2], onlyResourceIdentifiers: true)
+          .post(@lib.Product.links()['related'], [@product, @product2], onlyResourceIdentifiers: true)
           .then(window.onSuccess)
           .catch(window.onFailure)
 
@@ -369,7 +369,7 @@ describe 'ActiveResource', ->
     describe '#delete', ->
       describe 'with resource data', ->
         beforeEach ->
-          @lib::Product.last()
+          @lib.Product.last()
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -400,7 +400,7 @@ describe 'ActiveResource', ->
       describe 'without resource data', ->
         beforeEach ->
           @interface
-          .delete(@lib::Product.links()['related'])
+          .delete(@lib.Product.links()['related'])
           .then(window.onSuccess)
           .catch(window.onFailure)
 
@@ -413,7 +413,7 @@ describe 'ActiveResource', ->
 
     describe '#findResourceForRelationship', ->
       beforeEach ->
-        @resource = @lib::Order.build()
+        @resource = @lib.Order.build()
 
         @response = getJSONFixture('orders/includes.json');
 
@@ -446,7 +446,7 @@ describe 'ActiveResource', ->
             expect(@result.id).toEqual(@response.data.relationships.order_items.data[0].id)
 
           it 'returns resource built from include type', ->
-            expect(@result.klass()).toBe(@lib::OrderItem)
+            expect(@result.klass()).toBe(@lib.OrderItem)
 
         describe 'when relationship singular', ->
           beforeEach ->
@@ -462,13 +462,13 @@ describe 'ActiveResource', ->
             expect(@result.id).toEqual(@response.data.relationships.customer.data.id)
 
           it 'returns resource built from include type', ->
-            expect(@result.klass()).toBe(@lib::Customer)
+            expect(@result.klass()).toBe(@lib.Customer)
 
       describe 'when included is on relationship target', ->
         describe 'when relationship target persisted', ->
           describe 'when relationship collection', ->
             beforeEach ->
-              @relationshipResource = @lib::OrderItem.build(id: "5")
+              @relationshipResource = @lib.OrderItem.build(id: "5")
               @resource.assignAttributes(orderItems: [
                 @relationshipResource
               ])
@@ -490,7 +490,7 @@ describe 'ActiveResource', ->
 
           describe 'when relationship singular', ->
             beforeEach ->
-              @relationshipResource = @lib::Customer.build(id: "1")
+              @relationshipResource = @lib.Customer.build(id: "1")
               @resource.assignAttributes(customer: @relationshipResource)
 
               @result =
@@ -510,8 +510,8 @@ describe 'ActiveResource', ->
         describe 'when relationship target unpersisted', ->
           describe 'when relationship collection', ->
             beforeEach ->
-              @relationshipResource0 = @lib::OrderItem.build()
-              @relationshipResource1 = @lib::OrderItem.build()
+              @relationshipResource0 = @lib.OrderItem.build()
+              @relationshipResource1 = @lib.OrderItem.build()
               @resource.assignAttributes(orderItems: [
                 @relationshipResource0
                 @relationshipResource1
@@ -537,7 +537,7 @@ describe 'ActiveResource', ->
 
           describe 'when relationship singular', ->
             beforeEach ->
-              @relationshipResource = @lib::Customer.build()
+              @relationshipResource = @lib.Customer.build()
               @resource.assignAttributes(customer: @relationshipResource)
 
               @result =

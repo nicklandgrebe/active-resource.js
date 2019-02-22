@@ -13,19 +13,19 @@ MyLibrary.createResource(
 )
 `
 
-class MyLibrary::Customer extends MyLibrary.Base
+class MyLibrary.Customer extends MyLibrary.Base
   this.className = 'Customer'
   this.queryName = 'customers'
 
   this.hasMany 'orders', inverseOf: 'customer'
 
-class MyLibrary::GiftCard extends MyLibrary.Base
+class MyLibrary.GiftCard extends MyLibrary.Base
   this.className = 'GiftCard'
   this.queryName = 'gift_cards'
 
   this.hasOne 'order'
 
-class MyLibrary::Order extends MyLibrary.Base
+class MyLibrary.Order extends MyLibrary.Base
   this.className = 'Order'
   this.queryName = 'orders'
 
@@ -40,20 +40,20 @@ class MyLibrary::Order extends MyLibrary.Base
   this.hasMany 'orderItems'
   this.hasMany 'transactions', autosave: true
 
-class MyLibrary::OrderItem extends MyLibrary.Base
+class MyLibrary.OrderItem extends MyLibrary.Base
   this.className = 'OrderItem'
   this.queryName = 'order_items'
 
   this.belongsTo 'order'
 
-class MyLibrary::PaymentMethod extends MyLibrary.Base
+class MyLibrary.PaymentMethod extends MyLibrary.Base
   this.className = 'PaymentMethod'
   this.queryName = 'payment_methods'
 
   this.hasMany 'orders', as: 'paymentSource', inverseOf: 'paymentSource'
   this.hasMany 'transactions'
 
-class MyLibrary::Product extends MyLibrary.Base
+class MyLibrary.Product extends MyLibrary.Base
   this.className = 'Product'
   this.queryName = 'products'
 
@@ -67,7 +67,7 @@ class MyLibrary::Product extends MyLibrary.Base
   this.customFind = () =>
     'found'
 
-class MyLibrary::Merchant extends MyLibrary.Base
+class MyLibrary.Merchant extends MyLibrary.Base
   this.className = 'Merchant'
   this.queryName = 'merchants'
 
@@ -75,13 +75,13 @@ class MyLibrary::Merchant extends MyLibrary.Base
 
   this.hasMany 'products'
 
-class MyLibrary::TimeSlot extends MyLibrary.Base
+class MyLibrary.TimeSlot extends MyLibrary.Base
   this.className = 'TimeSlot'
   this.queryName = 'time_slots'
 
   this.belongsTo 'product'
 
-class MyLibrary::Transaction extends MyLibrary.Base
+class MyLibrary.Transaction extends MyLibrary.Base
   this.className = 'Transaction'
   this.queryName = 'transactions'
 

@@ -13,14 +13,14 @@ describe 'ActiveResource', ->
     describe '#persisted()', ->
       describe 'when the resource is not persisted', ->
         beforeEach ->
-          @resource = MyLibrary::Product.build()
+          @resource = MyLibrary.Product.build()
 
         it 'returns false', ->
           expect(@resource.persisted?()).toBeFalsy()
 
       describe 'when the resource is persisted', ->
         beforeEach ->
-          MyLibrary::Product.create(title: 'A product title', description: 'A product description', window.onCompletion)
+          MyLibrary.Product.create(title: 'A product title', description: 'A product description', window.onCompletion)
 
           @promise = moxios.wait =>
             moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
@@ -34,14 +34,14 @@ describe 'ActiveResource', ->
     describe '#newResource()', ->
       describe 'when the resource is not persisted', ->
         beforeEach ->
-          @resource = MyLibrary::Product.build()
+          @resource = MyLibrary.Product.build()
 
         it 'returns true', ->
           expect(@resource.newResource?()).toBeTruthy()
 
       describe 'when the resource is persisted', ->
         beforeEach ->
-          MyLibrary::Product.create(title: 'A product title', description: 'A product description', window.onCompletion)
+          MyLibrary.Product.create(title: 'A product title', description: 'A product description', window.onCompletion)
 
           @promise = moxios.wait =>
             moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.save.success)
@@ -55,7 +55,7 @@ describe 'ActiveResource', ->
     describe '#save', ->
       describe 'in general', ->
         beforeEach ->
-          MyLibrary::Product.last()
+          MyLibrary.Product.last()
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -73,7 +73,7 @@ describe 'ActiveResource', ->
 
       describe 'when resource is persisted', ->
         beforeEach ->
-          MyLibrary::Product.last()
+          MyLibrary.Product.last()
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -90,7 +90,7 @@ describe 'ActiveResource', ->
 
       describe 'when resource is not persisted', ->
         beforeEach ->
-          @resource = MyLibrary::Product.build()
+          @resource = MyLibrary.Product.build()
 
         it 'makes a POST request', ->
           @resource.save()
@@ -99,7 +99,7 @@ describe 'ActiveResource', ->
 
       describe 'when resource is valid', ->
         beforeEach ->
-          MyLibrary::Product.last()
+          MyLibrary.Product.last()
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -124,7 +124,7 @@ describe 'ActiveResource', ->
 
       describe 'when resource is invalid', ->
         beforeEach ->
-          MyLibrary::Product.last()
+          MyLibrary.Product.last()
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -150,7 +150,7 @@ describe 'ActiveResource', ->
     describe '#update', ->
       describe 'in general', ->
         beforeEach ->
-          MyLibrary::Product.last()
+          MyLibrary.Product.last()
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -168,7 +168,7 @@ describe 'ActiveResource', ->
 
       describe 'when resource is persisted', ->
         beforeEach ->
-          MyLibrary::Product.last()
+          MyLibrary.Product.last()
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -184,7 +184,7 @@ describe 'ActiveResource', ->
 
       describe 'when resource is not persisted', ->
         beforeEach ->
-          @resource = MyLibrary::Product.build(title: 'A product title', description: 'A product description')
+          @resource = MyLibrary.Product.build(title: 'A product title', description: 'A product description')
 
         it 'makes a POST request', ->
           @resource.update(title: 'Another title')
@@ -193,7 +193,7 @@ describe 'ActiveResource', ->
 
       describe 'when resource is valid', ->
         beforeEach ->
-          MyLibrary::Product.last()
+          MyLibrary.Product.last()
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -213,7 +213,7 @@ describe 'ActiveResource', ->
 
       describe 'when resource is invalid', ->
         beforeEach ->
-          MyLibrary::Product.last()
+          MyLibrary.Product.last()
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -237,7 +237,7 @@ describe 'ActiveResource', ->
 
     describe '#destroy', ->
       beforeEach ->
-        MyLibrary::Product.last()
+        MyLibrary.Product.last()
         .then window.onSuccess
 
         @promise = moxios.wait =>

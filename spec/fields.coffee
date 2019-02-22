@@ -6,7 +6,7 @@ describe 'ActiveResource', ->
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
 
-    MyLibrary::Order.last()
+    MyLibrary.Order.last()
     .then window.onSuccess
 
     @promise = moxios.wait =>
@@ -75,7 +75,7 @@ describe 'ActiveResource', ->
         describe 'singular', ->
           beforeEach ->
             @promise2 = @promise.then =>
-              @resource.assignProduct(MyLibrary::Product.build(id: '10'))
+              @resource.assignProduct(MyLibrary.Product.build(id: '10'))
 
           it 'adds relationship to resource document', ->
             @promise2.then =>

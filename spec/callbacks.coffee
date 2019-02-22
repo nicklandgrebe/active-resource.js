@@ -12,25 +12,25 @@ describe 'ActiveResource', ->
   describe '::Callbacks', ->
     describe '#afterBuild()', ->
       beforeEach ->
-        MyLibrary::Order.afterBuild(->
+        MyLibrary.Order.afterBuild(->
           @orderItems().build([{}, {}, {}])
         )
 
-        @resource = MyLibrary::Order.build()
+        @resource = MyLibrary.Order.build()
 
       afterEach ->
-        MyLibrary::Order.__callbacks['afterBuild'].clear()
+        MyLibrary.Order.__callbacks['afterBuild'].clear()
 
       it 'calls after making a request', ->
         expect(@resource.orderItems().size()).toEqual(3)
 
     describe '#afterRequest()', ->
       beforeEach ->
-        MyLibrary::Order.afterRequest(->
+        MyLibrary.Order.afterRequest(->
           @price = @price + 1.0
         )
 
-        MyLibrary::Order.last()
+        MyLibrary.Order.last()
         .then window.onSuccess
 
         @promise = moxios.wait =>
@@ -39,7 +39,7 @@ describe 'ActiveResource', ->
             @resource = window.onSuccess.calls.mostRecent().args[0]
 
       afterEach ->
-        MyLibrary::Order.__callbacks['afterRequest'].clear()
+        MyLibrary.Order.__callbacks['afterRequest'].clear()
 
       it 'calls after making a request', ->
         expect(@resource.price).toEqual(3.0)

@@ -6,7 +6,7 @@ ActiveResource.Interfaces = class ActiveResource::Interfaces
 
     constructor: (@resourceLibrary) ->
       @axios = axios.create(
-        headers: _.extend(@resourceLibrary.headers || {}, {
+        headers: _.extend(_.clone(@resourceLibrary.headers || {}), {
           'Content-Type': @constructor.contentType
         })
       )

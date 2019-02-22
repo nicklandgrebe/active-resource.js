@@ -16,13 +16,13 @@ describe 'ActiveResource', ->
 
       moxios.install(ImmutableLibrary.interface.axios)
 
-      class ImmutableLibrary::Comment extends ImmutableLibrary.Base
+      class ImmutableLibrary.Comment extends ImmutableLibrary.Base
         this.className = 'Comment'
         this.queryName = 'comments'
 
         this.belongsTo 'order'
 
-      class ImmutableLibrary::Customer extends ImmutableLibrary.Base
+      class ImmutableLibrary.Customer extends ImmutableLibrary.Base
         this.className = 'Customer'
         this.queryName = 'customers'
 
@@ -30,13 +30,13 @@ describe 'ActiveResource', ->
 
         this.hasMany 'orders', inverseOf: 'customer'
 
-      class ImmutableLibrary::GiftCard extends ImmutableLibrary.Base
+      class ImmutableLibrary.GiftCard extends ImmutableLibrary.Base
         this.className = 'GiftCard'
         this.queryName = 'gift_cards'
 
         this.hasOne 'order'
 
-      class ImmutableLibrary::Order extends ImmutableLibrary.Base
+      class ImmutableLibrary.Order extends ImmutableLibrary.Base
         this.className = 'Order'
         this.queryName = 'orders'
 
@@ -50,7 +50,7 @@ describe 'ActiveResource', ->
 
         this.hasOne 'rating', autosave: true
 
-      class ImmutableLibrary::OrderItem extends ImmutableLibrary.Base
+      class ImmutableLibrary.OrderItem extends ImmutableLibrary.Base
         this.className = 'OrderItem'
         this.queryName = 'order_items'
 
@@ -58,7 +58,7 @@ describe 'ActiveResource', ->
 
         this.belongsTo 'order', inverseOf: 'orderItems'
 
-      class ImmutableLibrary::Rating extends ImmutableLibrary.Base
+      class ImmutableLibrary.Rating extends ImmutableLibrary.Base
         this.className = 'Rating'
         this.queryName = 'ratings'
 
@@ -68,7 +68,7 @@ describe 'ActiveResource', ->
 
     describe 'adding errors', ->
       beforeEach ->
-        @resource = ImmutableLibrary::Order.build()
+        @resource = ImmutableLibrary.Order.build()
 
       describe '#add', ->
         beforeEach ->
@@ -95,7 +95,7 @@ describe 'ActiveResource', ->
 
     describe 'propagating errors', ->
       beforeEach ->
-        @resource = ImmutableLibrary::Order.build()
+        @resource = ImmutableLibrary.Order.build()
 
       describe 'singular relationship', ->
         beforeEach ->
@@ -176,7 +176,7 @@ describe 'ActiveResource', ->
 
     describe 'when resource unpersisted', ->
       beforeEach ->
-        @resource = ImmutableLibrary::Order.build()
+        @resource = ImmutableLibrary.Order.build()
 
       describe 'assigning attributes', ->
         beforeEach ->
@@ -372,7 +372,7 @@ describe 'ActiveResource', ->
         describe 'singular relationship', ->
           describe 'when inverse is singular', ->
             beforeEach ->
-              @singularResource = ImmutableLibrary::GiftCard.build(id: '1')
+              @singularResource = ImmutableLibrary.GiftCard.build(id: '1')
               @resource2 = @resource.assignAttributes({
                 giftCard: @singularResource
               })
@@ -484,7 +484,7 @@ describe 'ActiveResource', ->
 
           describe 'when inverse is collection', ->
             beforeEach ->
-              @singularResource = ImmutableLibrary::Customer.build(id: '1')
+              @singularResource = ImmutableLibrary.Customer.build(id: '1')
               @resource2 = @resource.assignAttributes({
                 customer: @singularResource
               })
@@ -597,8 +597,8 @@ describe 'ActiveResource', ->
         describe 'collection relationship', ->
           beforeEach ->
             @collection = ActiveResource::Collection.build([
-              ImmutableLibrary::Comment.build(id: '1'),
-              ImmutableLibrary::Comment.build(id: '2')
+              ImmutableLibrary.Comment.build(id: '1'),
+              ImmutableLibrary.Comment.build(id: '2')
             ])
 
             @resource2 = @resource.assignAttributes({
@@ -712,7 +712,7 @@ describe 'ActiveResource', ->
 
     describe 'when resource persisted', ->
       beforeEach ->
-        ImmutableLibrary::Order.includes('giftCard','orderItems').find('1')
+        ImmutableLibrary.Order.includes('giftCard','orderItems').find('1')
         .then window.onSuccess
 
         @promise = moxios.wait =>
@@ -830,7 +830,7 @@ describe 'ActiveResource', ->
         describe 'singular relationship', ->
           beforeEach ->
             @promise2 = @promise.then =>
-              @singularResource = ImmutableLibrary::GiftCard.build(id: '1')
+              @singularResource = ImmutableLibrary.GiftCard.build(id: '1')
               @resource2 = @resource.assignAttributes({
                 giftCard: @singularResource
               })
@@ -949,8 +949,8 @@ describe 'ActiveResource', ->
         describe 'collection relationship', ->
           beforeEach ->
             @collection = ActiveResource::Collection.build([
-              ImmutableLibrary::Comment.build(id: '1'),
-              ImmutableLibrary::Comment.build(id: '2')
+              ImmutableLibrary.Comment.build(id: '1'),
+              ImmutableLibrary.Comment.build(id: '2')
             ])
 
             @resource2 = @resource.assignAttributes({
@@ -1065,7 +1065,7 @@ describe 'ActiveResource', ->
     describe 'when resource that is inverse of autosave relationship is changed', ->
       describe 'when relationship with autosave inverse is collection', ->
         beforeEach ->
-          ImmutableLibrary::Customer.includes('orders').find('1')
+          ImmutableLibrary.Customer.includes('orders').find('1')
           .then window.onSuccess
 
           @promise = moxios.wait =>
@@ -1099,7 +1099,7 @@ describe 'ActiveResource', ->
       describe 'when relationship with autosave inverse is singular', ->
         describe 'when autosave inverse is collection', ->
           beforeEach ->
-            ImmutableLibrary::Order.includes('orderItems').find('1')
+            ImmutableLibrary.Order.includes('orderItems').find('1')
             .then window.onSuccess
 
             @promise = moxios.wait =>
@@ -1150,7 +1150,7 @@ describe 'ActiveResource', ->
 
         describe 'when autosave inverse is singular', ->
           beforeEach ->
-            ImmutableLibrary::Order.includes('rating').find('1')
+            ImmutableLibrary.Order.includes('rating').find('1')
             .then window.onSuccess
 
             @promise = moxios.wait =>
@@ -1187,7 +1187,7 @@ describe 'ActiveResource', ->
 
     describe 'when using relationship management', ->
       beforeEach ->
-        ImmutableLibrary::Order.find('1')
+        ImmutableLibrary.Order.find('1')
         .then window.onSuccess
 
         @promise = moxios.wait =>
@@ -1197,7 +1197,7 @@ describe 'ActiveResource', ->
 
       describe 'singular', ->
         beforeEach ->
-          ImmutableLibrary::Customer.find('1')
+          ImmutableLibrary.Customer.find('1')
           .then window.onSuccess
 
           @promise2 = moxios.wait =>
@@ -1212,7 +1212,7 @@ describe 'ActiveResource', ->
 
           it 'returns owner of relationship', ->
             @promise3.then =>
-              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+              expect(@clone.isA(ImmutableLibrary.Order)).toBeTruthy()
 
           it 'clones resource', ->
             @promise3.then =>
@@ -1220,7 +1220,7 @@ describe 'ActiveResource', ->
 
           it 'clones related resource', ->
             @promise3.then =>
-              expect(@clone.customer().isA(ImmutableLibrary::Customer)).toBeTruthy()
+              expect(@clone.customer().isA(ImmutableLibrary.Customer)).toBeTruthy()
               expect(@clone.customer()).not.toBe(@relatedResource)
 
         describe 'update', ->
@@ -1236,7 +1236,7 @@ describe 'ActiveResource', ->
 
           it 'returns owner of relationship', ->
             @promise3.then =>
-              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+              expect(@clone.isA(ImmutableLibrary.Order)).toBeTruthy()
 
           it 'clones resource', ->
             @promise3.then =>
@@ -1244,7 +1244,7 @@ describe 'ActiveResource', ->
 
           it 'clones related resource', ->
             @promise3.then =>
-              expect(@clone.customer().isA(ImmutableLibrary::Customer)).toBeTruthy()
+              expect(@clone.customer().isA(ImmutableLibrary.Customer)).toBeTruthy()
               expect(@clone.customer()).not.toBe(@relatedResource)
 
         describe 'build', ->
@@ -1254,7 +1254,7 @@ describe 'ActiveResource', ->
 
           it 'returns owner of relationship', ->
             @promise3.then =>
-              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+              expect(@clone.isA(ImmutableLibrary.Order)).toBeTruthy()
 
           it 'clones resource', ->
             @promise3.then =>
@@ -1273,7 +1273,7 @@ describe 'ActiveResource', ->
 
           it 'returns owner of relationship', ->
             @promise3.then =>
-              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+              expect(@clone.isA(ImmutableLibrary.Order)).toBeTruthy()
 
           it 'clones resource', ->
             @promise3.then =>
@@ -1281,7 +1281,7 @@ describe 'ActiveResource', ->
 
       describe 'collection', ->
         beforeEach ->
-          ImmutableLibrary::Comment.find('1')
+          ImmutableLibrary.Comment.find('1')
           .then window.onSuccess
 
           @promise2 = moxios.wait =>
@@ -1301,7 +1301,7 @@ describe 'ActiveResource', ->
 
           it 'returns owner of relationship', ->
             @promise2.then =>
-              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+              expect(@clone.isA(ImmutableLibrary.Order)).toBeTruthy()
 
           it 'clones resource', ->
             @promise2.then =>
@@ -1318,7 +1318,7 @@ describe 'ActiveResource', ->
 
           it 'returns owner of relationship', ->
             @promise3.then =>
-              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+              expect(@clone.isA(ImmutableLibrary.Order)).toBeTruthy()
 
           it 'clones resource', ->
             @promise3.then =>
@@ -1326,7 +1326,7 @@ describe 'ActiveResource', ->
 
           it 'clones related resources', ->
             @promise3.then =>
-              expect(@clone.comments().target().first().isA(ImmutableLibrary::Comment)).toBeTruthy()
+              expect(@clone.comments().target().first().isA(ImmutableLibrary.Comment)).toBeTruthy()
               expect(@clone.comments().target().first()).not.toBe(@relatedResource)
 
         describe 'update', ->
@@ -1342,7 +1342,7 @@ describe 'ActiveResource', ->
 
           it 'returns owner of relationship', ->
             @promise3.then =>
-              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+              expect(@clone.isA(ImmutableLibrary.Order)).toBeTruthy()
 
           it 'clones resource', ->
             @promise3.then =>
@@ -1350,7 +1350,7 @@ describe 'ActiveResource', ->
 
           it 'clones related resources', ->
             @promise3.then =>
-              expect(@clone.comments().target().first().isA(ImmutableLibrary::Comment)).toBeTruthy()
+              expect(@clone.comments().target().first().isA(ImmutableLibrary.Comment)).toBeTruthy()
               expect(@clone.comments().target().first()).not.toBe(@relatedResource)
 
         describe 'build', ->
@@ -1360,7 +1360,7 @@ describe 'ActiveResource', ->
 
           it 'returns owner of relationship', ->
             @promise3.then =>
-              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+              expect(@clone.isA(ImmutableLibrary.Order)).toBeTruthy()
 
           it 'clones resource', ->
             @promise3.then =>
@@ -1379,7 +1379,7 @@ describe 'ActiveResource', ->
 
           it 'returns owner of relationship', ->
             @promise3.then =>
-              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+              expect(@clone.isA(ImmutableLibrary.Order)).toBeTruthy()
 
           it 'clones resource', ->
             @promise3.then =>
@@ -1398,7 +1398,7 @@ describe 'ActiveResource', ->
 
           it 'returns owner of relationship', ->
             @promise3.then =>
-              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+              expect(@clone.isA(ImmutableLibrary.Order)).toBeTruthy()
 
           it 'clones resource', ->
             @promise3.then =>
@@ -1406,7 +1406,7 @@ describe 'ActiveResource', ->
 
           it 'clones related resources', ->
             @promise3.then =>
-              expect(@clone.comments().target().first().isA(ImmutableLibrary::Comment)).toBeTruthy()
+              expect(@clone.comments().target().first().isA(ImmutableLibrary.Comment)).toBeTruthy()
               expect(@clone.comments().target().first()).not.toBe(@relatedResource)
 
         describe 'delete', ->
@@ -1422,7 +1422,7 @@ describe 'ActiveResource', ->
 
           it 'returns owner of relationship', ->
             @promise3.then =>
-              expect(@clone.isA(ImmutableLibrary::Order)).toBeTruthy()
+              expect(@clone.isA(ImmutableLibrary.Order)).toBeTruthy()
 
           it 'clones resource', ->
             @promise3.then =>
@@ -1430,5 +1430,5 @@ describe 'ActiveResource', ->
 
           it 'clones related resources', ->
             @promise3.then =>
-              expect(@clone.comments().target().first().isA(ImmutableLibrary::Comment)).toBeTruthy()
+              expect(@clone.comments().target().first().isA(ImmutableLibrary.Comment)).toBeTruthy()
               expect(@clone.comments().target().first()).not.toBe(@relatedResource)
