@@ -22,33 +22,54 @@ describe 'ActiveResource', ->
       it 'returns fields', ->
         @promise.then =>
           expect(@resource.klass().fields().toArray().sort()).toEqual([
-            'price', 'customer', 'comments', 'giftCard', 'orderItems', 'paymentSource', 'product', 'transactions'
+            'price', 'jsonField', 'customer', 'comments', 'giftCard', 'orderItems', 'paymentSource', 'product', 'transactions'
           ].sort())
 
     describe 'updating changed fields', ->
       describe 'changing attribute', ->
-        beforeEach ->
-          @promise2 = @promise.then =>
-            @resource.price = 1000.0
+        describe 'value attribute', ->
+          beforeEach ->
+            @promise2 = @promise.then =>
+              @resource.price = 1000.0
 
-        it 'adds attribute to resource document', ->
-          @promise2.then =>
-            @resource.save()
+          it 'adds attribute to resource document', ->
+            @promise2.then =>
+              @resource.save()
 
-            resourceDocument =
-              JSON.stringify({
-                data: {
-                  type: 'orders',
-                  id: '2',
-                  attributes: {
-                    price: 1000.0
-                  },
-                  relationships: {}
-                }
-              })
+              resourceDocument =
+                JSON.stringify({
+                  data: {
+                    type: 'orders',
+                    id: '2',
+                    attributes: {
+                      price: 1000.0
+                    },
+                    relationships: {}
+                  }
+                })
 
-            moxios.wait =>
-              expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+              moxios.wait =>
+                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+
+        describe 'object attribute', ->
+          it 'adds attribute to resource document', ->
+            @promise.then =>
+              @resource.update({ jsonField: { stuffStuff: 1234 }})
+
+              resourceDocument =
+                JSON.stringify({
+                  data: {
+                    type: 'orders',
+                    id: '2',
+                    attributes: {
+                      json_field: { stuff_stuff: 1234 }
+                    },
+                    relationships: {}
+                  }
+                })
+
+              moxios.wait =>
+                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
 
       describe 'changing relationship', ->
         describe 'singular', ->

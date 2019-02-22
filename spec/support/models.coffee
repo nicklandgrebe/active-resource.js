@@ -29,7 +29,7 @@ class MyLibrary::Order extends MyLibrary.Base
   this.className = 'Order'
   this.queryName = 'orders'
 
-  this.attributes('price')
+  this.attributes('price', 'jsonField')
 
   this.belongsTo 'customer', inverseOf: 'orders'
   this.belongsTo 'giftCard'

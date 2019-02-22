@@ -66,6 +66,11 @@ describe 'ActiveResource', ->
           @resource.assignAttributes({ anAttribute: 'value' })
           expect(@resource.hasAttribute('anAttribute')).toBeTruthy()
 
+      it 'assigns object attributes', ->
+        @promise.then =>
+          @resource.assignAttributes({ anAttribute: { stuff: 1234 } })
+          expect(@resource.anAttribute).toEqual({ stuff: 1234 })
+
     describe '#attributes()', ->
       describe 'if attribute is a property', ->
         beforeEach ->
