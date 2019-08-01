@@ -24,7 +24,7 @@ describe 'ActiveResource', ->
       it 'calls after making a request', ->
         expect(@resource.orderItems().size()).toEqual(3)
 
-    fdescribe '#afterCreate()', ->
+    describe '#afterCreate()', ->
       beforeEach ->
         MyLibrary.Order.afterCreate(->
           @calls = @calls && @calls + 1 || 1
