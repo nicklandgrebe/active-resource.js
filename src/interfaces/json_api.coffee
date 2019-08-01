@@ -361,6 +361,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @return [ActiveResource] the built ActiveResource
   buildResource: (data, includes, { existingResource, parentRelationship }) ->
     resource = existingResource || @resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build()
+    justCreated = existingResource && existingResource.newResource()
 
     attributes = data['attributes'] || {}
 
@@ -401,6 +402,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
 
       association.loaded(true) if _.has(attributes, reflection.name) || relationshipEmpty
 
+    if justCreated
+      resource.__executeCallbacks('afterCreate')
     resource.__executeCallbacks('afterRequest')
     resource
 

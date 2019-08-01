@@ -927,8 +927,9 @@
           value: function buildResource(data, includes, _ref2) {
             var existingResource = _ref2.existingResource,
                 parentRelationship = _ref2.parentRelationship;
-            var attributes, resource;
+            var attributes, justCreated, resource;
             resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
+            justCreated = existingResource && existingResource.newResource();
             attributes = data['attributes'] || {};
 
             if (data[resource.klass().primaryKey]) {
@@ -967,6 +968,10 @@
                 return association.loaded(true);
               }
             });
+
+            if (justCreated) {
+              resource.__executeCallbacks('afterCreate');
+            }
 
             resource.__executeCallbacks('afterRequest');
 
@@ -1715,6 +1720,7 @@
         value: function callbacks() {
           return this.__callbacks || (this.__callbacks = {
             afterBuild: ActiveResource.prototype.Collection.build(),
+            afterCreate: ActiveResource.prototype.Collection.build(),
             afterRequest: ActiveResource.prototype.Collection.build()
           });
         }
@@ -1722,6 +1728,11 @@
         key: "afterBuild",
         value: function afterBuild(func) {
           return this.callbacks()['afterBuild'].push(func);
+        }
+      }, {
+        key: "afterCreate",
+        value: function afterCreate(func) {
+          return this.callbacks()['afterCreate'].push(func);
         }
       }, {
         key: "afterRequest",
