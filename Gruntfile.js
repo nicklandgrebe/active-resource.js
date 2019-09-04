@@ -103,7 +103,7 @@ module.exports = function(grunt) {
           sourceMap: true,
         },
         files: {
-          'dist/active-resource.min.js': 'dist/active-resource.js'
+          'build/active-resource.min.js': 'build/active-resource.js'
         }
       }
     },
@@ -119,9 +119,9 @@ module.exports = function(grunt) {
           '*/\n\n'
         },
         files: {
-          'dist/active-resource.js': ['dist/active-resource.js'],
-          'dist/active-resource.min.js': ['dist/active-resource.min.js'],
-          'dist/active-resource.min.js.map': ['dist/active-resource.min.js.map']
+          'dist/active-resource.js': ['build/active-resource.js'],
+          'dist/active-resource.min.js': ['build/active-resource.min.js'],
+          'dist/active-resource.min.js.map': ['build/active-resource.min.js.map']
         }
       },
     },
