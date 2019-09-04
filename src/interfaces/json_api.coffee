@@ -376,7 +376,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     resource.__assignFields(attributes)
 
     resource.__links = _.extend(resource.links(), data['links'])
-    resource.klass().reflectOnAllAssociations().each (reflection) ->
+    resource.klass().reflectOnAllAssociations().each (reflection) =>
       association = resource.association(reflection.name)
 
       if(relationshipLinks = data['relationships']?[s.underscored(reflection.name)]?['links'])?
@@ -395,6 +395,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
       relationshipEmpty =
         if _.isObject(relationship = data['relationships']?[s.underscored(reflection.name)]?['data'])
           _.keys(relationship).length == 0
+        else if @resourceLibrary.immutable
+          _.isNull(relationship) || _.isEmpty(relationship) || _.has(attributes, reflection.name)
         else if relationship?
           relationship.length == 0
         else
