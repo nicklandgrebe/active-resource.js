@@ -747,6 +747,10 @@ describe 'ActiveResource', ->
           @promise2.then =>
             expect(@resource2.orderItems().target().toArray()).toEqual([])
 
+        it 'does not assign unloaded relationships', ->
+          @promise2.then =>
+            expect(@resource2.comments().size()).toEqual(2)
+
       describe 'assigning attributes', ->
         beforeEach ->
           @promise2 = @promise.then =>

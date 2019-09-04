@@ -19,7 +19,10 @@ class ActiveResource::Immutable::Attributes
       fields = reloaded.attributes()
 
       resource.klass().reflectOnAllAssociations().each (reflection) ->
-        target = reloaded.association(reflection.name).reader()
+        association = reloaded.association(reflection.name)
+        return if !association.loaded()
+
+        target = association.reader()
         target = target.toArray() if reflection.collection?()
         fields[reflection.name] = target
 
