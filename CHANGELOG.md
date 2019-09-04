@@ -113,3 +113,8 @@ changes to each resource
 * BREAKING: Remove support for adding classes to resource library `prototype` instead of as direct object property
 * FIX: Allow resource library headers to be set after initialization
 * FEATURE: Add afterCreate callback
+
+# 1.0.0-beta.5
+
+* Add immutable `reload`
+* In immutable mode, don't flag associations as loaded unless they are included in response
