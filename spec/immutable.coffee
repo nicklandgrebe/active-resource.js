@@ -720,6 +720,33 @@ describe 'ActiveResource', ->
           .then =>
             @resource = window.onSuccess.calls.mostRecent().args[0]
 
+      describe 'reload', ->
+        beforeEach ->
+          @promise2 = @promise.then =>
+            @resource.reload()
+            .then window.onSuccess
+
+            moxios.wait =>
+              moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes2)
+              .then =>
+                @resource2 = window.onSuccess.calls.mostRecent().args[0]
+
+        it 'clones resource', ->
+          @promise2.then =>
+            expect(@resource).not.toBe(@resource2)
+
+        it 'assigns new attributes', ->
+          @promise2.then =>
+            expect(@resource2.total).toEqual(9.0)
+
+        it 'assigns new singular relationship', ->
+          @promise2.then =>
+            expect(@resource2.rating()).toBeNull()
+
+        it 'assigns new collection relationship', ->
+          @promise2.then =>
+            expect(@resource2.orderItems().target().toArray()).toEqual([])
+
       describe 'assigning attributes', ->
         beforeEach ->
           @promise2 = @promise.then =>

@@ -7,3 +7,21 @@ class ActiveResource::Immutable::Attributes
     clone = @clone()
     clone.__assignAttributes(attributes)
     clone
+
+  @reload: ->
+    throw 'Cannot reload a resource that is not persisted or has an ID' unless @persisted() || @id?.toString().length > 0
+
+    resource = this.clone()
+    url = @links()['self'] || (ActiveResource::Links.__constructLink(@links()['related'], @id.toString()))
+
+    @interface().get(url, @queryParams())
+    .then (reloaded) ->
+      fields = reloaded.attributes()
+
+      resource.klass().reflectOnAllAssociations().each (reflection) ->
+        target = reloaded.association(reflection.name).reader()
+        target = target.toArray() if reflection.collection?()
+        fields[reflection.name] = target
+
+      resource.__assignFields(fields)
+      resource

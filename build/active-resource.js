@@ -4521,6 +4521,35 @@
         return clone;
       }
 
+      static reload() {
+        var ref, resource, url;
+
+        if (!(this.persisted() || ((ref = this.id) != null ? ref.toString().length : void 0) > 0)) {
+          throw 'Cannot reload a resource that is not persisted or has an ID';
+        }
+
+        resource = this.clone();
+        url = this.links()['self'] || ActiveResource.prototype.Links.__constructLink(this.links()['related'], this.id.toString());
+        return this.interface().get(url, this.queryParams()).then(function (reloaded) {
+          var fields;
+          fields = reloaded.attributes();
+          resource.klass().reflectOnAllAssociations().each(function (reflection) {
+            var target;
+            target = reloaded.association(reflection.name).reader();
+
+            if (typeof reflection.collection === "function" ? reflection.collection() : void 0) {
+              target = target.toArray();
+            }
+
+            return fields[reflection.name] = target;
+          });
+
+          resource.__assignFields(fields);
+
+          return resource;
+        });
+      }
+
     };
   }).call(undefined);
   (function () {
