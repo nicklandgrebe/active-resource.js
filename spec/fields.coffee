@@ -6,11 +6,11 @@ describe 'ActiveResource', ->
     window.onFailure = jasmine.createSpy('onFailure')
     window.onCompletion = jasmine.createSpy('onCompletion')
 
-    MyLibrary.Order.last()
+    MyLibrary.Order.find('1')
     .then window.onSuccess
 
     @promise = moxios.wait =>
-      moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.all.success)
+      moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.success)
       .then =>
         @resource = window.onSuccess.calls.mostRecent().args[0]
 
@@ -40,7 +40,7 @@ describe 'ActiveResource', ->
                 JSON.stringify({
                   data: {
                     type: 'orders',
-                    id: '2',
+                    id: '1',
                     attributes: {
                       price: 1000.0
                     },
@@ -49,7 +49,7 @@ describe 'ActiveResource', ->
                 })
 
               moxios.wait =>
-                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+                expect(extractData(moxios.requests.mostRecent().data)).toEqual(resourceDocument)
 
         describe 'object attribute', ->
           it 'adds attribute to resource document', ->
@@ -60,7 +60,7 @@ describe 'ActiveResource', ->
                 JSON.stringify({
                   data: {
                     type: 'orders',
-                    id: '2',
+                    id: '1',
                     attributes: {
                       json_field: { stuff_stuff: 1234 }
                     },
@@ -69,7 +69,7 @@ describe 'ActiveResource', ->
                 })
 
               moxios.wait =>
-                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+                expect(extractData(moxios.requests.mostRecent().data)).toEqual(resourceDocument)
 
       describe 'changing relationship', ->
         describe 'singular', ->
@@ -85,7 +85,7 @@ describe 'ActiveResource', ->
                 JSON.stringify({
                   data: {
                     type: 'orders',
-                    id: '2',
+                    id: '1',
                     attributes: {},
                     relationships: {
                       product: {
@@ -99,7 +99,7 @@ describe 'ActiveResource', ->
                 })
 
               moxios.wait =>
-                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+                expect(extractData(moxios.requests.mostRecent().data)).toEqual(resourceDocument)
 
         describe 'polymorphic', ->
           beforeEach ->
@@ -114,7 +114,7 @@ describe 'ActiveResource', ->
                 JSON.stringify({
                   data: {
                     type: 'orders',
-                    id: '2',
+                    id: '1',
                     attributes: {},
                     relationships: {
                       comments: {
@@ -129,7 +129,7 @@ describe 'ActiveResource', ->
                 })
 
               moxios.wait =>
-                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+                expect(extractData(moxios.requests.mostRecent().data)).toEqual(resourceDocument)
 
           describe 'when includePolymorphicRepeats true', ->
             beforeEach ->
@@ -147,7 +147,7 @@ describe 'ActiveResource', ->
                   JSON.stringify({
                     data: {
                       type: 'orders',
-                      id: '2',
+                      id: '1',
                       attributes: {},
                       relationships: {
                         comments: {
@@ -158,7 +158,7 @@ describe 'ActiveResource', ->
                               resource: {
                                 data: {
                                   type: 'orders',
-                                  id: '2'
+                                  id: '1'
                                 }
                               }
                             }
@@ -169,7 +169,7 @@ describe 'ActiveResource', ->
                   })
 
                 moxios.wait =>
-                  expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+                  expect(extractData(moxios.requests.mostRecent().data)).toEqual(resourceDocument)
 
         describe 'collection', ->
           beforeEach ->
@@ -187,7 +187,7 @@ describe 'ActiveResource', ->
                 JSON.stringify({
                   data: {
                     type: 'orders',
-                    id: '2',
+                    id: '1',
                     attributes: {},
                     relationships: {
                       order_items: {
@@ -203,7 +203,7 @@ describe 'ActiveResource', ->
                   }
                 })
 
-              expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+              expect(extractData(moxios.requests.mostRecent().data)).toEqual(resourceDocument)
 
           it 'assigns inverseOf field on related resources (removing it from changedFields)', ->
             @promise2.then =>
@@ -239,7 +239,7 @@ describe 'ActiveResource', ->
                 })
 
               moxios.wait =>
-                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+                expect(extractData(moxios.requests.mostRecent().data)).toEqual(resourceDocument)
 
         describe 'autosave', ->
           beforeEach ->
@@ -255,7 +255,7 @@ describe 'ActiveResource', ->
                 JSON.stringify({
                   data: {
                     type: 'orders',
-                    id: '2',
+                    id: '1',
                     attributes: {},
                     relationships: {
                       transactions: {
@@ -278,4 +278,4 @@ describe 'ActiveResource', ->
                 })
 
               moxios.wait =>
-                expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+                expect(extractData(moxios.requests.mostRecent().data)).toEqual(resourceDocument)

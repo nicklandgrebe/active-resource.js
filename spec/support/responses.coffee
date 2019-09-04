@@ -55,6 +55,9 @@ window.JsonApiResponses =
       includes:
         status: 200
         response: getJSONFixture('orders/find_includes.json')
+      includes2:
+        status: 200
+        response: getJSONFixture('orders/find_includes2.json')
     save:
       success:
         status: 200
@@ -112,3 +115,5 @@ window.JsonApiResponses =
       failure:
         status: 403
         response: null
+
+window.extractData = (response) -> JSON.stringify(data: JSON.parse(response).data)

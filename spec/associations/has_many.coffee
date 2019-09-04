@@ -611,11 +611,10 @@ describe 'ActiveResource', ->
                     data: { type: 'products', id: '1' }
                   }
                 }
-              },
-              include: 'comments,transactions'
+              }
             })
             @promise3.then =>
-              expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
+              expect(extractData(moxios.requests.mostRecent().data)).toEqual(resourceDocument)
 
           it 'builds resource(s) of reflection klass type', ->
             @promise3.then =>

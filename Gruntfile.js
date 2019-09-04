@@ -66,11 +66,6 @@ module.exports = function(grunt) {
         }
       }
     },
-    exec: {
-      bili: {
-        cmd: 'bili'
-      }
-    },
     rollup: {
       options: {
         plugins: [
@@ -78,6 +73,17 @@ module.exports = function(grunt) {
             exclude: './node_modules/**'
           })
         ]
+      },
+      build: {
+        options: {
+          format: 'umd',
+          name: 'active-resource',
+          moduleName: 'ActiveResource'
+        },
+        files: [{
+          dest: 'build/active-resource.js',
+          src: 'build/active-resource.js',
+        }],
       },
       specs: {
         options: {
@@ -91,13 +97,13 @@ module.exports = function(grunt) {
       }
     },
     uglify: {
-      build: {
+      release: {
         options: {
           mangle: false,
           sourceMap: true,
         },
         files: {
-          'build/active-resource.min.js': 'build/active-resource.js'
+          'dist/active-resource.min.js': 'dist/active-resource.js'
         }
       }
     },
@@ -113,9 +119,9 @@ module.exports = function(grunt) {
           '*/\n\n'
         },
         files: {
-          'dist/active-resource.js': ['build/active-resource.js'],
-          'dist/active-resource.min.js': ['build/active-resource.min.js'],
-          'dist/active-resource.min.js.map': ['build/active-resource.min.js.map']
+          'dist/active-resource.js': ['dist/active-resource.js'],
+          'dist/active-resource.min.js': ['dist/active-resource.min.js'],
+          'dist/active-resource.min.js.map': ['dist/active-resource.min.js.map']
         }
       },
     },
@@ -203,7 +209,7 @@ module.exports = function(grunt) {
   grunt.registerTask(
     'build',
     'Compiles and runs the Javascript spec files for ActiveResource.js source code.',
-    [ 'coffee:build', 'exec:bili', 'uglify:build', 'spec' ]
+    [ 'coffee:build', 'rollup:build', 'spec' ]
   );
 
   grunt.registerTask(
@@ -221,6 +227,6 @@ module.exports = function(grunt) {
   grunt.registerTask(
     'release',
     'Creates a new release of the library in the dist folder',
-    [ 'clean:dist', 'build', 'concat:release' ]
+    [ 'clean:dist', 'build', 'uglify:release', 'concat:release' ]
   );
 };
