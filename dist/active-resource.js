@@ -1,5 +1,5 @@
 /*
-	active-resource 1.0.0-beta.5
+	active-resource 1.0.0-beta.6
 	(c) 2019 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	active-resource may be freely distributed under the MIT license
 	Portions of active-resource were inspired by or borrowed from Rail's ActiveRecord library
@@ -1844,7 +1844,7 @@
               }) : ((ref1 = reflection.inverseOf()) != null ? ref1.autosave() : void 0) ? _this10.__createCollectionInverseAutosaveAssociationClone(oldAssociation, {
                 parentClone: clone,
                 cloner: cloner
-              }) : oldAssociation.target : reflection.autosave() && oldAssociation.target === cloner ? _this10.__createSingularAutosaveAssociationClone(oldAssociation, {
+              }) : oldAssociation.target : reflection.polymorphic() ? oldAssociation.target : reflection.autosave() && oldAssociation.target === cloner ? _this10.__createSingularAutosaveAssociationClone(oldAssociation, {
                 parentClone: clone,
                 newCloner: newCloner
               }) : ((ref2 = reflection.inverseOf()) != null ? ref2.autosave() : void 0) && oldAssociation.target != null ? _this10.__createSingularInverseAutosaveAssociationClone(oldAssociation, {

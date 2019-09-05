@@ -118,3 +118,7 @@ changes to each resource
 
 * Add immutable `reload`
 * In immutable mode, don't flag associations as loaded unless they are included in response
+
+# 1.0.0-beta.6
+
+* Add polymorphic relationships to clone
