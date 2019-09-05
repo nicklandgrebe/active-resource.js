@@ -1837,7 +1837,7 @@
               }) : ((ref1 = reflection.inverseOf()) != null ? ref1.autosave() : void 0) ? _this10.__createCollectionInverseAutosaveAssociationClone(oldAssociation, {
                 parentClone: clone,
                 cloner: cloner
-              }) : oldAssociation.target : reflection.autosave() && oldAssociation.target === cloner ? _this10.__createSingularAutosaveAssociationClone(oldAssociation, {
+              }) : oldAssociation.target : reflection.polymorphic() ? oldAssociation.target : reflection.autosave() && oldAssociation.target === cloner ? _this10.__createSingularAutosaveAssociationClone(oldAssociation, {
                 parentClone: clone,
                 newCloner: newCloner
               }) : ((ref2 = reflection.inverseOf()) != null ? ref2.autosave() : void 0) && oldAssociation.target != null ? _this10.__createSingularInverseAutosaveAssociationClone(oldAssociation, {

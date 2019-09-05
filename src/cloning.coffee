@@ -77,7 +77,9 @@ class ActiveResource::Cloning
             else
               oldAssociation.target
           else
-            if reflection.autosave() && oldAssociation.target == cloner
+            if reflection.polymorphic()
+              oldAssociation.target
+            else if reflection.autosave() && oldAssociation.target == cloner
               @__createSingularAutosaveAssociationClone(
                 oldAssociation,
                 {

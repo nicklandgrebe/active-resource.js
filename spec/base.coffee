@@ -74,6 +74,7 @@ describe 'ActiveResource', ->
           .then =>
             @resource = window.onSuccess.calls.mostRecent().args[0]
 
+            @resource.assignAttributes({ paymentSource: MyLibrary.PaymentMethod.build() })
             @resource.errors().add('attribute', 'invalid')
 
             @clone = @resource.clone()
