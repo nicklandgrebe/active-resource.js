@@ -1,5 +1,5 @@
 /*
-	active-resource 1.0.0-beta.6
+	active-resource 1.0.0-beta.7
 	(c) 2019 Nick Landgrebe && Peak Labs, LLC DBA Occasion App
 	active-resource may be freely distributed under the MIT license
 	Portions of active-resource were inspired by or borrowed from Rail's ActiveRecord library
@@ -978,7 +978,7 @@
                 };
               }
 
-              relationshipEmpty = _.isObject(relationship = (ref2 = data['relationships']) != null ? (ref3 = ref2[s.underscored(reflection.name)]) != null ? ref3['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : _this7.resourceLibrary.immutable ? _.isNull(relationship) || _.isEmpty(relationship) || _.has(attributes, reflection.name) : relationship != null ? relationship.length === 0 : true;
+              relationshipEmpty = _.isObject(relationship = (ref2 = data['relationships']) != null ? (ref3 = ref2[s.underscored(reflection.name)]) != null ? ref3['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : _this7.resourceLibrary.immutable ? !_.isUndefined(relationship) && (_.isNull(relationship) || _.isEmpty(relationship) || _.has(attributes, reflection.name)) : relationship != null ? relationship.length === 0 : true;
 
               if (_.has(attributes, reflection.name) || relationshipEmpty) {
                 return association.loaded(true);

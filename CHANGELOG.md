@@ -122,3 +122,7 @@ changes to each resource
 # 1.0.0-beta.6
 
 * Add polymorphic relationships to clone
+
+# 1.0.0-beta.7
+
+* In immutable mode, don't flag associations as loaded if they are not defined in the response
