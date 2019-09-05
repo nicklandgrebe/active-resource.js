@@ -971,7 +971,7 @@
                 };
               }
 
-              relationshipEmpty = _.isObject(relationship = (ref2 = data['relationships']) != null ? (ref3 = ref2[s.underscored(reflection.name)]) != null ? ref3['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : _this7.resourceLibrary.immutable ? _.isNull(relationship) || _.isEmpty(relationship) || _.has(attributes, reflection.name) : relationship != null ? relationship.length === 0 : true;
+              relationshipEmpty = _.isObject(relationship = (ref2 = data['relationships']) != null ? (ref3 = ref2[s.underscored(reflection.name)]) != null ? ref3['data'] : void 0 : void 0) ? _.keys(relationship).length === 0 : _this7.resourceLibrary.immutable ? !_.isUndefined(relationship) && (_.isNull(relationship) || _.isEmpty(relationship) || _.has(attributes, reflection.name)) : relationship != null ? relationship.length === 0 : true;
 
               if (_.has(attributes, reflection.name) || relationshipEmpty) {
                 return association.loaded(true);

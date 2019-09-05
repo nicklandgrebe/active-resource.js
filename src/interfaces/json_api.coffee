@@ -396,7 +396,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
         if _.isObject(relationship = data['relationships']?[s.underscored(reflection.name)]?['data'])
           _.keys(relationship).length == 0
         else if @resourceLibrary.immutable
-          _.isNull(relationship) || _.isEmpty(relationship) || _.has(attributes, reflection.name)
+          !_.isUndefined(relationship) && (_.isNull(relationship) || _.isEmpty(relationship) || _.has(attributes, reflection.name))
         else if relationship?
           relationship.length == 0
         else
