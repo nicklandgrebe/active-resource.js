@@ -114,15 +114,19 @@ changes to each resource
 * FIX: Allow resource library headers to be set after initialization
 * FEATURE: Add afterCreate callback
 
-# 1.0.0-beta.5
+## 1.0.0-beta.5
 
 * Add immutable `reload`
 * In immutable mode, don't flag associations as loaded unless they are included in response
 
-# 1.0.0-beta.6
+## 1.0.0-beta.6
 
 * Add polymorphic relationships to clone
 
-# 1.0.0-beta.7
+## 1.0.0-beta.7
 
 * In immutable mode, don't flag associations as loaded if they are not defined in the response
+
+# Master
+
+* In immutable mode, fix passing down of queryParams in CollectionProxy build
