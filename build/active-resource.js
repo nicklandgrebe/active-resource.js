@@ -4429,21 +4429,29 @@
           });
         } // Builds resource(s) for the association
         // @param [Object,Array<Object>] attributes the attributes to build into the resource
+        // @param [Object] queryParams the options to add to the resource, like `fields` and `include`
         // @return [ActiveResource::Base] the built resource(s) for the association, with attributes
 
       }, {
         key: "build",
         value: function build() {
           var attributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+          var queryParams = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
           return this.__executeOnCloneIfImmutable(true, [], function () {
             var _this25 = this;
 
-            if (_.isArray(attributes)) {
-              return ActiveResource.prototype.Collection.build(attributes).map(function (attr) {
-                return _this25.build(attr);
-              });
+            var resources;
+            resources = _.isArray(attributes) ? ActiveResource.prototype.Collection.build(attributes).map(function (attr) {
+              return _this25.build(attr);
+            }) : this.__concatResources(ActiveResource.prototype.Collection.build(this.__buildResource(attributes)));
+            resources.each(function (r) {
+              return r.assignResourceRelatedQueryParams(queryParams);
+            });
+
+            if (resources.size() > 1) {
+              return resources;
             } else {
-              return this.__concatResources(ActiveResource.prototype.Collection.build(this.__buildResource(attributes))).first();
+              return resources.first();
             }
           });
         } // Creates resource for the association
@@ -4825,20 +4833,10 @@
             var _this31 = this;
 
             var attributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-            var resources;
             attributes = _.isArray(attributes) ? _.map(attributes, function (attr) {
               return _.extend(attr, _this31.queryParams()['filter']);
             }) : _.extend(attributes, this.queryParams()['filter']);
-            resources = ActiveResource.prototype.Collection.build(this.base.build(attributes));
-            resources.each(function (r) {
-              return r.assignResourceRelatedQueryParams(_this31.queryParams());
-            });
-
-            if (resources.size() > 1) {
-              return resources;
-            } else {
-              return resources.first();
-            }
+            return this.base.build(attributes, this.__resourceRelatedParams());
           } // Create resource for the association
           // @see CollectionAssociation#create
           // @param [Object] attributes the attributes to build into the resource

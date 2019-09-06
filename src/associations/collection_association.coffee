@@ -42,13 +42,21 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
   # Builds resource(s) for the association
   #
   # @param [Object,Array<Object>] attributes the attributes to build into the resource
+  # @param [Object] queryParams the options to add to the resource, like `fields` and `include`
   # @return [ActiveResource::Base] the built resource(s) for the association, with attributes
-  build: (attributes = {}) ->
+  build: (attributes = {}, queryParams = {}) ->
     @__executeOnCloneIfImmutable(true, [], () ->
-      if _.isArray(attributes)
-        ActiveResource::Collection.build(attributes).map (attr) => @build(attr)
+      resources =
+        if _.isArray(attributes)
+          ActiveResource::Collection.build(attributes).map (attr) => @build(attr)
+        else
+          @__concatResources(ActiveResource::Collection.build(@__buildResource(attributes)))
+
+      resources.each((r) => r.assignResourceRelatedQueryParams(queryParams))
+      if resources.size() > 1
+        resources
       else
-        @__concatResources(ActiveResource::Collection.build(@__buildResource(attributes))).first()
+        resources.first()
     )
 
   # Creates resource for the association
