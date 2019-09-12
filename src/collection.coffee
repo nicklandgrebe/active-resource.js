@@ -132,7 +132,7 @@ ActiveResource.Collection = class ActiveResource::Collection
   # @param [Function] iteratee the function to apply as transformation when checking uniqueness
   # @return [ActiveResource.Collection] a collection with only unique items
   uniq: (iteratee) ->
-    this.constructor.build(_.uniq(@__collection, undefined, iteratee))
+    this.constructor.build(_.uniq(@__collection, iteratee))
 
   # Joins each item of the collection as a string, with a separator
   #

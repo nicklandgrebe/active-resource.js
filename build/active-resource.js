@@ -2187,7 +2187,7 @@
         }, {
           key: "uniq",
           value: function uniq(iteratee) {
-            return this.constructor.build(_.uniq(this.__collection, void 0, iteratee));
+            return this.constructor.build(_.uniq(this.__collection, iteratee));
           } // Joins each item of the collection as a string, with a separator
           // @param [String] separator the string to separate each item of the collection with
           // @return [String] the joined collection
