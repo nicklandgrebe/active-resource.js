@@ -57,6 +57,22 @@ describe 'ActiveResource', ->
         it 'adds the association to class level queryParams', ->
           expect(MyLibrary.Customer.queryParams()['include']).toContain('orders')
 
+      describe 'include: true', ->
+        beforeEach ->
+          class MyLibrary.Message extends MyLibrary.Base
+            @hasMany 'artifacts', include: true
+
+        it 'adds the association to class level queryParams', ->
+          expect(MyLibrary.Message.queryParams()['include']).toContain('artifacts')
+
+      describe 'autosave: true, include: false', ->
+        beforeEach ->
+          class MyLibrary.MessageTemplate extends MyLibrary.Base
+            @hasMany 'replies', autosave: true, include: false
+
+        it 'does not add the association to class level queryParams', ->
+          expect(MyLibrary.MessageTemplate.queryParams()['include']).not.toContain('replies')
+
   describe 'building reflections using ::Associations', ->
     describe '.hasMany', ->
       beforeEach ->

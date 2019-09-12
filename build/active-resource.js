@@ -2998,7 +2998,6 @@
           // Gets a queryParams object for `this`
           // If `this` is an instance of a class, instantiate its queryParams with that of its classes,
           // which will have built-in queryParams from autosave associations and `fields` declarations
-          // TODO: Add autosave associations to default klass().queryParams (returns {} right now)
           // @return [Object] the queryParams for `this`
           value: function queryParams() {
             return this.__queryParams || (this.__queryParams = (typeof this.isA === "function" ? this.isA(ActiveResource.prototype.Base) : void 0) ? _.clone(this.klass().queryParams()) : {});
@@ -3266,7 +3265,7 @@
             this.options = options1;
             this.activeResource = activeResource1;
 
-            if (this.autosave()) {
+            if (this.include() || this.autosave() && _.isUndefined(this.options['include'])) {
               this.activeResource.assignQueryParams(this.activeResource.__extendArrayParam('include', [this.name]));
             }
           } // Returns the target klass that this reflection reflects on
@@ -3350,6 +3349,12 @@
             key: "autosave",
             value: function autosave() {
               return this.options['autosave'] || false;
+            } // @return [Boolean] whether or not this is an auto-included association
+
+          }, {
+            key: "include",
+            value: function include() {
+              return this.options['include'] || false;
             }
           }, {
             key: "buildAssociation",

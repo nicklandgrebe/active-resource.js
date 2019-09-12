@@ -67,7 +67,7 @@ ActiveResource.Reflection = class ActiveResource::Reflection
     # @param [Object] options the options to build into the reflection
     # @param [Class] activeResource the ActiveResource class that owns this reflection
     constructor: (@name, @options, @activeResource) ->
-      if @autosave()
+      if @include() || (@autosave() && _.isUndefined(@options['include']))
         @activeResource.assignQueryParams(
           @activeResource.__extendArrayParam('include', [@name])
         )
@@ -126,6 +126,10 @@ ActiveResource.Reflection = class ActiveResource::Reflection
     # @return [Boolean] whether or not this is an autosave association
     autosave: ->
       @options['autosave'] || false
+
+    # @return [Boolean] whether or not this is an auto-included association
+    include: ->
+      @options['include'] || false
 
     buildAssociation: ->
       @klass().build()
