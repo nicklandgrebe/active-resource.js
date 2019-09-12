@@ -124,14 +124,15 @@ ActiveResource.Collection = class ActiveResource::Collection
   # Removes all null values from the array (undefined, null)
   #
   # @return [ActiveResource::Collection] a collection with all null values removed
-  compact: (iteratee) ->
+  compact: () ->
     this.constructor.build(_.without(@__collection,null,undefined))
 
   # Uses equality test === to return collection with only unique items
   #
+  # @param [Function] iteratee the function to apply as transformation when checking uniqueness
   # @return [ActiveResource.Collection] a collection with only unique items
-  uniq: ->
-    this.constructor.build(_.uniq(@__collection))
+  uniq: (iteratee) ->
+    this.constructor.build(_.uniq(@__collection, undefined, iteratee))
 
   # Joins each item of the collection as a string, with a separator
   #

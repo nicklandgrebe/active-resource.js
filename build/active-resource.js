@@ -2178,15 +2178,16 @@
 
         }, {
           key: "compact",
-          value: function compact(iteratee) {
+          value: function compact() {
             return this.constructor.build(_.without(this.__collection, null, void 0));
           } // Uses equality test === to return collection with only unique items
+          // @param [Function] iteratee the function to apply as transformation when checking uniqueness
           // @return [ActiveResource.Collection] a collection with only unique items
 
         }, {
           key: "uniq",
-          value: function uniq() {
-            return this.constructor.build(_.uniq(this.__collection));
+          value: function uniq(iteratee) {
+            return this.constructor.build(_.uniq(this.__collection, void 0, iteratee));
           } // Joins each item of the collection as a string, with a separator
           // @param [String] separator the string to separate each item of the collection with
           // @return [String] the joined collection
