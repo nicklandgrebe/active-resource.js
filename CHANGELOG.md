@@ -131,3 +131,4 @@ changes to each resource
 
 * In immutable mode, fix passing down of queryParams in CollectionProxy build
 * Add uniq to Collection
+* Remove empty attributes and relationships objects from resources post/patch'd to server

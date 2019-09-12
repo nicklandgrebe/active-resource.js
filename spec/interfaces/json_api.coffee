@@ -366,6 +366,27 @@ describe 'ActiveResource', ->
           @promise.then =>
             expect(moxios.requests.mostRecent().data).toEqual(resourceDocument)
 
+    describe '#patch', ->
+      describe 'persisting resource data', ->
+        beforeEach ->
+          @lib.Order.find('1')
+          .then(window.onSuccess)
+
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.success)
+            .then =>
+              @resource = window.onSuccess.calls.mostRecent().args[0]
+
+        it 'builds a resource document', ->
+          resourceDocument =
+            {
+              type: 'orders',
+              id: '1'
+            }
+
+          @promise.then =>
+            expect(JSON.parse(moxios.requests.mostRecent().data).data).toEqual(resourceDocument)
+
     describe '#delete', ->
       describe 'with resource data', ->
         beforeEach ->

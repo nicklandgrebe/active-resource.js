@@ -52,9 +52,7 @@ describe 'ActiveResource', ->
           resourceDocument = JSON.stringify({
             data: {
               type: 'venues',
-              token: 'abc123',
-              attributes: {},
-              relationships: {}
+              token: 'abc123'
             }
           })
 

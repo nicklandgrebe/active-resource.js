@@ -43,8 +43,7 @@ describe 'ActiveResource', ->
                     id: '1',
                     attributes: {
                       price: 1000.0
-                    },
-                    relationships: {}
+                    }
                   }
                 })
 
@@ -63,8 +62,7 @@ describe 'ActiveResource', ->
                     id: '1',
                     attributes: {
                       json_field: { stuff_stuff: 1234 }
-                    },
-                    relationships: {}
+                    }
                   }
                 })
 
@@ -86,7 +84,6 @@ describe 'ActiveResource', ->
                   data: {
                     type: 'orders',
                     id: '1',
-                    attributes: {},
                     relationships: {
                       product: {
                         data: {
@@ -115,13 +112,10 @@ describe 'ActiveResource', ->
                   data: {
                     type: 'orders',
                     id: '1',
-                    attributes: {},
                     relationships: {
                       comments: {
                         data: [{
-                          type: 'comments',
-                          attributes: {},
-                          relationships: {}
+                          type: 'comments'
                         }]
                       }
                     }
@@ -148,12 +142,10 @@ describe 'ActiveResource', ->
                     data: {
                       type: 'orders',
                       id: '1',
-                      attributes: {},
                       relationships: {
                         comments: {
                           data: [{
                             type: 'comments',
-                            attributes: {},
                             relationships: {
                               resource: {
                                 data: {
@@ -188,7 +180,6 @@ describe 'ActiveResource', ->
                   data: {
                     type: 'orders',
                     id: '1',
-                    attributes: {},
                     relationships: {
                       order_items: {
                         data: [{
@@ -223,7 +214,6 @@ describe 'ActiveResource', ->
                   data: {
                     type: 'orders',
                     id: '1',
-                    attributes: {},
                     relationships: {
                       order_items: {
                         data: [{
@@ -256,21 +246,18 @@ describe 'ActiveResource', ->
                   data: {
                     type: 'orders',
                     id: '1',
-                    attributes: {},
                     relationships: {
                       transactions: {
                         data: [{
                           type: 'transactions',
                           attributes: {
                             amount: 5.0
-                          },
-                          relationships: {}
+                          }
                         },{
                           type: 'transactions',
                           attributes: {
                             amount: 10.0
-                          },
-                          relationships: {}
+                          }
                         }]
                       }
                     }

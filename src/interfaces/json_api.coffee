@@ -331,8 +331,8 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
             attributes = _.pick(attributes, changedFields...)
             relationships = _.intersection(relationships, changedFields)
 
-          documentResource['attributes'] = this.toUnderscored(attributes)
-          documentResource['relationships'] = this.buildResourceRelationships(resource, relationships, onlyChanged)
+          documentResource['attributes'] = this.toUnderscored(attributes) if !_.isEmpty(attributes)
+          documentResource['relationships'] = this.buildResourceRelationships(resource, relationships, onlyChanged) if !_.isEmpty(relationships)
 
         documentResource
 

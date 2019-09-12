@@ -702,15 +702,13 @@ describe 'ActiveResource', ->
                       type: 'order_items',
                       attributes: {
                         amount: 1.0
-                      },
-                      relationships: {}
+                      }
                     },
                     {
                       type: 'order_items',
                       attributes: {
                         amount: 2.0
-                      },
-                      relationships: {}
+                      }
                     }
                   ]
                 }

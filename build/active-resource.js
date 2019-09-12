@@ -901,8 +901,13 @@
                   relationships = _.intersection(relationships, changedFields);
                 }
 
-                documentResource['attributes'] = _this6.toUnderscored(attributes);
-                documentResource['relationships'] = _this6.buildResourceRelationships(resource, relationships, onlyChanged);
+                if (!_.isEmpty(attributes)) {
+                  documentResource['attributes'] = _this6.toUnderscored(attributes);
+                }
+
+                if (!_.isEmpty(relationships)) {
+                  documentResource['relationships'] = _this6.buildResourceRelationships(resource, relationships, onlyChanged);
+                }
               }
 
               return documentResource;
