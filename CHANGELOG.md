@@ -130,3 +130,4 @@ changes to each resource
 # Master
 
 * In immutable mode, fix passing down of queryParams in CollectionProxy build
+* Add uniq to Collection

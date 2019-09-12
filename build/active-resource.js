@@ -2180,6 +2180,13 @@
           key: "compact",
           value: function compact(iteratee) {
             return this.constructor.build(_.without(this.__collection, null, void 0));
+          } // Uses equality test === to return collection with only unique items
+          // @return [ActiveResource.Collection] a collection with only unique items
+
+        }, {
+          key: "uniq",
+          value: function uniq() {
+            return this.constructor.build(_.uniq(this.__collection));
           } // Joins each item of the collection as a string, with a separator
           // @param [String] separator the string to separate each item of the collection with
           // @return [String] the joined collection

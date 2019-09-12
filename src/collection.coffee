@@ -127,6 +127,12 @@ ActiveResource.Collection = class ActiveResource::Collection
   compact: (iteratee) ->
     this.constructor.build(_.without(@__collection,null,undefined))
 
+  # Uses equality test === to return collection with only unique items
+  #
+  # @return [ActiveResource.Collection] a collection with only unique items
+  uniq: ->
+    this.constructor.build(_.uniq(@__collection))
+
   # Joins each item of the collection as a string, with a separator
   #
   # @param [String] separator the string to separate each item of the collection with

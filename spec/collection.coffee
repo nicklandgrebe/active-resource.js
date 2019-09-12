@@ -107,6 +107,14 @@ describe 'ActiveResource', ->
       it 'removes null values', ->
         expect(@collection.compact().toArray()).toEqual([1,false,2,3])
 
+    describe '#uniq()', ->
+      beforeEach ->
+        @array = [1,2,2,3,4,4,5]
+        @collection = ActiveResource::Collection.build(@array)
+
+      it 'removes non-unique values', ->
+        expect(@collection.uniq().toArray()).toEqual([1,2,3,4,5])
+
     describe '#flatten()', ->
       beforeEach ->
         @array = [[1,2],[3,[4,5]]]
