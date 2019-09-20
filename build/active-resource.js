@@ -1799,6 +1799,7 @@
         //          is cloned, the autosave association target is cloned, and vice-versa.
         //       2. Only clone a related resource if it is part of the identity of the resource being cloned.
         // @option [ActiveResource::Base] cloner the resource cloning this resource (always a related resource)
+        // @option [Integer] nestedIndex cloning initiated directly from uncloned cloner, use index to replace clone on cloner relationship
         // @option [ActiveResource::Base] newCloner the clone of cloner to reassign fields to
         // @return [ActiveResource::Base] the cloned resource
 
@@ -1808,6 +1809,7 @@
           var _this10 = this;
 
           var cloner = _ref3.cloner,
+              nestedIndex = _ref3.nestedIndex,
               newCloner = _ref3.newCloner;
           var attributes, clone;
           clone = this.klass().build();
@@ -1847,7 +1849,8 @@
                 newCloner: newCloner
               }) : ((ref2 = reflection.inverseOf()) != null ? ref2.autosave() : void 0) && oldAssociation.target != null ? _this10.__createSingularInverseAutosaveAssociationClone(oldAssociation, {
                 parentClone: clone,
-                cloner: cloner
+                cloner: cloner,
+                nestedIndex: nestedIndex
               }) : (((ref3 = reflection.inverseOf()) != null ? ref3.collection() : void 0) ? _this10.__replaceSingularInverseCollectionAssociationClone(oldAssociation, {
                 parentClone: clone
               }) : void 0, oldAssociation.target);
@@ -1969,16 +1972,20 @@
         // @param [Association] association the association that is being cloned
         // @param [ActiveResource] parentClone the cloned owner that is cloning the association
         // @param [ActiveResource] cloner the original related resource that initiated parentClone to be cloned
+        // @option [Integer] nestedIndex cloning initiated directly from uncloned cloner, use index to replace clone on cloner relationship
         // @return [ActiveResource] the new association target
 
       }, {
         key: "__createSingularInverseAutosaveAssociationClone",
         value: function __createSingularInverseAutosaveAssociationClone(association, _ref7) {
           var parentClone = _ref7.parentClone,
-              cloner = _ref7.cloner;
+              cloner = _ref7.cloner,
+              nestedIndex = _ref7.nestedIndex;
           var clone;
 
-          if (association.target === cloner) {
+          if (!_.isUndefined(nestedIndex)) {
+            return cloner.association(association.reflection.name).replaceOnTarget(parentClone, nestedIndex);
+          } else if (association.target === cloner) {
             return cloner;
           } else {
             clone = association.target.__createClone({
@@ -5667,7 +5674,8 @@
                 relationshipResource = association.target.first();
 
                 if (clone = relationshipResource != null ? relationshipResource.__createClone({
-                  cloner: _this34.base
+                  cloner: _this34.base,
+                  nestedIndex: 0
                 }) : void 0) {
                   _this34.base.__fields[association.reflection.name].replace(relationshipResource, clone);
 

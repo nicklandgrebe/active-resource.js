@@ -23,9 +23,10 @@ class ActiveResource::Cloning
   #       2. Only clone a related resource if it is part of the identity of the resource being cloned.
   #
   # @option [ActiveResource::Base] cloner the resource cloning this resource (always a related resource)
+  # @option [Integer] nestedIndex cloning initiated directly from uncloned cloner, use index to replace clone on cloner relationship
   # @option [ActiveResource::Base] newCloner the clone of cloner to reassign fields to
   # @return [ActiveResource::Base] the cloned resource
-  @__createClone: ({ cloner, newCloner }) ->
+  @__createClone: ({ cloner, nestedIndex, newCloner }) ->
     clone = @klass().build()
 
     @errors().each (attribute, e) => clone.errors().push(_.clone(e))
@@ -92,7 +93,8 @@ class ActiveResource::Cloning
                 oldAssociation,
                 {
                   parentClone: clone,
-                  cloner: cloner
+                  cloner: cloner,
+                  nestedIndex: nestedIndex
                 }
               )
             else
@@ -211,9 +213,12 @@ class ActiveResource::Cloning
   # @param [Association] association the association that is being cloned
   # @param [ActiveResource] parentClone the cloned owner that is cloning the association
   # @param [ActiveResource] cloner the original related resource that initiated parentClone to be cloned
+  # @option [Integer] nestedIndex cloning initiated directly from uncloned cloner, use index to replace clone on cloner relationship
   # @return [ActiveResource] the new association target
-  @__createSingularInverseAutosaveAssociationClone: (association, { parentClone, cloner }) ->
-    if association.target == cloner
+  @__createSingularInverseAutosaveAssociationClone: (association, { parentClone, cloner, nestedIndex }) ->
+    if !_.isUndefined(nestedIndex)
+      cloner.association(association.reflection.name).replaceOnTarget(parentClone, nestedIndex)
+    else if association.target == cloner
       cloner
     else
       clone = association.target.__createClone(cloner: this, newCloner: parentClone)
