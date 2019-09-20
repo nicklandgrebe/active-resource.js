@@ -1984,8 +1984,10 @@
           var clone;
 
           if (!_.isUndefined(nestedIndex)) {
-            return cloner.association(association.reflection.name).replaceOnTarget(parentClone, nestedIndex);
-          } else if (association.target === cloner) {
+            cloner.association(association.reflection.inverseOf().name).replaceOnTarget(parentClone, nestedIndex);
+          }
+
+          if (association.target === cloner) {
             return cloner;
           } else {
             clone = association.target.__createClone({

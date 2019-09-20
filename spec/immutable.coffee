@@ -167,6 +167,9 @@ describe 'ActiveResource', ->
         it 'clones the relationship resource', ->
           expect(@resource.orderItems().target().first()).not.toBe(@orderItem)
 
+        it 'clones relationships to relationship resource', ->
+          expect(@resource.orderItems().target().first().order()).toBe(@resource)
+
         it 'does not duplicate cloned resource on the relationship', ->
           expect(@resource.orderItems().target().size()).toBe(1)
 

@@ -217,8 +217,9 @@ class ActiveResource::Cloning
   # @return [ActiveResource] the new association target
   @__createSingularInverseAutosaveAssociationClone: (association, { parentClone, cloner, nestedIndex }) ->
     if !_.isUndefined(nestedIndex)
-      cloner.association(association.reflection.name).replaceOnTarget(parentClone, nestedIndex)
-    else if association.target == cloner
+      cloner.association(association.reflection.inverseOf().name).replaceOnTarget(parentClone, nestedIndex)
+
+    if association.target == cloner
       cloner
     else
       clone = association.target.__createClone(cloner: this, newCloner: parentClone)
