@@ -7,7 +7,7 @@
   "homepage": "https://github.com/nicklandgrebe/activeresource.js",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.16.2",
+    "axios": "^0.19.0",
     "es6-promise": "^4.1.1",
     "qs": "^6.5.0",
     "underscore": "1.8.3",
