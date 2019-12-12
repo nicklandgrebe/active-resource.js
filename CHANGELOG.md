@@ -134,3 +134,4 @@ changes to each resource
 * Remove empty attributes and relationships objects from resources post/patch'd to server
 * Add `include` option to Reflection for adding relationship to default include queryParams
 * Fix bug in immutable error propagation to has many association that resulted in duplicate items on association target of clone
+* Bump axios from 0.16.2 to 0.19.0 (#54)
