@@ -899,7 +899,7 @@ window.Promise = es6Promise.Promise;
           this[k] = v;
         }
       }
-      return null;
+      return this;
     };
 
     Attributes.__readAttribute = function(attribute) {

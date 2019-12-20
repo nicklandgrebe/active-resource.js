@@ -106,8 +106,7 @@ class ActiveResource::Attributes
           @["assign#{s.capitalize(k)}"](v)
       catch
         @[k] = v
-
-    null
+    @
 
   # Reads an attribute on the resource
   #
