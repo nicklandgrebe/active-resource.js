@@ -893,7 +893,7 @@ window.Promise = es6Promise.Promise;
       });
       return this.klass().reflectOnAllAssociations().each(function(reflection) {
         var assoc;
-        if ((assoc = _this.association(reflection.name).target) === null) {
+        if ((assoc = _this.association(reflection.name).target) == null) {
           return;
         }
         if (reflection.collection()) {

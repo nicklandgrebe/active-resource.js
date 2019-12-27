@@ -101,7 +101,7 @@ class ActiveResource::Attributes
     @klass().attributes().readWrite.each (k) =>
       @__tracked[k] = @[k]
     @klass().reflectOnAllAssociations().each (reflection) =>
-      return unless (assoc = @association(reflection.name).target) != null
+      return unless (assoc = @association(reflection.name).target)?
       if reflection.collection()
         assoc.each (r) => r.__trackChanges() unless r.__tracked
       else
