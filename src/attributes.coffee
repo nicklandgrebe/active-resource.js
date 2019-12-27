@@ -94,10 +94,24 @@ class ActiveResource::Attributes
 
   # private
 
+  # Check local changes to read-write attributes applied while waiting for a remote response.
+  # Also implicitly called on all loaded associated records
+  @__trackChanges: () ->
+    @__tracked = {}
+    @klass().attributes().readWrite.each (k) =>
+      @__tracked[k] = @[k]
+    @klass().reflectOnAllAssociations().each (reflection) =>
+      return unless (assoc = @association(reflection.name).target) != null
+      if reflection.collection()
+        assoc.each (r) => r.__trackChanges() unless r.__tracked
+      else
+        assoc.__trackChanges() unless assoc.__tracked
+
   # Assigns `attributes` to the resource
   #
   # @param [Object] attributes the attributes to assign
-  @__assignAttributes: (attributes) ->
+  # @todo Keep track of individual requests
+  @__assignAttributes: (attributes, fromRemote = false) ->
     for k, v of attributes
       try
         if @association(k).reflection.collection?()
@@ -105,7 +119,12 @@ class ActiveResource::Attributes
         else
           @["assign#{s.capitalize(k)}"](v)
       catch
-        @[k] = v
+        if fromRemote && @[k]? && @__tracked?.hasOwnProperty(k) && @__tracked[k] != @[k]
+          console.log "Conflict for #{@klass().name}##{k}: Base = #{@__tracked[k]}; Remote = #{v}; Local = #{@[k]}. Sticking with Local."
+        else
+          console.log "Incoming change from remote for #{@klass().name}##{k}: #{@[k]} => #{v}" if fromRemote && @__tracked?[k] && @[k] != v
+          @[k] = v
+    @__tracked = null if fromRemote
     @
 
   # Reads an attribute on the resource

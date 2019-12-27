@@ -39,7 +39,7 @@ class ActiveResource::Fields
       catch
         @__fields[k] = v
 
-    @__assignAttributes(fields)
+    @__assignAttributes(fields, true)
 
   # If true, at least one field on the resource has changed
   # @return [Boolean] whether or not the resource has changed

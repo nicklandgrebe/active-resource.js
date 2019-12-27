@@ -127,6 +127,7 @@ class ActiveResource::Persistence
   @__createOrUpdate: ->
     @errors().reset()
 
+    @__trackChanges()
     if @persisted()
       @klass().resourceLibrary.interface.patch @links()['self'], this
     else

@@ -885,8 +885,36 @@ window.Promise = es6Promise.Promise;
       });
     };
 
-    Attributes.__assignAttributes = function(attributes) {
-      var k, v, _base;
+    Attributes.__trackChanges = function() {
+      var _this = this;
+      this.__tracked = {};
+      this.klass().attributes().readWrite.each(function(k) {
+        return _this.__tracked[k] = _this[k];
+      });
+      return this.klass().reflectOnAllAssociations().each(function(reflection) {
+        var assoc;
+        if ((assoc = _this.association(reflection.name).target) === null) {
+          return;
+        }
+        if (reflection.collection()) {
+          return assoc.each(function(r) {
+            if (!r.__tracked) {
+              return r.__trackChanges();
+            }
+          });
+        } else {
+          if (!assoc.__tracked) {
+            return assoc.__trackChanges();
+          }
+        }
+      });
+    };
+
+    Attributes.__assignAttributes = function(attributes, fromRemote) {
+      var k, v, _base, _ref, _ref1;
+      if (fromRemote == null) {
+        fromRemote = false;
+      }
       for (k in attributes) {
         v = attributes[k];
         try {
@@ -896,8 +924,18 @@ window.Promise = es6Promise.Promise;
             this["assign" + (s.capitalize(k))](v);
           }
         } catch (_error) {
-          this[k] = v;
+          if (fromRemote && (this[k] != null) && ((_ref = this.__tracked) != null ? _ref.hasOwnProperty(k) : void 0) && this.__tracked[k] !== this[k]) {
+            console.log("Conflict for " + (this.klass().name) + "#" + k + ": Base = " + this.__tracked[k] + "; Remote = " + v + "; Local = " + this[k] + ". Sticking with Local.");
+          } else {
+            if (fromRemote && ((_ref1 = this.__tracked) != null ? _ref1[k] : void 0) && this[k] !== v) {
+              console.log("Incoming change from remote for " + (this.klass().name) + "#" + k + ": " + this[k] + " => " + v);
+            }
+            this[k] = v;
+          }
         }
+      }
+      if (fromRemote) {
+        this.__tracked = null;
       }
       return this;
     };
@@ -1536,7 +1574,7 @@ window.Promise = es6Promise.Promise;
           return _this.__fields[k] = v;
         }
       });
-      return this.__assignAttributes(fields);
+      return this.__assignAttributes(fields, true);
     };
 
     Fields.changed = function() {
@@ -1657,6 +1695,7 @@ window.Promise = es6Promise.Promise;
 
     Persistence.__createOrUpdate = function() {
       this.errors().reset();
+      this.__trackChanges();
       if (this.persisted()) {
         return this.klass().resourceLibrary["interface"].patch(this.links()['self'], this);
       } else {
