@@ -72,7 +72,10 @@ ActiveResource.Errors = class ActiveResource::Errors
         nestedErrors = ActiveResource.Collection.build([nestedError])
 
         if association.reflection.collection()
-          association.target.first()?.errors().propagate(nestedErrors)
+          if nestedError.field == 'base'
+            @push(error)
+          else
+            association.target.first()?.errors().propagate(nestedErrors)
         else
           association.target?.errors().propagate(nestedErrors)
       catch

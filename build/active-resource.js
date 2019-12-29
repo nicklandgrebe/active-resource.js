@@ -1421,7 +1421,11 @@ window.Promise = es6Promise.Promise;
           nestedError.field = nestedField.length === 0 && 'base' || nestedField.join('.');
           nestedErrors = ActiveResource.Collection.build([nestedError]);
           if (association.reflection.collection()) {
-            return (_ref = association.target.first()) != null ? _ref.errors().propagate(nestedErrors) : void 0;
+            if (nestedError.field === 'base') {
+              return _this.push(error);
+            } else {
+              return (_ref = association.target.first()) != null ? _ref.errors().propagate(nestedErrors) : void 0;
+            }
           } else {
             return (_ref1 = association.target) != null ? _ref1.errors().propagate(nestedErrors) : void 0;
           }
