@@ -14,9 +14,9 @@
   }
 }(this, function (axios, es6Promise, _, s, Qs) {
 
-var ActiveResource = function(){};
+var ActiveResource = function() {};
 
-window.Promise = es6Promise.Promise;
+if (typeof window !== "undefined") window.Promise = es6Promise.Promise;
 
 (function() {
   ActiveResource.extend = function(klass, mixin) {
