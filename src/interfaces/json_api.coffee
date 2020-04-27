@@ -316,7 +316,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [ActiveResource::Base] parentRelationship the owner relationship name/resource that is building this resource
   # @return [ActiveResource] the built ActiveResource
   buildResource: (data, includes, { existingResource, parentRelationship }) ->
-    resource = existingResource || @resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build()
+    resource = existingResource || @resourceLibrary.constantize(i.singularize(s.classify(data['type']))).build()
 
     attributes = data['attributes'] || {}
 

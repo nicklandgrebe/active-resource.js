@@ -12,7 +12,7 @@
   } else {
     root['ActiveResource'] = factory(root["axios"],root["es6-promise"],root["underscore"],root["underscore.string"],root["qs"],root["underscore.inflection"]);
   }
-}(this, function (axios, es6Promise, _, s, Qs) {
+}(this, function (axios, es6Promise, _, s, Qs, i) {
 
 var ActiveResource = function() {};
 
@@ -141,7 +141,7 @@ if (typeof window !== "undefined") window.Promise = es6Promise.Promise;
       ;
         klass = extend(klass, this.Base);
         klass.className || (klass.className = klass.name);
-        klass.queryName || (klass.queryName = _.pluralize(s.underscored(klass.className)));
+        klass.queryName || (klass.queryName = i.pluralize(s.underscored(klass.className)));
         if (typeof klass.define === "function") {
           klass.define();
         }
@@ -448,7 +448,7 @@ if (typeof window !== "undefined") window.Promise = es6Promise.Promise;
     JsonApi.prototype.buildResource = function(data, includes, _arg) {
       var attributes, existingResource, parentRelationship, resource;
       existingResource = _arg.existingResource, parentRelationship = _arg.parentRelationship;
-      resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
+      resource = existingResource || this.resourceLibrary.constantize(i.singularize(s.classify(data['type']))).build();
       attributes = data['attributes'] || {};
       if (data[resource.klass().primaryKey]) {
         attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString();
@@ -1956,7 +1956,7 @@ if (typeof window !== "undefined") window.Promise = es6Promise.Promise;
       };
 
       AbstractReflection.prototype.__deriveClassName = function() {
-        return s.classify(_.singularize(this.name));
+        return s.classify(i.singularize(this.name));
       };
 
       AbstractReflection.prototype.__deriveForeignKey = function() {

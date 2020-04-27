@@ -1,22 +1,17 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
   // configure the tasks
   grunt.initConfig({
     pkg: grunt.file.readJSON("package.json"),
     clean: {
       dist: {
-        src: ["dist"]
+        src: ["dist"],
       },
       build: {
-        src: [
-          "build/**/*.js",
-          "!build/init.js",
-          "!build/active-resource.js",
-          "!build/active-resource.min.js"
-        ]
+        src: ["build/**/*.js", "!build/init.js", "!build/active-resource.js", "!build/active-resource.min.js"],
       },
       specs: {
-        src: "spec/spec.js"
-      }
+        src: "spec/spec.js",
+      },
     },
     coffee: {
       build: {
@@ -24,13 +19,13 @@ module.exports = function(grunt) {
         cwd: "src",
         src: ["**/*.coffee"],
         dest: "build",
-        ext: ".js"
+        ext: ".js",
       },
       specs: {
         files: {
-          "spec/spec.js": ["spec/support/*.coffee", "spec/**/*.coffee"]
-        }
-      }
+          "spec/spec.js": ["spec/support/*.coffee", "spec/**/*.coffee"],
+        },
+      },
     },
     umd: {
       build: {
@@ -44,10 +39,10 @@ module.exports = function(grunt) {
               { underscore: "_" },
               { "underscore.string": "s" },
               { qs: "Qs" },
-              { "underscore.inflection": null }
-            ]
-          }
-        }
+              { "underscore.inflection": "i" },
+            ],
+          },
+        },
       },
       specs: {
         options: {
@@ -60,22 +55,22 @@ module.exports = function(grunt) {
               { jquery: "$" },
               { "jasmine-jquery": null },
               { "jasmine-ajax": null },
-              { "jasmine-promises": null }
-            ]
-          }
-        }
-      }
+              { "jasmine-promises": null },
+            ],
+          },
+        },
+      },
     },
     uglify: {
       build: {
         options: {
           mangle: false,
-          sourceMap: true
+          sourceMap: true,
         },
         files: {
-          "build/active-resource.min.js": "build/active-resource.js"
-        }
-      }
+          "build/active-resource.min.js": "build/active-resource.js",
+        },
+      },
     },
     concat: {
       release: {
@@ -86,15 +81,13 @@ module.exports = function(grunt) {
             '\t(c) <%= grunt.template.today("yyyy") %> Nick Landgrebe && Peak Labs, LLC DBA Occasion App\n' +
             "\tactive-resource may be freely distributed under the MIT license\n" +
             "\tPortions of active-resource were inspired by or borrowed from Rail's ActiveRecord library\n" +
-            "*/\n\n"
+            "*/\n\n",
         },
         files: {
           "dist/active-resource.js": ["build/active-resource.js"],
           "dist/active-resource.min.js": ["build/active-resource.min.js"],
-          "dist/active-resource.min.js.map": [
-            "build/active-resource.min.js.map"
-          ]
-        }
+          "dist/active-resource.min.js.map": ["build/active-resource.min.js.map"],
+        },
       },
       build: {
         src: [
@@ -136,23 +129,23 @@ module.exports = function(grunt) {
           "build/immutable/attributes.js",
           "build/immutable/errors.js",
           "build/immutable/persistence.js",
-          "build/immutable/base.js"
+          "build/immutable/base.js",
         ],
-        dest: "build/active-resource.js"
-      }
+        dest: "build/active-resource.js",
+      },
     },
     watch: {
       source: {
         files: "src/**/*.coffee",
-        tasks: ["build"]
-      }
+        tasks: ["build"],
+      },
     },
     connect: {
       test: {
         options: {
-          port: 8000
-        }
-      }
+          port: 8000,
+        },
+      },
     },
     jasmine: {
       activeresource: {
@@ -171,23 +164,19 @@ module.exports = function(grunt) {
                 "js-promise": "/node_modules/js-promise/dist/js-promise",
                 qs: "/node_modules/qs/dist/qs",
                 underscore: "/node_modules/underscore/underscore-min",
-                "underscore.string":
-                  "/node_modules/underscore.string/dist/underscore.string",
-                "underscore.inflection":
-                  "/node_modules/underscore.inflection/lib/underscore.inflection",
+                "underscore.string": "/node_modules/underscore.string/dist/underscore.string",
+                "underscore.inflection": "/node_modules/underscore.inflection/lib/underscore.inflection",
                 "active-resource": "/build/active-resource",
                 jquery: "/node_modules/jquery/dist/jquery.min",
-                "jasmine-jquery":
-                  "/node_modules/jasmine-jquery/lib/jasmine-jquery",
+                "jasmine-jquery": "/node_modules/jasmine-jquery/lib/jasmine-jquery",
                 "jasmine-ajax": "/node_modules/jasmine-ajax/lib/mock-ajax",
-                "jasmine-promises":
-                  "/node_modules/jasmine-promises/dist/jasmine-promises"
-              }
-            }
-          }
-        }
-      }
-    }
+                "jasmine-promises": "/node_modules/jasmine-promises/dist/jasmine-promises",
+              },
+            },
+          },
+        },
+      },
+    },
   });
 
   // load the tasks
@@ -207,17 +196,13 @@ module.exports = function(grunt) {
     ["coffee:build", "concat:build", "umd:build", "uglify", "clean:build"]
   );
 
-  grunt.registerTask(
-    "spec",
-    "Compiles and runs the Javascript spec files for ActiveResource.js source code.",
-    [
-      "clean:specs",
-      "coffee:specs",
-      "umd:specs",
-      "connect:test",
-      "jasmine:activeresource"
-    ]
-  );
+  grunt.registerTask("spec", "Compiles and runs the Javascript spec files for ActiveResource.js source code.", [
+    "clean:specs",
+    "coffee:specs",
+    "umd:specs",
+    "connect:test",
+    "jasmine:activeresource",
+  ]);
 
   grunt.registerTask(
     "build",
@@ -225,15 +210,14 @@ module.exports = function(grunt) {
     ["clean:build", "compile"]
   );
 
-  grunt.registerTask(
-    "release",
-    "Creates a new release of the library in the dist folder",
-    ["clean:dist", "compile", "concat:release"]
-  );
+  grunt.registerTask("release", "Creates a new release of the library in the dist folder", [
+    "clean:dist",
+    "compile",
+    "concat:release",
+  ]);
 
-  grunt.registerTask(
-    "default",
-    "Watches the project for changes, automatically builds them and runs specs.",
-    ["build", "watch"]
-  );
+  grunt.registerTask("default", "Watches the project for changes, automatically builds them and runs specs.", [
+    "build",
+    "watch",
+  ]);
 };

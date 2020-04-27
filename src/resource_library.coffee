@@ -75,7 +75,7 @@ ActiveResource.createResourceLibrary = (baseUrl, options = {}) ->
       klass = extend(klass, @Base)
 
       klass.className ||= klass.name
-      klass.queryName ||= _.pluralize(s.underscored(klass.className))
+      klass.queryName ||= i.pluralize(s.underscored(klass.className))
 
       klass.define?()
 

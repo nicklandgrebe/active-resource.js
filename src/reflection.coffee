@@ -172,7 +172,7 @@ ActiveResource.Reflection = class ActiveResource::Reflection
     # Derives the class name of the reflection from its name
     # @return [String] the class name of the reflection
     __deriveClassName: ->
-      s.classify(_.singularize(@name))
+      s.classify(i.singularize(@name))
 
     # Derives the foreign key of the reflection based on its type
     # @return [String] the foreign key of the reflection
