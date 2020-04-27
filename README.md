@@ -29,7 +29,7 @@ to use more universal idioms.
 ## Installation
 
 ```
-yard add active-resource
+yarn add active-resource
 ```
 
 ## Getting Started
