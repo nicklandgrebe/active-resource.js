@@ -11,7 +11,7 @@
     "es6-promise": "^4.1.1",
     "qs": "^6.5.0",
     "underscore": "^1.8.3",
-    "underscore.inflection": "latest",
+    "underscore.inflection": "getoccasion/underscore.inflection#es6-webpack-compat",
     "underscore.string": "latest"
   },
   "engine": "node >= 0.10",

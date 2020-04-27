@@ -1,5 +1,5 @@
 # Imply that a singular version of the word 'Class' is still 'Class'
-_.singular('Class', 'Class');
+i.singular('Class', 'Class');
 
 window.MyLibrary = ActiveResource.createResourceLibrary('https://example.com/api/v1')
 
