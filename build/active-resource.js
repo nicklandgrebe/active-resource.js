@@ -941,10 +941,11 @@
 
             var existingResource = _ref2.existingResource,
                 parentRelationship = _ref2.parentRelationship;
-            var attributes, justCreated, resource;
+            var attributes, justCreated, relationships, resource;
             resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
             justCreated = existingResource && existingResource.newResource();
             attributes = data['attributes'] || {};
+            relationships = data['relationships'] || {};
 
             if (data[resource.klass().primaryKey]) {
               attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString();
@@ -952,9 +953,10 @@
 
             if (parentRelationship != null) {
               attributes = _.extend(attributes, parentRelationship);
+              relationships = _.omit(relationships, _.keys(parentRelationship)[0]);
             }
 
-            attributes = this.addRelationshipsToFields(attributes, data['relationships'], includes, resource);
+            attributes = this.addRelationshipsToFields(attributes, relationships, includes, resource);
             attributes = this.toCamelCase(attributes);
 
             resource.__assignFields(attributes);

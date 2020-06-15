@@ -364,13 +364,16 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     justCreated = existingResource && existingResource.newResource()
 
     attributes = data['attributes'] || {}
+    relationships = data['relationships'] || {}
 
     if data[resource.klass().primaryKey]
       attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString()
 
-    attributes = _.extend(attributes, parentRelationship) if parentRelationship?
+    if parentRelationship?
+      attributes = _.extend(attributes, parentRelationship)
+      relationships = _.omit(relationships, _.keys(parentRelationship)[0])
 
-    attributes = @addRelationshipsToFields(attributes, data['relationships'], includes, resource)
+    attributes = @addRelationshipsToFields(attributes, relationships, includes, resource)
     attributes = this.toCamelCase(attributes)
 
     resource.__assignFields(attributes)
