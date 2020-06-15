@@ -42,7 +42,7 @@ import { createResourceLibrary } from 'active-resource';
 
 export default createResourceLibrary(
   'https://example.com/api/v1/', // base url for your server
-  headers: { Authorization: 'Bearer ...' }
+  { headers: { Authorization: 'Bearer ...' } }
 );
 ```
 
