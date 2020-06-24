@@ -377,6 +377,14 @@ describe 'ActiveResource', ->
             .then =>
               @resource = window.onSuccess.calls.mostRecent().args[0]
 
+          @promise2 = @promise.then =>
+            @interface
+            .patch(@resource.links()['self'], @resource, onlyResourceIdentifiers: true)
+            .then(window.onSuccess)
+            .catch(window.onFailure)
+
+            moxios.wait => true
+
         it 'builds a resource document', ->
           resourceDocument =
             {
@@ -384,7 +392,7 @@ describe 'ActiveResource', ->
               id: '1'
             }
 
-          @promise.then =>
+          @promise2.then =>
             expect(JSON.parse(moxios.requests.mostRecent().data).data).toEqual(resourceDocument)
 
     describe '#delete', ->
@@ -500,6 +508,7 @@ describe 'ActiveResource', ->
                   @response.included,
                   @resource,
                   @resource.klass().reflectOnAssociation('orderItems')
+                  {},
                   0
                 )
 
@@ -519,7 +528,8 @@ describe 'ActiveResource', ->
                   @response.data.relationships.customer.data,
                   @response.included,
                   @resource,
-                  @resource.klass().reflectOnAssociation('customer')
+                  @resource.klass().reflectOnAssociation('customer'),
+                  {}
                 )
 
             it 'returns resource from target', ->
@@ -543,7 +553,8 @@ describe 'ActiveResource', ->
                   @response.data.relationships.order_items.data[1],
                   @response.included,
                   @resource,
-                  @resource.klass().reflectOnAssociation('orderItems')
+                  @resource.klass().reflectOnAssociation('orderItems'),
+                  {},
                   1
                 )
 
@@ -566,7 +577,8 @@ describe 'ActiveResource', ->
                   @response.data.relationships.customer.data,
                   @response.included,
                   @resource,
-                  @resource.klass().reflectOnAssociation('customer')
+                  @resource.klass().reflectOnAssociation('customer'),
+                  {}
                 )
 
             it 'returns resource from target', ->

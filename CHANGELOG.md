@@ -136,3 +136,5 @@ changes to each resource
 * Fix bug in immutable error propagation to has many association that resulted in duplicate items on association target of clone
 * Bump axios from 0.16.2 to 0.19.0 (#54)
 * Fix infinite call stack when resources reference eachother as includes
+* Implement resourceRegister in JsonApi interface for each resource built from a response, for use in relationships rather than
+  creating duplicate resources for each relationship

@@ -234,6 +234,25 @@ describe 'ActiveResource', ->
           @paramStr = requestParams(moxios.requests.mostRecent())
           expect(@paramStr).toContain('include=merchant,orders.attribute_values,orders.gift_cards')
 
+      describe 'nested includes', ->
+        beforeEach ->
+          MyLibrary.OrderItem.find('3')
+          .then window.onSuccess
+
+          @promise = moxios.wait =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.OrderItem.find.success)
+            .then =>
+              @result = window.onSuccess.calls.mostRecent().args[0]
+
+        it 'constructs nested includes together', ->
+          @promise.then =>
+            order = @result.order()
+
+            expect(order.orderItems().size()).toEqual(3)
+            order.orderItems().target().each((orderItem) =>
+              expect(orderItem.order()).toBe(order)
+            )
+
     describe '#page()', ->
       beforeEach ->
         MyLibrary.Product.page(2).all()

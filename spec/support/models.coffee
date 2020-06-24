@@ -36,9 +36,9 @@ class MyLibrary.Order extends MyLibrary.Base
   this.belongsTo 'paymentSource', polymorphic: true, inverseOf: 'orders'
   this.belongsTo 'product'
 
-  this.hasMany 'comments', as: 'resource', autosave: true, inverseOf: 'resource'
+  this.hasMany 'comments', as: 'resource', autosave: true, include: false, inverseOf: 'resource'
   this.hasMany 'orderItems'
-  this.hasMany 'transactions', autosave: true
+  this.hasMany 'transactions', autosave: true, include: false
 
 class MyLibrary.OrderItem extends MyLibrary.Base
   this.className = 'OrderItem'

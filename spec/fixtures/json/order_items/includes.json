@@ -1,0 +1,88 @@
+{
+  "data": {
+    "id": "3",
+    "type": "order_items",
+    "attributes": {
+      "amount": 0.0
+    },
+    "relationships": {
+      "order": {
+        "data": {
+          "id": "1",
+          "type": "orders"
+        }
+      }
+    },
+    "links": {
+      "self": "https://example.com/api/v1/order_items/3/"
+    }
+  },
+  "included": [
+    {
+      "id": "1",
+      "type": "orders",
+      "attributes": {},
+      "relationships": {
+        "order_items": {
+          "data": [
+            {
+              "id": "3",
+              "type": "order_items"
+            },
+            {
+              "id": "5",
+              "type": "order_items"
+            },
+            {
+              "id": "10",
+              "type": "order_items"
+            }
+          ],
+          "links": {
+            "self": "https://example.com/api/v1/orders/1/relationships/order_items/",
+            "related": "https://example.com/api/v1/orders/1/order_items/"
+          }
+        }
+      },
+      "links": {
+        "self": "https://example.com/api/v1/orders/1/"
+      }
+    },
+    {
+      "id": "5",
+      "type": "order_items",
+      "attributes": {
+        "amount": 1.0
+      },
+      "relationships": {
+        "order_items": {
+          "data": {
+            "id": "1",
+            "type": "orders"
+          }
+        }
+      },
+      "links": {
+        "self": "https://example.com/api/v1/order_items/5/"
+      }
+    },
+    {
+      "id": "10",
+      "type": "order_items",
+      "attributes": {
+        "amount": 2.0
+      },
+      "relationships": {
+        "order_items": {
+          "data": {
+            "id": "1",
+            "type": "orders"
+          }
+        }
+      },
+      "links": {
+        "self": "https://example.com/api/v1/order_items/10/"
+      }
+    }
+  ]
+}

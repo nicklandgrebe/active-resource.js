@@ -68,6 +68,11 @@ window.JsonApiResponses =
       failure:
         status: 422
         response: getJSONFixture('orders/422_resource_invalid.json')
+  OrderItem:
+    find:
+      success:
+        status: 200
+        response: getJSONFixture('order_items/includes.json')
   Product:
     all:
       success:

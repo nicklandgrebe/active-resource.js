@@ -251,7 +251,7 @@
 
       var ResourceLibrary, _interface, library;
 
-      _interface = options.interface || ActiveResource.Interfaces.JsonApi;
+      _interface = options["interface"] || ActiveResource.Interfaces.JsonApi;
 
       library = ResourceLibrary =
       /*#__PURE__*/
@@ -269,13 +269,13 @@
               },
               set: function set(value) {
                 _this2._headers = value;
-                return _this2.interface = new _interface(_this2);
+                return _this2["interface"] = new _interface(_this2);
               }
             }
           });
           this.baseUrl = baseUrl.charAt(baseUrl.length - 1) === '/' ? baseUrl : "".concat(baseUrl, "/");
           this._headers = options.headers;
-          this.interface = new _interface(this);
+          this["interface"] = new _interface(this);
           this.constantizeScope = options['constantizeScope'];
           this.immutable = options.immutable;
           this.includePolymorphicRepeats = options.includePolymorphicRepeats;
@@ -932,6 +932,7 @@
           // @param [Array] includes the array of includes to search for resource relationships in
           // @param [ActiveResource::Base] existingResource an existingResource to use instead of building a new one
           // @param [ActiveResource::Base] parentRelationship the owner relationship name/resource that is building this resource
+          // @param [Object] resourceCache cache of resources for the query that have already been created, to avoid duplicate creation
           // @return [ActiveResource] the built ActiveResource
 
         }, {
@@ -940,15 +941,20 @@
             var _this7 = this;
 
             var existingResource = _ref2.existingResource,
-                parentRelationship = _ref2.parentRelationship;
-            var attributes, justCreated, relationships, resource;
+                parentRelationship = _ref2.parentRelationship,
+                resourceCache = _ref2.resourceCache;
+            var attributes, id, justCreated, relationships, resource;
             resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
             justCreated = existingResource && existingResource.newResource();
+            resourceCache = resourceCache || {};
             attributes = data['attributes'] || {};
             relationships = data['relationships'] || {};
 
             if (data[resource.klass().primaryKey]) {
-              attributes[resource.klass().primaryKey] = data[resource.klass().primaryKey].toString();
+              id = data[resource.klass().primaryKey].toString();
+              attributes[resource.klass().primaryKey] = id;
+              resourceCache[resource.klass().queryName] = resourceCache[resource.klass().queryName] || {};
+              resourceCache[resource.klass().queryName][id] = resource;
             }
 
             if (parentRelationship != null) {
@@ -956,7 +962,7 @@
               relationships = _.omit(relationships, _.keys(parentRelationship)[0]);
             }
 
-            attributes = this.addRelationshipsToFields(attributes, relationships, includes, resource);
+            attributes = this.addRelationshipsToFields(attributes, relationships, includes, resource, resourceCache);
             attributes = this.toCamelCase(attributes);
 
             resource.__assignFields(attributes);
@@ -1027,27 +1033,31 @@
           // @param [Object] relationships the object defining the relationships to be built into `attributes`
           // @param [Array] includes the array of includes to search for relationship resources in
           // @param [ActiveResource::Base] resource the resource to get the primary key of
+          // @param [Object] resourceCache cache of resources for the query that have already been created, to avoid duplicate creation
           // @return [Object] the attributes with all relationships built into it
 
         }, {
           key: "addRelationshipsToFields",
-          value: function addRelationshipsToFields(attributes, relationships, includes, resource) {
+          value: function addRelationshipsToFields(attributes, relationships, includes, resource, resourceCache) {
             var _this8 = this;
 
             _.each(relationships, function (relationship, relationshipName) {
-              var include, reflection, relationshipItems;
+              var cachedResource, include, ref, reflection, relationshipItems;
 
               if (reflection = resource.klass().reflectOnAssociation(s.camelize(relationshipName))) {
                 if (reflection.collection()) {
                   relationshipItems = ActiveResource.prototype.Collection.build(relationship['data']).map(function (relationshipMember, index) {
-                    return _this8.findResourceForRelationship(relationshipMember, includes, resource, reflection, index);
+                    var cachedResource, ref;
+                    cachedResource = (ref = resourceCache[relationshipMember['type']]) != null ? ref[relationshipMember[resource.klass().primaryKey]] : void 0;
+                    return cachedResource || _this8.findResourceForRelationship(relationshipMember, includes, resource, reflection, resourceCache, index);
                   }).compact();
 
                   if (!(typeof relationshipItems.empty === "function" ? relationshipItems.empty() : void 0)) {
                     return attributes[relationshipName] = relationshipItems;
                   }
                 } else if (relationship['data'] != null) {
-                  include = _this8.findResourceForRelationship(relationship['data'], includes, resource, reflection);
+                  cachedResource = (ref = resourceCache[relationship['data']['type']]) != null ? ref[relationship['data'][resource.klass().primaryKey]] : void 0;
+                  include = cachedResource || _this8.findResourceForRelationship(relationship['data'], includes, resource, reflection, resourceCache);
 
                   if (include != null) {
                     return attributes[relationshipName] = include;
@@ -1069,12 +1079,13 @@
           // @param [Array] includes the array of includes to search for relationships in
           // @param [ActiveResource::Base] resource the resource to get the primary key of
           // @param [Reflection] reflection the reflection for the relationship
+          // @param [Object] resourceCache cache of resources for the query that have already been created, to avoid duplicate creation
           // @param [Integer] index the index of the relationship data (only in collection relationships)
           // @return [ActiveResource::Base] the include built into an ActiveResource::Base
 
         }, {
           key: "findResourceForRelationship",
-          value: function findResourceForRelationship(relationshipData, includes, resource, reflection, index) {
+          value: function findResourceForRelationship(relationshipData, includes, resource, reflection, resourceCache, index) {
             var buildResourceOptions, findConditions, include, parentReflection, potentialTarget, primaryKey, target;
             primaryKey = resource.klass().primaryKey;
             findConditions = {
@@ -1093,7 +1104,9 @@
               }
             }
 
-            buildResourceOptions = {};
+            buildResourceOptions = {
+              resourceCache: resourceCache
+            };
 
             if (reflection.polymorphic()) {
               parentReflection = reflection.polymorphicInverseOf(this.resourceLibrary.constantize(_.singularize(s.classify(relationshipData['type']))));
@@ -1642,7 +1655,7 @@
 
           resource = this;
           url = this.links()['self'] || ActiveResource.prototype.Links.__constructLink(this.links()['related'], this.id.toString());
-          return this.interface().get(url, this.queryParams()).then(function (reloaded) {
+          return this["interface"]().get(url, this.queryParams()).then(function (reloaded) {
             resource.__assignFields(reloaded.attributes());
 
             resource.klass().reflectOnAllAssociations().each(function (reflection) {
@@ -2360,7 +2373,7 @@
         key: "prevPage",
         value: function prevPage() {
           if (this.hasPrevPage()) {
-            return this.prevPagePromise || (this.prevPagePromise = this.first().klass().resourceLibrary.interface.get(this.links()['prev']));
+            return this.prevPagePromise || (this.prevPagePromise = this.first().klass().resourceLibrary["interface"].get(this.links()['prev']));
           }
         } // Loads data at links()['next'] if there is a link
         // @return [Promise] a promise to return the next page of data, or errors
@@ -2369,7 +2382,7 @@
         key: "nextPage",
         value: function nextPage() {
           if (this.hasNextPage()) {
-            return this.nextPagePromise || (this.nextPagePromise = this.first().klass().resourceLibrary.interface.get(this.links()['next']));
+            return this.nextPagePromise || (this.nextPagePromise = this.first().klass().resourceLibrary["interface"].get(this.links()['next']));
           }
         } // Converts this a plain ActiveResource::Collection
         // @return [Collection] the converted collection for this CollectionResponse
@@ -2963,7 +2976,7 @@
         key: "destroy",
         value: function destroy() {
           var resource;
-          return this.klass().resourceLibrary.interface.delete(this.links()['self'], resource = this).then(function () {
+          return this.klass().resourceLibrary["interface"]["delete"](this.links()['self'], resource = this).then(function () {
             resource.__links = {};
             return resource;
           });
@@ -2983,9 +2996,9 @@
           this.errors().reset();
 
           if (this.persisted()) {
-            return this.klass().resourceLibrary.interface.patch(this.links()['self'], this);
+            return this.klass().resourceLibrary["interface"].patch(this.links()['self'], this);
           } else {
-            return this.klass().resourceLibrary.interface.post(this.links()['related'], this);
+            return this.klass().resourceLibrary["interface"].post(this.links()['related'], this);
           }
         }
       }]);
@@ -3692,7 +3705,7 @@
         }, {
           key: "interface",
           value: function _interface() {
-            return this.base.interface();
+            return this.base["interface"]();
           } // Adds filters to the query
           // @example
           //  .where(price: 5.0) = { filter: { price: 5.0 } }
@@ -3924,7 +3937,7 @@
             }
 
             url = ActiveResource.prototype.Links.__constructLink(this.links()['related'], primaryKey.toString());
-            return this.interface().get(url, this.queryParams());
+            return this["interface"]().get(url, this.queryParams());
           } // Retrieves the first ActiveResource in the relation corresponding to conditions
           // @param [Object] conditions the conditions to filter by
           // @return [Promise] a promise to return the ActiveResource **or** errors
@@ -3939,7 +3952,7 @@
         }, {
           key: "all",
           value: function all() {
-            return this.interface().get(this.links()['related'], this.queryParams());
+            return this["interface"]().get(this.links()['related'], this.queryParams());
           } // Retrieves all resources in the relation and calls a function with each one of them
           // @param [Function] iteratee the function to call with each item of the relation
           // @return [Promise] a promise that returns the collection **or** errors
@@ -4016,7 +4029,7 @@
           key: "interface",
           // The interface to use when querying the server for this resource
           value: function _interface() {
-            return this.klass().interface();
+            return this.klass()["interface"]();
           } // Creates a new ActiveResource::Relation with the extended queryParams passed in
           // @param [Object] queryParams the extended query params for the relation
           // @return [ActiveResource::Relation] the new Relation for the extended query
@@ -4024,7 +4037,7 @@
         }, {
           key: "toString",
           value: function toString() {
-            return JSON.stringify(this.interface().buildResourceDocument({
+            return JSON.stringify(this["interface"]().buildResourceDocument({
               resourceData: this
             }));
           }
@@ -4032,7 +4045,7 @@
           key: "interface",
           // The interface to use when querying the server for this class
           value: function _interface() {
-            return this.resourceLibrary.interface;
+            return this.resourceLibrary["interface"];
           }
         }, {
           key: "__newRelation",
@@ -4146,7 +4159,7 @@
         }, {
           key: "interface",
           value: function _interface() {
-            return this.owner.klass().interface();
+            return this.owner.klass()["interface"]();
           } // Resets the loaded flag to `false` and the target to `nil`
 
         }, {
@@ -4202,7 +4215,7 @@
                 _this21.loaded(true);
 
                 return loadedTarget;
-              }).catch(function () {
+              })["catch"](function () {
                 return _this21.reset();
               });
             } else {
@@ -4609,7 +4622,7 @@
           var _this;
 
           _this = this;
-          return this.interface().get(this.links()['related'], this.owner.queryParamsForReflection(this.reflection)).then(function (resources) {
+          return this["interface"]().get(this.links()['related'], this.owner.queryParamsForReflection(this.reflection)).then(function (resources) {
             resources.each(function (r) {
               return _this.setInverseInstance(r);
             });
@@ -4661,7 +4674,7 @@
       }, {
         key: "__persistAssignment",
         value: function __persistAssignment(resources) {
-          return this.interface().patch(this.links()['self'], resources, {
+          return this["interface"]().patch(this.links()['self'], resources, {
             onlyResourceIdentifiers: true
           });
         } // Persists a concat to the association by posting to the owner's relationship endpoint
@@ -4670,7 +4683,7 @@
       }, {
         key: "__persistConcat",
         value: function __persistConcat(resources) {
-          return this.interface().post(this.links()['self'], resources, {
+          return this["interface"]().post(this.links()['self'], resources, {
             onlyResourceIdentifiers: true
           });
         } // Persists deleting resources from the association by deleting it on the owner's relationship endpoint
@@ -4679,7 +4692,7 @@
       }, {
         key: "__persistDelete",
         value: function __persistDelete(resources) {
-          return this.interface().delete(this.links()['self'], resources, {
+          return this["interface"]()["delete"](this.links()['self'], resources, {
             onlyResourceIdentifiers: true
           });
         } // @see #create
@@ -4895,7 +4908,7 @@
         }, {
           key: "delete",
           value: function _delete(resources) {
-            return this.base.delete(resources);
+            return this.base["delete"](resources);
           } // Deletes all the resources in the association from the association
           // @return [Promise] a promise to return a success indicator (204 No Content) **or**
           //   an error indicator (403 Forbidden)
@@ -4903,7 +4916,7 @@
         }, {
           key: "deleteAll",
           value: function deleteAll() {
-            return this.base.delete(this.target());
+            return this.base["delete"](this.target());
           }
         }]);
 
@@ -5053,7 +5066,7 @@
       }, {
         key: "__persistAssignment",
         value: function __persistAssignment(resource) {
-          return this.interface().patch(this.links()['self'], resource, {
+          return this["interface"]().patch(this.links()['self'], resource, {
             onlyResourceIdentifiers: true
           });
         } // Gets the resource that is the target
@@ -5062,7 +5075,7 @@
       }, {
         key: "__getResource",
         value: function __getResource() {
-          return this.interface().get(this.links()['related'], this.owner.queryParamsForReflection(this.reflection));
+          return this["interface"]().get(this.links()['related'], this.owner.queryParamsForReflection(this.reflection));
         } // Finds target using either the owner's relationship endpoint
         // @return [Promise] a promise to return the target **or** error 404
 
@@ -5193,7 +5206,7 @@
             return _get(_getPrototypeOf(BelongsToAssociation.prototype), "__getResource", this).call(this);
           } else {
             // @example Uses @links()['related'] == '/products/:product_id'
-            return this.interface().get(this.links()['related'] + this.owner[this.reflection.foreignKey()], this.owner.queryParamsForReflection(this.reflection));
+            return this["interface"]().get(this.links()['related'] + this.owner[this.reflection.foreignKey()], this.owner.queryParamsForReflection(this.reflection));
           }
         } // Replaces the foreign key of the owner with the primary key of the resource (the new target)
         // @param [ActiveResource::Base] resource the resource with a primaryKey to replace the foreignKey of the owner
@@ -5541,7 +5554,7 @@
 
           resource = this.clone();
           url = this.links()['self'] || ActiveResource.prototype.Links.__constructLink(this.links()['related'], this.id.toString());
-          return this.interface().get(url, this.queryParams()).then(function (reloaded) {
+          return this["interface"]().get(url, this.queryParams()).then(function (reloaded) {
             var fields;
             fields = reloaded.attributes();
             resource.klass().reflectOnAllAssociations().each(function (reflection) {
@@ -5670,7 +5683,7 @@
                 });
                 baseErrors.each(function (e) {
                   e.field = k;
-                  return errorsForTarget.errors.delete(e);
+                  return errorsForTarget.errors["delete"](e);
                 });
                 baseErrors.each(function (e) {
                   return _this34.push(e);
@@ -5750,9 +5763,9 @@
           clone.errors().reset();
 
           if (clone.persisted()) {
-            return this.klass().resourceLibrary.interface.patch(this.links()['self'], clone);
+            return this.klass().resourceLibrary["interface"].patch(this.links()['self'], clone);
           } else {
-            return this.klass().resourceLibrary.interface.post(this.links()['related'], clone);
+            return this.klass().resourceLibrary["interface"].post(this.links()['related'], clone);
           }
         }
       }]);
