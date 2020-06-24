@@ -377,7 +377,9 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
 
     if parentRelationship?
       attributes = _.extend(attributes, parentRelationship)
-      relationships = _.omit(relationships, _.keys(parentRelationship)[0])
+
+      if !resource.association(_.keys(parentRelationship)[0]).reflection.collection()
+        relationships = _.omit(relationships, _.keys(parentRelationship)[0])
 
     attributes = @addRelationshipsToFields(attributes, relationships, includes, resource, resourceRegister)
     attributes = this.toCamelCase(attributes)
