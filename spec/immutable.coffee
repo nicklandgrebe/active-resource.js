@@ -93,6 +93,21 @@ describe 'ActiveResource', ->
         it 'adds errors to new resource', ->
           expect(@resource2.errors().size()).toBe(2)
 
+    describe 'isSame', ->
+      beforeEach ->
+        @resource = ImmutableLibrary.Order.build()
+        @resource2 = ImmutableLibrary.Order.build()
+
+        @resourceClone = @resource.clone()
+
+      describe 'when not equal', ->
+        it 'returns false', ->
+          expect(@resource.isSame(@resource2)).toBeFalsy()
+
+      describe 'when equal', ->
+        it 'returns true', ->
+          expect(@resource.isSame(@resourceClone)).toBeTruthy()
+
     describe 'propagating errors', ->
       beforeEach ->
         @resource = ImmutableLibrary.Order.build()

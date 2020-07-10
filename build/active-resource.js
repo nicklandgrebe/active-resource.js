@@ -1714,7 +1714,7 @@
         key: "__validAttribute",
         value: function __validAttribute(attribute, value, options) {
           var e, reserved;
-          reserved = ['__super__', '__associations', '__errors', '__fields', '__links', '__queryParams'];
+          reserved = ['__super__', '__associations', '__errors', '__fields', '__immutableId', '__links', '__queryParams'];
 
           if (this.klass().resourceLibrary.strictAttributes) {
             if (options.readOnly) {
@@ -1831,6 +1831,7 @@
               newCloner = _ref3.newCloner;
           var attributes, clone;
           clone = this.klass().build();
+          clone.__immutableId = this.__immutableId;
           this.errors().each(function (attribute, e) {
             return clone.errors().push(_.clone(e));
           });
@@ -5784,10 +5785,26 @@
         _inherits(Base, _ActiveResource$proto16);
 
         function Base() {
+          var _this35;
+
           _classCallCheck(this, Base);
 
-          return _possibleConstructorReturn(this, _getPrototypeOf(Base).call(this));
+          _this35 = _possibleConstructorReturn(this, _getPrototypeOf(Base).call(this));
+          _this35.__immutableId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r, v;
+            r = Math.random() * 16 | 0;
+            v = c === 'x' ? r : r & 0x3 | 0x8;
+            return v.toString(16);
+          });
+          return _this35;
         }
+
+        _createClass(Base, [{
+          key: "isSame",
+          value: function isSame(b) {
+            return this.__immutableId === b.__immutableId;
+          }
+        }]);
 
         return Base;
       }(ActiveResource.prototype.Base);

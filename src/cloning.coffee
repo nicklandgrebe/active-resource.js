@@ -29,6 +29,8 @@ class ActiveResource::Cloning
   @__createClone: ({ cloner, nestedIndex, newCloner }) ->
     clone = @klass().build()
 
+    clone.__immutableId = @__immutableId
+    
     @errors().each (attribute, e) => clone.errors().push(_.clone(e))
     clone.__links = _.clone(@links())
 
