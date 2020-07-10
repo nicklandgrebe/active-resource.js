@@ -32,3 +32,6 @@ class ActiveResource::Base
 
   constructor: ->
     @__initializeFields()
+
+  isSame: (b) ->
+    @ == b

@@ -66,6 +66,33 @@ describe 'ActiveResource', ->
 
         this.belongsTo 'order'
 
+    describe 'isSame', ->
+      beforeEach ->
+        @resource = ImmutableLibrary.Order.build()
+        @resource2 = ImmutableLibrary.Order.build()
+
+        @resourceClone = @resource.clone()
+
+      describe 'when not equal', ->
+        it 'returns false', ->
+          expect(@resource.isSame(@resource2)).toBeFalsy()
+
+      describe 'when equal', ->
+        it 'returns true', ->
+          expect(@resource.isSame(@resourceClone)).toBeTruthy()
+
+      describe 'collections', ->
+        beforeEach ->
+          @comment = ImmutableLibrary.Comment.build()
+          @commentClone = @comment.clone()
+          @comment2 = ImmutableLibrary.Comment.build()
+
+          @resource = @resource.assignAttributes({ comments: [@comment, @comment2] })
+          @resource2 = @resource.comments().push(@commentClone)
+
+        it 'replaces item where isSame true', ->
+          expect(@resource2.comments().target().first()).toBe(@commentClone)
+
     describe 'adding errors', ->
       beforeEach ->
         @resource = ImmutableLibrary.Order.build()
@@ -92,21 +119,6 @@ describe 'ActiveResource', ->
 
         it 'adds errors to new resource', ->
           expect(@resource2.errors().size()).toBe(2)
-
-    describe 'isSame', ->
-      beforeEach ->
-        @resource = ImmutableLibrary.Order.build()
-        @resource2 = ImmutableLibrary.Order.build()
-
-        @resourceClone = @resource.clone()
-
-      describe 'when not equal', ->
-        it 'returns false', ->
-          expect(@resource.isSame(@resource2)).toBeFalsy()
-
-      describe 'when equal', ->
-        it 'returns true', ->
-          expect(@resource.isSame(@resourceClone)).toBeTruthy()
 
     describe 'propagating errors', ->
       beforeEach ->

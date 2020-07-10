@@ -4086,11 +4086,24 @@
     //     @belongsTo('product')
     //     @hasMany('comments', as: 'resource')
     ActiveResource.prototype.Base = function () {
-      var Base = function Base() {
-        _classCallCheck(this, Base);
+      var Base =
+      /*#__PURE__*/
+      function () {
+        function Base() {
+          _classCallCheck(this, Base);
 
-        this.__initializeFields();
-      };
+          this.__initializeFields();
+        }
+
+        _createClass(Base, [{
+          key: "isSame",
+          value: function isSame(b) {
+            return this === b;
+          }
+        }]);
+
+        return Base;
+      }();
 
       
       ActiveResource.extend(Base, ActiveResource.prototype.Associations);
@@ -4586,7 +4599,9 @@
         key: "addToTarget",
         value: function addToTarget(resource) {
           var index;
-          index = _.indexOf(this.target.toArray(), resource);
+          index = _.findIndex(this.target.toArray(), function (r) {
+            return r.isSame(resource);
+          });
 
           if (index < 0) {
             index = null;

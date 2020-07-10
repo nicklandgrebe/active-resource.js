@@ -119,7 +119,7 @@ class ActiveResource::Associations::CollectionAssociation extends ActiveResource
   #
   # @param [ActiveResource::Base] resource the resource to add to the target
   addToTarget: (resource) ->
-    index = _.indexOf(@target.toArray(), resource)
+    index = _.findIndex(@target.toArray(), (r) => r.isSame(resource))
     index = null if index < 0
     @replaceOnTarget(resource, index)
 
