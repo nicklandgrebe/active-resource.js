@@ -20,6 +20,16 @@ ActiveResource.CollectionResponse = class ActiveResource::CollectionResponse ext
 
     @__links
 
+  # Retrieves and sets the meta that were sent at the top level in the response
+  #
+  # @param [Object] data the data to set this CollectionResponse's meta to
+  # @return [Object] the meta data for the response
+  meta: (data = {}) ->
+    if !_.isEmpty(data) || !@__meta?
+      @__meta = data
+
+    @__meta
+
   # Indicates whether or not a prev link was included in the response
   #
   # @return [Boolean] whether or not the response has a previous page that can be loaded
@@ -53,3 +63,11 @@ ActiveResource.CollectionResponse = class ActiveResource::CollectionResponse ext
   # @return [Collection] the converted collection for this CollectionResponse
   toCollection: ->
     ActiveResource::Collection.build(this.toArray())
+
+  # Duplicates the items of the collection into a new collection plus the links
+  #
+  # @return [Collection] the cloned collection of original items
+  clone: ->
+    clone = super()
+    clone.__links = _.clone(@links())
+    clone

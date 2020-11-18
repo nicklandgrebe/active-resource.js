@@ -1123,6 +1123,9 @@
             }
 
             if (target != null) {
+              // TODO: Use case: message.save() affects original messageChain(), so we want to duplicate messageChain(), but this also duplicates Order.comments() in specs when it expects those to pass-through
+              // if @resourceLibrary.immutable
+              // target = target.__createClone({ cloner: resource })
               buildResourceOptions.existingResource = target;
             }
 
@@ -1277,6 +1280,7 @@
                 return object;
               });
               built.links(response.links);
+              built.meta(_this.toCamelCase(response.meta || {}));
 
               if (_.isArray(response.data)) {
                 return built;
@@ -2356,6 +2360,20 @@
           }
 
           return this.__links;
+        } // Retrieves and sets the meta that were sent at the top level in the response
+        // @param [Object] data the data to set this CollectionResponse's meta to
+        // @return [Object] the meta data for the response
+
+      }, {
+        key: "meta",
+        value: function meta() {
+          var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+          if (!_.isEmpty(data) || this.__meta == null) {
+            this.__meta = data;
+          }
+
+          return this.__meta;
         } // Indicates whether or not a prev link was included in the response
         // @return [Boolean] whether or not the response has a previous page that can be loaded
 
@@ -2395,6 +2413,16 @@
         key: "toCollection",
         value: function toCollection() {
           return ActiveResource.prototype.Collection.build(this.toArray());
+        } // Duplicates the items of the collection into a new collection plus the links
+        // @return [Collection] the cloned collection of original items
+
+      }, {
+        key: "clone",
+        value: function clone() {
+          var clone;
+          clone = _get(_getPrototypeOf(CollectionResponse.prototype), "clone", this).call(this);
+          clone.__links = _.clone(this.links());
+          return clone;
         }
       }], [{
         key: "build",

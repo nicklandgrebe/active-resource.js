@@ -356,6 +356,17 @@ describe 'ActiveResource', ->
               @promise4.then =>
                 expect(@requestCount).toEqual(moxios.requests.count())
 
+      describe 'when meta in response', ->
+        beforeEach ->
+          @promise2 = @promise.then =>
+            moxios.requests.mostRecent().respondWith(JsonApiResponses.Product.all.paginated)
+            .then =>
+              @resources = window.onSuccess.calls.mostRecent().args[0]
+
+        it 'meta attributes added', ->
+          @promise2.then =>
+            expect(@resources.meta().totalPages).toBeDefined()
+
     describe '#perPage()', ->
       it 'adds a page size to the query', ->
         MyLibrary.Product.perPage(2).all()

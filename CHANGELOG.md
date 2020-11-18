@@ -139,3 +139,5 @@ changes to each resource
 * Implement resourceRegister in JsonApi interface for each resource built from a response, for use in relationships rather than
   creating duplicate resources for each relationship
 * Add `__immutableId` and Base#isSame for immutable mode
+* Add `CollectionResponse#clone`
+* Add `CollectionResponse#meta` for receiving `meta` from JSON:API response

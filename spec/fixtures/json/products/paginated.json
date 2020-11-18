@@ -70,5 +70,12 @@
   "links": {
     "prev": "https://example.com/api/v1/products?page[number]=1&page[size]=2",
     "next": "https://example.com/api/v1/products?page[number]=3&page[size]=2"
+  },
+  "meta": {
+    "current_page": 2,
+    "next_page": 3,
+    "prev_page": 1,
+    "total_pages": 3,
+    "total_count": 6
   }
 }
