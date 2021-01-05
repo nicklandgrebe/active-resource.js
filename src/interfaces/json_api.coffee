@@ -648,7 +648,13 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
       built.links(response.links)
       built.meta(_this.toCamelCase(response.meta || {}))
 
-      if _.isArray(response.data) then built else built.first()
+      if _.isArray(response.data)
+        output = built
+      else
+        output = built.first()
+        output.responseMeta(built.meta())
+
+      output
     , (errors) ->
       Promise.reject(_this.parameterErrors(errors.response.data['errors']))
 

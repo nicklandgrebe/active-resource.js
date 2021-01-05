@@ -141,3 +141,4 @@ changes to each resource
 * Add `__immutableId` and Base#isSame for immutable mode
 * Add `CollectionResponse#clone`
 * Add `CollectionResponse#meta` for receiving `meta` from JSON:API response
+* Add `Base#responseMeta` for receiving `meta` from singular GET response

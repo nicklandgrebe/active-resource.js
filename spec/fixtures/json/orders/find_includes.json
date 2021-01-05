@@ -126,5 +126,8 @@
         "self": "https://example.com/api/v1/ratings/1/"
       }
     }
-  ]
+  ],
+  "meta": {
+    "meta_attribute": 2
+  }
 }

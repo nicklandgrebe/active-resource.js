@@ -137,3 +137,17 @@ describe 'ActiveResource', ->
             name = reflection.name
 
             expect(@clone.association(name).links()).toEqual(@resource.association(name).links())
+
+    describe '.responseMeta()', ->
+      beforeEach ->
+        MyLibrary.Order.includes('giftCard', 'orderItems').select('price').find(1)
+        .then window.onSuccess
+
+        @promise = moxios.wait =>
+          moxios.requests.mostRecent().respondWith(JsonApiResponses.Order.find.includes)
+          .then =>
+            @resource = window.onSuccess.calls.mostRecent().args[0]
+
+      it 'adds meta attributes from response to responseMeta', ->
+        @promise.then =>
+          expect(@resource.responseMeta()).toEqual({ metaAttribute: 2 })

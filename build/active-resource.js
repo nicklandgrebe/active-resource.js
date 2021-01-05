@@ -1123,9 +1123,6 @@
             }
 
             if (target != null) {
-              // TODO: Use case: message.save() affects original messageChain(), so we want to duplicate messageChain(), but this also duplicates Order.comments() in specs when it expects those to pass-through
-              // if @resourceLibrary.immutable
-              // target = target.__createClone({ cloner: resource })
               buildResourceOptions.existingResource = target;
             }
 
@@ -1273,7 +1270,7 @@
 
             _this = this;
             return this.request(url, 'GET', data).then(function (response) {
-              var built;
+              var built, output;
               built = ActiveResource.prototype.CollectionResponse.build(_.flatten([response.data])).map(function (object) {
                 object = _this.buildResource(object, response.included, {});
                 object.assignResourceRelatedQueryParams(queryParams);
@@ -1283,10 +1280,13 @@
               built.meta(_this.toCamelCase(response.meta || {}));
 
               if (_.isArray(response.data)) {
-                return built;
+                output = built;
               } else {
-                return built.first();
+                output = built.first();
+                output.responseMeta(built.meta());
               }
+
+              return output;
             }, function (errors) {
               return Promise.reject(_this.parameterErrors(errors.response.data['errors']));
             });
@@ -4127,6 +4127,20 @@
           key: "isSame",
           value: function isSame(b) {
             return this === b;
+          } // Retrieves and sets the meta that were sent at the top level in the response
+          // @param [Object] data the data to set this resource's responseMeta to
+          // @return [Object] the meta data for the response
+
+        }, {
+          key: "responseMeta",
+          value: function responseMeta() {
+            var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+            if (!_.isEmpty(data) || this.__meta == null) {
+              this.__meta = data;
+            }
+
+            return this.__meta;
           }
         }]);
 

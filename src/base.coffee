@@ -35,3 +35,13 @@ class ActiveResource::Base
 
   isSame: (b) ->
     @ == b
+
+  # Retrieves and sets the meta that were sent at the top level in the response
+  #
+  # @param [Object] data the data to set this resource's responseMeta to
+  # @return [Object] the meta data for the response
+  responseMeta: (data = {}) ->
+    if !_.isEmpty(data) || !@__meta?
+      @__meta = data
+
+    @__meta
