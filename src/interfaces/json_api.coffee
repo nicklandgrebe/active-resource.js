@@ -214,18 +214,21 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # 4. Return the includeStrArray as a ',' joined string
   buildIncludeTree: (includes) ->
     buildNestedIncludes = (object) ->
-      modelName = s.underscored(_.keys(object)[0])
-      value = _.values(object)[0]
+      _.flatten(
+        _.map(object, (value, key) ->
+          modelName = s.underscored(key)
 
-      includeCollection =
-        ActiveResource::Collection.build([value]).flatten().map((item) ->
-          if _.isString(item)
-            _.map(item.split(','), (i) -> s.underscored(i))
-          else if _.isObject(item)
-            buildNestedIncludes(item)
-        ).flatten()
+          includeCollection =
+            ActiveResource::Collection.build([value]).flatten().map((item) ->
+              if _.isString(item)
+                _.map(item.split(','), (i) -> s.underscored(i))
+              else if _.isObject(item)
+                buildNestedIncludes(item)
+            ).flatten()
 
-      includeCollection.map((i) -> "#{modelName}.#{i}").toArray()
+          includeCollection.map((i) -> "#{modelName}.#{i}").toArray()
+        )
+      )
 
     ActiveResource::Collection.build(includes).inject([], (includeStrArray, include) ->
       if _.isObject(include)

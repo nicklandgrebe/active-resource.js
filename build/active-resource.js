@@ -752,21 +752,22 @@
             var _buildNestedIncludes;
 
             _buildNestedIncludes = function buildNestedIncludes(object) {
-              var includeCollection, modelName, value;
-              modelName = s.underscored(_.keys(object)[0]);
-              value = _.values(object)[0];
-              includeCollection = ActiveResource.prototype.Collection.build([value]).flatten().map(function (item) {
-                if (_.isString(item)) {
-                  return _.map(item.split(','), function (i) {
-                    return s.underscored(i);
-                  });
-                } else if (_.isObject(item)) {
-                  return _buildNestedIncludes(item);
-                }
-              }).flatten();
-              return includeCollection.map(function (i) {
-                return "".concat(modelName, ".").concat(i);
-              }).toArray();
+              return _.flatten(_.map(object, function (value, key) {
+                var includeCollection, modelName;
+                modelName = s.underscored(key);
+                includeCollection = ActiveResource.prototype.Collection.build([value]).flatten().map(function (item) {
+                  if (_.isString(item)) {
+                    return _.map(item.split(','), function (i) {
+                      return s.underscored(i);
+                    });
+                  } else if (_.isObject(item)) {
+                    return _buildNestedIncludes(item);
+                  }
+                }).flatten();
+                return includeCollection.map(function (i) {
+                  return "".concat(modelName, ".").concat(i);
+                }).toArray();
+              }));
             };
 
             return ActiveResource.prototype.Collection.build(includes).inject([], function (includeStrArray, include) {

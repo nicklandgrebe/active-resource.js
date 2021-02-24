@@ -234,6 +234,13 @@ describe 'ActiveResource', ->
           @paramStr = requestParams(moxios.requests.mostRecent())
           expect(@paramStr).toContain('include=merchant,orders.attribute_values,orders.gift_cards')
 
+      it 'adds multiple nested includes', ->
+        MyLibrary.Product.includes('merchant', { orders: { attributeValues: 'value', giftCards: 'value' }, timeSlots: 'product' }).all()
+
+        moxios.wait =>
+          @paramStr = requestParams(moxios.requests.mostRecent())
+          expect(@paramStr).toContain('include=merchant,orders.attribute_values.value,orders.gift_cards.value,time_slots.product')
+
       describe 'nested includes', ->
         beforeEach ->
           MyLibrary.OrderItem.find('3')
