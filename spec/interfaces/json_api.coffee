@@ -446,11 +446,12 @@ describe 'ActiveResource', ->
 
         @response = getJSONFixture('orders/includes.json');
 
-      describe 'when relationship not found in included', ->
+      describe 'when relationship not found in included or primaryData', ->
         beforeEach ->
           @result =
             @interface.findResourceForRelationship(
               @response.data.relationships.order_items.data[0],
+              [],
               [],
               @resource,
               @resource.klass().reflectOnAssociation('orderItems')
@@ -466,8 +467,10 @@ describe 'ActiveResource', ->
               @interface.findResourceForRelationship(
                 @response.data.relationships.order_items.data[0],
                 @response.included,
+                [],
                 @resource,
                 @resource.klass().reflectOnAssociation('orderItems'),
+                {},
                 0
               )
 
@@ -483,6 +486,7 @@ describe 'ActiveResource', ->
               @interface.findResourceForRelationship(
                 @response.data.relationships.customer.data,
                 @response.included,
+                [],
                 @resource,
                 @resource.klass().reflectOnAssociation('customer')
               )
@@ -506,8 +510,9 @@ describe 'ActiveResource', ->
                 @interface.findResourceForRelationship(
                   @response.data.relationships.order_items.data[0],
                   @response.included,
+                  [],
                   @resource,
-                  @resource.klass().reflectOnAssociation('orderItems')
+                  @resource.klass().reflectOnAssociation('orderItems'),
                   {},
                   0
                 )
@@ -527,6 +532,7 @@ describe 'ActiveResource', ->
                 @interface.findResourceForRelationship(
                   @response.data.relationships.customer.data,
                   @response.included,
+                  [],
                   @resource,
                   @resource.klass().reflectOnAssociation('customer'),
                   {}
@@ -544,7 +550,7 @@ describe 'ActiveResource', ->
               @relationshipResource0 = @lib.OrderItem.build()
               @relationshipResource1 = @lib.OrderItem.build()
               @resource.assignAttributes(orderItems: [
-                @relationshipResource0
+                @relationshipResource0,
                 @relationshipResource1
               ])
 
@@ -552,6 +558,7 @@ describe 'ActiveResource', ->
                 @interface.findResourceForRelationship(
                   @response.data.relationships.order_items.data[1],
                   @response.included,
+                  [],
                   @resource,
                   @resource.klass().reflectOnAssociation('orderItems'),
                   {},
@@ -576,6 +583,7 @@ describe 'ActiveResource', ->
                 @interface.findResourceForRelationship(
                   @response.data.relationships.customer.data,
                   @response.included,
+                  [],
                   @resource,
                   @resource.klass().reflectOnAssociation('customer'),
                   {}
@@ -596,9 +604,30 @@ describe 'ActiveResource', ->
             @interface.findResourceForRelationship(
               @response.data.relationships.payment_source.data,
               @response.included,
+              [],
               @resource,
               @resource.klass().reflectOnAssociation('paymentSource')
             )
 
         it 'builds polymorphic relationship using inverse', ->
           expect(@result.orders().target().first()).toBe(@resource)
+
+    describe '#findResourceForRelationship with primaryData', ->
+      beforeEach ->
+        @resource = @lib.Order.build()
+
+        @response = getJSONFixture('orders/collection_includes_primary_data.json');
+
+      describe 'when relationship not found in included but found in primaryData', ->
+        beforeEach ->
+          @result =
+            @interface.findResourceForRelationship(
+              @response.data[0].relationships.grouped_order.data,
+              [],
+              @response.data,
+              @resource,
+              @resource.klass().reflectOnAssociation('groupedOrder')
+            )
+
+        it 'returns resource built from primary data', ->
+          expect(@result).toBeUndefined()

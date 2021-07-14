@@ -87,7 +87,7 @@ describe 'ActiveResource', ->
 
       it 'clones attributes', ->
         @promise.then =>
-          expect(_.omit(@clone.attributes(), 'productId', 'customerId')).toEqual(@resource.attributes())
+          expect(_.omit(@clone.attributes(), 'productId', 'customerId', 'groupedOrderId')).toEqual(@resource.attributes())
 
       it 'clones links', ->
         @promise.then =>

@@ -943,6 +943,7 @@
 
             var existingResource = _ref2.existingResource,
                 parentRelationship = _ref2.parentRelationship,
+                primaryData = _ref2.primaryData,
                 resourceRegister = _ref2.resourceRegister;
             var attributes, id, justCreated, relationships, resource;
             resource = existingResource || this.resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build();
@@ -966,7 +967,7 @@
               }
             }
 
-            attributes = this.addRelationshipsToFields(attributes, relationships, includes, resource, resourceRegister);
+            attributes = this.addRelationshipsToFields(attributes, relationships, includes, primaryData, resource, resourceRegister);
             attributes = this.toCamelCase(attributes);
 
             resource.__assignFields(attributes);
@@ -1036,13 +1037,14 @@
           // @param [Object] attributes the attribute object to build relationships into
           // @param [Object] relationships the object defining the relationships to be built into `attributes`
           // @param [Array] includes the array of includes to search for relationship resources in
+          // @param [Array] primaryData the array of includes to search for relationship resources in after includes
           // @param [ActiveResource::Base] resource the resource to get the primary key of
           // @param [Object] resourceRegister cache of resources for the query that have already been created, to avoid duplicate creation
           // @return [Object] the attributes with all relationships built into it
 
         }, {
           key: "addRelationshipsToFields",
-          value: function addRelationshipsToFields(attributes, relationships, includes, resource, resourceRegister) {
+          value: function addRelationshipsToFields(attributes, relationships, includes, primaryData, resource, resourceRegister) {
             var _this8 = this;
 
             _.each(relationships, function (relationship, relationshipName) {
@@ -1053,7 +1055,7 @@
                   relationshipItems = ActiveResource.prototype.Collection.build(relationship['data']).map(function (relationshipMember, index) {
                     var cachedResource, ref;
                     cachedResource = (ref = resourceRegister[relationshipMember['type']]) != null ? ref[relationshipMember[resource.klass().primaryKey]] : void 0;
-                    return cachedResource || _this8.findResourceForRelationship(relationshipMember, includes, resource, reflection, resourceRegister, index);
+                    return cachedResource || _this8.findResourceForRelationship(relationshipMember, includes, primaryData, resource, reflection, resourceRegister, index);
                   }).compact();
 
                   if (!(typeof relationshipItems.empty === "function" ? relationshipItems.empty() : void 0)) {
@@ -1061,7 +1063,7 @@
                   }
                 } else if (relationship['data'] != null) {
                   cachedResource = (ref = resourceRegister[relationship['data']['type']]) != null ? ref[relationship['data'][resource.klass().primaryKey]] : void 0;
-                  include = cachedResource || _this8.findResourceForRelationship(relationship['data'], includes, resource, reflection, resourceRegister);
+                  include = cachedResource || _this8.findResourceForRelationship(relationship['data'], includes, primaryData, resource, reflection, resourceRegister);
 
                   if (include != null) {
                     return attributes[relationshipName] = include;
@@ -1081,6 +1083,7 @@
           //   returns { id: '1202', type: 'products', ... }
           // @param [Object] relationshipData the data defining the relationship to match an include to
           // @param [Array] includes the array of includes to search for relationships in
+          // @param [Array] primaryData the array of primaryData to search for relationships in after includes
           // @param [ActiveResource::Base] resource the resource to get the primary key of
           // @param [Reflection] reflection the reflection for the relationship
           // @param [Object] resourceRegister cache of resources for the query that have already been created, to avoid duplicate creation
@@ -1089,7 +1092,7 @@
 
         }, {
           key: "findResourceForRelationship",
-          value: function findResourceForRelationship(relationshipData, includes, resource, reflection, resourceRegister, index) {
+          value: function findResourceForRelationship(relationshipData, includes, primaryData, resource, reflection, resourceRegister, index) {
             var buildResourceOptions, findConditions, include, parentReflection, potentialTarget, primaryKey, target;
             primaryKey = resource.klass().primaryKey;
             findConditions = {
@@ -1097,6 +1100,7 @@
             };
             findConditions[primaryKey] = relationshipData[primaryKey];
             include = _.findWhere(includes, findConditions);
+            include = include || _.findWhere(primaryData, findConditions);
 
             if (reflection.collection()) {
               target = resource.association(reflection.name).target.detect(function (t) {
@@ -1271,9 +1275,12 @@
 
             _this = this;
             return this.request(url, 'GET', data).then(function (response) {
-              var built, output;
-              built = ActiveResource.prototype.CollectionResponse.build(_.flatten([response.data])).map(function (object) {
-                object = _this.buildResource(object, response.included, {});
+              var built, output, primaryData;
+              primaryData = ActiveResource.prototype.CollectionResponse.build(_.flatten([response.data]));
+              built = primaryData.map(function (object) {
+                object = _this.buildResource(object, response.included, {
+                  primaryData: primaryData
+                });
                 object.assignResourceRelatedQueryParams(queryParams);
                 return object;
               });

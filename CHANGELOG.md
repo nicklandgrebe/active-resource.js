@@ -143,3 +143,4 @@ changes to each resource
 * Add `CollectionResponse#meta` for receiving `meta` from JSON:API response
 * Add `Base#responseMeta` for receiving `meta` from singular GET response
 * Add all nested object `includes` to request instead of just the first key
+* BREAKING: Add `primaryData` as arg for `findResourceForRelationship`

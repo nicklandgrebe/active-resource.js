@@ -363,7 +363,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [ActiveResource::Base] parentRelationship the owner relationship name/resource that is building this resource
   # @param [Object] resourceRegister cache of resources for the query that have already been created, to avoid duplicate creation
   # @return [ActiveResource] the built ActiveResource
-  buildResource: (data, includes, { existingResource, parentRelationship, resourceRegister }) ->
+  buildResource: (data, includes, { existingResource, parentRelationship, primaryData, resourceRegister }) ->
     resource = existingResource || @resourceLibrary.constantize(_.singularize(s.classify(data['type']))).build()
     justCreated = existingResource && existingResource.newResource()
     resourceRegister = resourceRegister || {}
@@ -384,7 +384,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
       if !resource.association(_.keys(parentRelationship)[0]).reflection.collection()
         relationships = _.omit(relationships, _.keys(parentRelationship)[0])
 
-    attributes = @addRelationshipsToFields(attributes, relationships, includes, resource, resourceRegister)
+    attributes = @addRelationshipsToFields(attributes, relationships, includes, primaryData, resource, resourceRegister)
     attributes = this.toCamelCase(attributes)
 
     resource.__assignFields(attributes)
@@ -463,10 +463,11 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [Object] attributes the attribute object to build relationships into
   # @param [Object] relationships the object defining the relationships to be built into `attributes`
   # @param [Array] includes the array of includes to search for relationship resources in
+  # @param [Array] primaryData the array of includes to search for relationship resources in after includes
   # @param [ActiveResource::Base] resource the resource to get the primary key of
   # @param [Object] resourceRegister cache of resources for the query that have already been created, to avoid duplicate creation
   # @return [Object] the attributes with all relationships built into it
-  addRelationshipsToFields: (attributes, relationships, includes, resource, resourceRegister) ->
+  addRelationshipsToFields: (attributes, relationships, includes, primaryData, resource, resourceRegister) ->
     _.each relationships, (relationship, relationshipName) =>
       if(reflection = resource.klass().reflectOnAssociation(s.camelize(relationshipName)))
         if reflection.collection()
@@ -474,13 +475,13 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
             ActiveResource::Collection.build(relationship['data'])
             .map((relationshipMember, index) =>
               cachedResource = resourceRegister[relationshipMember['type']]?[relationshipMember[resource.klass().primaryKey]]
-              cachedResource || @findResourceForRelationship(relationshipMember, includes, resource, reflection, resourceRegister, index)
+              cachedResource || @findResourceForRelationship(relationshipMember, includes, primaryData, resource, reflection, resourceRegister, index)
             ).compact()
 
           attributes[relationshipName] = relationshipItems unless relationshipItems.empty?()
         else if relationship['data']?
           cachedResource = resourceRegister[relationship['data']['type']]?[relationship['data'][resource.klass().primaryKey]]
-          include = cachedResource || @findResourceForRelationship(relationship['data'], includes, resource, reflection, resourceRegister)
+          include = cachedResource || @findResourceForRelationship(relationship['data'], includes, primaryData, resource, reflection, resourceRegister)
           attributes[relationshipName] = include if include?
 
     attributes
@@ -497,18 +498,20 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   #
   # @param [Object] relationshipData the data defining the relationship to match an include to
   # @param [Array] includes the array of includes to search for relationships in
+  # @param [Array] primaryData the array of primaryData to search for relationships in after includes
   # @param [ActiveResource::Base] resource the resource to get the primary key of
   # @param [Reflection] reflection the reflection for the relationship
   # @param [Object] resourceRegister cache of resources for the query that have already been created, to avoid duplicate creation
   # @param [Integer] index the index of the relationship data (only in collection relationships)
   # @return [ActiveResource::Base] the include built into an ActiveResource::Base
-  findResourceForRelationship: (relationshipData, includes, resource, reflection, resourceRegister, index) ->
+  findResourceForRelationship: (relationshipData, includes, primaryData, resource, reflection, resourceRegister, index) ->
     primaryKey = resource.klass().primaryKey
 
     findConditions = { type: relationshipData.type }
     findConditions[primaryKey] = relationshipData[primaryKey]
 
     include = _.findWhere(includes, findConditions)
+    include = include || _.findWhere(primaryData, findConditions)
 
     if reflection.collection()
       target =
@@ -641,10 +644,11 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
     _this = this
     @request(url, 'GET', data)
     .then (response) ->
+      primaryData = ActiveResource::CollectionResponse.build(_.flatten([response.data]))
       built =
-        ActiveResource::CollectionResponse.build(_.flatten([response.data]))
+        primaryData
         .map (object) ->
-          object = _this.buildResource(object, response.included, {})
+          object = _this.buildResource(object, response.included, { primaryData: primaryData })
           object.assignResourceRelatedQueryParams(queryParams)
           object
 

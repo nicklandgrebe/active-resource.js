@@ -35,6 +35,7 @@ class MyLibrary.Order extends MyLibrary.Base
   this.belongsTo 'giftCard'
   this.belongsTo 'paymentSource', polymorphic: true, inverseOf: 'orders'
   this.belongsTo 'product'
+  this.belongsTo 'groupedOrder', className: 'Order'
 
   this.hasMany 'comments', as: 'resource', autosave: true, include: false, inverseOf: 'resource'
   this.hasMany 'orderItems'
