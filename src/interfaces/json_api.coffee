@@ -648,7 +648,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
       built =
         primaryData
         .map (object) ->
-          object = _this.buildResource(object, response.included, { primaryData: primaryData })
+          object = _this.buildResource(object, response.included, { primaryData: primaryData.toArray() })
           object.assignResourceRelatedQueryParams(queryParams)
           object
 

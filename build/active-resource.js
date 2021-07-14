@@ -1279,7 +1279,7 @@
               primaryData = ActiveResource.prototype.CollectionResponse.build(_.flatten([response.data]));
               built = primaryData.map(function (object) {
                 object = _this.buildResource(object, response.included, {
-                  primaryData: primaryData
+                  primaryData: primaryData.toArray()
                 });
                 object.assignResourceRelatedQueryParams(queryParams);
                 return object;
