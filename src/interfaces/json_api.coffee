@@ -549,7 +549,7 @@ ActiveResource.Interfaces.JsonApi = class ActiveResource::Interfaces::JsonApi ex
   # @param [ActiveResource::Base] the resource to merge persisted changes into
   # @return [ActiveResource::Base] the resource, now persisted, with updated changes
   mergePersistedChanges: (response, resource) ->
-    resource.responseMeta(response['meta'])
+    resource.responseMeta(this.toCamelCase(response['meta'] || {}))
     @buildResource(response['data'], response['included'], existingResource: resource)
 
   # Adds errors in making a POST/PUT/PATCH call into the resource that called it

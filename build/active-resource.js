@@ -1142,7 +1142,7 @@
         }, {
           key: "mergePersistedChanges",
           value: function mergePersistedChanges(response, resource) {
-            resource.responseMeta(response['meta']);
+            resource.responseMeta(this.toCamelCase(response['meta'] || {}));
             return this.buildResource(response['data'], response['included'], {
               existingResource: resource
             });
