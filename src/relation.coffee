@@ -179,9 +179,9 @@ ActiveResource.Relation = class ActiveResource::Relation
   #  .limit(2) = { limit: 2 }
   #
   # @param [Integer] value the limit on the number of resources to query
-  # @return [ActiveResource::Relation] the extended relation with added `limit` param
+  # @return [ActiveResource::Relation] the extended relation with added `page.limit` param
   limit: (value) ->
-    @__newRelation(@__extendValueParam('limit', value))
+    @__newRelation(@__extendObjectParam('page', { limit: value }))
 
   # Defines the offset to start querying resources at
   #
@@ -189,9 +189,9 @@ ActiveResource.Relation = class ActiveResource::Relation
   #  .offset(2) = { offset: 2 }
   #
   # @param [Integer] value the offset to start querying resources at
-  # @return [ActiveResource::Relation] the extended relation with added `offset` param
+  # @return [ActiveResource::Relation] the extended relation with added `page.offset` param
   offset: (value) ->
-    @__newRelation(@__extendValueParam('offset', value))
+    @__newRelation(@__extendObjectParam('page', { offset: value }))
 
   # Adds association includes to the query
   #
